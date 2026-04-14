@@ -1,335 +1,264 @@
 <!doctype html>
 <html lang="hu">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Verskritika</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Georgia, serif;
-      background: #111;
-      color: #eee;
-      line-height: 1.6;
-    }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Verskritika</title>
 
-    .wrap {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 30px 20px 60px;
-    }
+<style>
+body {
+  margin: 0;
+  font-family: Georgia, serif;
+  background: #111;
+  color: #eee;
+}
 
-    h1 {
-      font-size: 2.2rem;
-      margin-bottom: 10px;
-    }
+.wrap {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 30px 20px 60px;
+}
 
-    .intro {
-      color: #bbb;
-      margin-bottom: 30px;
-    }
+h1 {
+  font-size: 2.2rem;
+  margin-bottom: 10px;
+}
 
-    textarea {
-      width: 100%;
-      min-height: 280px;
-      padding: 16px;
-      font-size: 1rem;
-      font-family: Georgia, serif;
-      background: #1b1b1b;
-      color: #f1f1f1;
-      border: 1px solid #444;
-      border-radius: 12px;
-      box-sizing: border-box;
-      resize: vertical;
-    }
+.intro {
+  color: #bbb;
+  margin-bottom: 25px;
+}
 
-    button {
-      margin-top: 16px;
-      padding: 12px 22px;
-      font-size: 1rem;
-      border: none;
-      border-radius: 10px;
-      background: #d6b36a;
-      color: #111;
-      cursor: pointer;
-      font-weight: bold;
-    }
+textarea {
+  width: 100%;
+  min-height: 260px;
+  padding: 16px;
+  background: #1b1b1b;
+  color: #eee;
+  border: 1px solid #444;
+  border-radius: 12px;
+  font-family: Georgia, serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  resize: vertical;
+  box-sizing: border-box;
+}
 
-    button:disabled {
-      opacity: 0.6;
-      cursor: default;
-    }
+button {
+  margin-top: 14px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #d6b36a;
+  color: #111;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1rem;
+}
 
-    .result {
-      margin-top: 40px;
-      display: grid;
-      gap: 18px;
-    }
+button:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
 
-    .card {
-      background: #1a1a1a;
-      border: 1px solid #333;
-      border-radius: 14px;
-      padding: 18px;
-      opacity: 0;
-      transform: translateY(12px);
-      transition: opacity 0.45s ease, transform 0.45s ease;
-    }
+.loading {
+  margin-top: 20px;
+  color: #aaa;
+  font-style: italic;
+  display: none;
+  min-height: 24px;
+}
 
-    .card.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
+.errorBox {
+  display: none;
+  margin-top: 20px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #2a1616;
+  border: 1px solid #6a2c2c;
+  color: #f0c7c7;
+  white-space: pre-wrap;
+}
 
-    .card h2 {
-      margin-top: 0;
-      font-size: 1.1rem;
-      color: #d6b36a;
-    }
+.result {
+  margin-top: 40px;
+  display: none;
+  gap: 18px;
+}
 
-    .final {
-      border: 1px solid #6f5a2f;
-      background: #181511;
-    }
+.card {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 14px;
+  padding: 18px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
 
-    .loading {
-      display: none;
-      margin-top: 20px;
-      color: #aaa;
-      font-style: italic;
-      min-height: 24px;
-    }
+.card.show {
+  opacity: 1;
+  transform: translateY(0);
+}
 
-    .errorBox {
-      display: none;
-      margin-top: 20px;
-      padding: 14px 16px;
-      border-radius: 12px;
-      background: #2a1616;
-      border: 1px solid #6a2c2c;
-      color: #f0c7c7;
-    }
+.card h2 {
+  color: #d6b36a;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
 
-    .footer-note {
-      margin-top: 40px;
-      color: #888;
-      font-size: 0.95rem;
-    }
-  </style>
+.card p {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.final {
+  border: 1px solid #6f5a2f;
+  background: #181511;
+}
+
+/* ÉRTELMEZÉS kiemelés */
+#cardInterpret {
+  border: 1px solid #3a3a3a;
+  background: #151515;
+}
+</style>
 </head>
+
 <body>
-  <div class="wrap">
-    <h1>Verskritika</h1>
-    <p class="intro">
-      Nem javít. Nem tanácsol. Azt vizsgálja meg, hogy a vers hol működik, hol gyenge, és miért.
-    </p>
 
-    <textarea id="poemInput" placeholder="Illeszd be ide a versedet..."></textarea>
-    <button id="analyzeBtn">Elemzés</button>
+<div class="wrap">
+  <h1>Verskritika</h1>
+  <p class="intro">
+    Először megérti. Aztán kimondja.
+  </p>
 
-    <div class="loading" id="loadingText">A vers vizsgálata folyamatban...</div>
-    <div class="errorBox" id="errorBox"></div>
+  <textarea id="poemInput" placeholder="Illeszd be ide a versed..."></textarea>
+  <button id="analyzeBtn">Elemzés</button>
 
-    <div class="result" id="resultBox" style="display:none;">
-      <div class="card" id="cardQuick">
-        <h2>Gyors megállapítások</h2>
-        <p id="quickNotes"></p>
-      </div>
+  <div class="loading" id="loadingText">Elemzés folyamatban...</div>
+  <div class="errorBox" id="errorBox"></div>
 
-      <div class="card" id="cardStructure">
-        <h2>Szerkezet</h2>
-        <p id="structureText"></p>
-      </div>
+  <div class="result" id="resultBox">
 
-      <div class="card" id="cardMeaning">
-        <h2>Tartalom és működés</h2>
-        <p id="meaningText"></p>
-      </div>
-
-      <div class="card" id="cardCritique">
-        <h2>Kritikai megállapítások</h2>
-        <p id="critiqueText"></p>
-      </div>
-
-      <div class="card" id="cardImpact">
-        <h2>Lehetséges hatás</h2>
-        <p id="impactText"></p>
-      </div>
-
-      <div class="card final" id="cardFinal">
-        <h2>Végső döntés</h2>
-        <p id="finalText"></p>
-      </div>
+    <div class="card" id="cardInterpret">
+      <h2>Értelmezés</h2>
+      <p id="interpretText"></p>
     </div>
 
-    <p class="footer-note">
-      Az értékelés kritikai olvasat, nem javítási javaslat.
-    </p>
+    <div class="card" id="cardQuick">
+      <h2>Gyors kép</h2>
+      <p id="quickText"></p>
+    </div>
+
+    <div class="card" id="cardAnalyzer">
+      <h2>Elemző</h2>
+      <p id="analyzerText"></p>
+    </div>
+
+    <div class="card" id="cardCritic">
+      <h2>Kritikus</h2>
+      <p id="criticText"></p>
+    </div>
+
+    <div class="card" id="cardReader">
+      <h2>Olvasó</h2>
+      <p id="readerText"></p>
+    </div>
+
+    <div class="card final" id="cardFinal">
+      <h2>Végső</h2>
+      <p id="finalText"></p>
+    </div>
+
   </div>
+</div>
 
-  <script>
-  const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
+<script>
+const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
 
-  const analyzeBtn = document.getElementById("analyzeBtn");
-  const loadingText = document.getElementById("loadingText");
-  const resultBox = document.getElementById("resultBox");
-  const errorBox = document.getElementById("errorBox");
+const btn = document.getElementById("analyzeBtn");
+const loading = document.getElementById("loadingText");
+const resultBox = document.getElementById("resultBox");
+const errorBox = document.getElementById("errorBox");
 
-  const steps = [
-    "A vers szerkezetének vizsgálata...",
-    "A visszatérő motívumok elemzése...",
-    "A jelentésréteg feltérképezése...",
-    "Kritikai szempontok alkalmazása..."
-  ];
+function resetCards() {
+  document.getElementById("interpretText").textContent = "";
+  document.getElementById("quickText").textContent = "";
+  document.getElementById("analyzerText").textContent = "";
+  document.getElementById("criticText").textContent = "";
+  document.getElementById("readerText").textContent = "";
+  document.getElementById("finalText").textContent = "";
 
-  let stepIndex = 0;
-  let stepInterval = null;
+  document.querySelectorAll(".card").forEach(c => c.classList.remove("show"));
+}
 
-  function resetCards() {
-    document.getElementById("quickNotes").textContent = "";
-    document.getElementById("structureText").textContent = "";
-    document.getElementById("meaningText").textContent = "";
-    document.getElementById("critiqueText").textContent = "";
-    document.getElementById("impactText").textContent = "";
-    document.getElementById("finalText").textContent = "";
+function getSection(text, name, nextNames) {
+  const next = nextNames.join("|");
+  const regex = new RegExp(`${name}:([\\s\\S]*?)(?=\\n(?:${next}):|$)`, "i");
+  const match = text.match(regex);
+  return match ? match[1].trim() : "";
+}
 
-    document.querySelectorAll(".card").forEach(card => {
-      card.classList.remove("show");
+function showCard(id, textId, text, delay) {
+  setTimeout(() => {
+    document.getElementById(textId).textContent =
+      text || "Nincs értékelhető tartalom.";
+    document.getElementById(id).classList.add("show");
+  }, delay);
+}
+
+btn.addEventListener("click", async () => {
+  const poem = document.getElementById("poemInput").value.trim();
+  if (!poem) {
+    errorBox.textContent = "Írj be verset.";
+    errorBox.style.display = "block";
+    return;
+  }
+
+  btn.disabled = true;
+  errorBox.style.display = "none";
+  resetCards();
+  loading.style.display = "block";
+  resultBox.style.display = "none";
+
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ poem })
     });
-  }
 
-  function startLoadingAnimation() {
-    loadingText.style.display = "block";
-    stepIndex = 0;
-    loadingText.textContent = steps[0];
+    const data = await res.json();
+    const text = data.result;
 
-    clearInterval(stepInterval);
-    stepInterval = setInterval(() => {
-      stepIndex = (stepIndex + 1) % steps.length;
-      loadingText.textContent = steps[stepIndex];
-    }, 1400);
-  }
+    const interpret = getSection(text, "ÉRTELMEZÉS", ["GYORS","ELEMZŐ","KRITIKUS","OLVASÓ","VÉGSŐ"]);
+    const quick = getSection(text, "GYORS", ["ELEMZŐ","KRITIKUS","OLVASÓ","VÉGSŐ"]);
+    const analyzer = getSection(text, "ELEMZŐ", ["KRITIKUS","OLVASÓ","VÉGSŐ"]);
+    const critic = getSection(text, "KRITIKUS", ["OLVASÓ","VÉGSŐ"]);
+    const reader = getSection(text, "OLVASÓ", ["VÉGSŐ"]);
+    const final = getSection(text, "VÉGSŐ", []);
 
-  function stopLoadingAnimation() {
-    clearInterval(stepInterval);
-    loadingText.style.display = "none";
-  }
+    loading.style.display = "none";
+    resultBox.style.display = "grid";
 
-  function showError(message) {
-    errorBox.textContent = message;
+    showCard("cardInterpret","interpretText",interpret,50);
+    showCard("cardQuick","quickText",quick,200);
+    showCard("cardAnalyzer","analyzerText",analyzer,400);
+    showCard("cardCritic","criticText",critic,600);
+    showCard("cardReader","readerText",reader,800);
+    showCard("cardFinal","finalText",final,1000);
+
+  } catch (err) {
+    loading.style.display = "none";
+    errorBox.textContent = err.message;
     errorBox.style.display = "block";
   }
 
-  function hideError() {
-    errorBox.style.display = "none";
-    errorBox.textContent = "";
-  }
-
-  function getOutputText(data) {
-    if (!data || !Array.isArray(data.output)) return "";
-    let fullText = "";
-
-    for (const item of data.output) {
-      if (!item.content) continue;
-      for (const part of item.content) {
-        if (part.type === "output_text" && part.text) {
-          fullText += part.text;
-        }
-      }
-    }
-
-    return fullText.trim();
-  }
-
-  function getSection(text, sectionName) {
-    const names = [
-      "GYORS",
-      "SZERKEZET",
-      "TARTALOM",
-      "KRITIKA",
-      "HATÁS",
-      "DÖNTÉS"
-    ];
-
-    const currentIndex = names.indexOf(sectionName);
-    if (currentIndex === -1) return "";
-
-    const nextNames = names.slice(currentIndex + 1).join("|");
-    const regex = nextNames
-      ? new RegExp(`${sectionName}:\\s*([\\s\\S]*?)(?=\\n(?:${nextNames}):|$)`, "i")
-      : new RegExp(`${sectionName}:\\s*([\\s\\S]*?)$`, "i");
-
-    const match = text.match(regex);
-    return match ? match[1].trim() : "";
-  }
-
-  function revealCard(cardId, textId, text, delay) {
-    setTimeout(() => {
-      document.getElementById(textId).textContent =
-        text || "Nincs értékelhető tartalom ebben a blokkban.";
-      document.getElementById(cardId).classList.add("show");
-    }, delay);
-  }
-
-  analyzeBtn.addEventListener("click", async () => {
-    const poem = document.getElementById("poemInput").value.trim();
-    if (!poem) return;
-
-    analyzeBtn.disabled = true;
-    resultBox.style.display = "none";
-    resetCards();
-    hideError();
-    startLoadingAnimation();
-
-    try {
-      const response = await fetch(WORKER_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          poem: poem
-        })
-      });
-
-      const rawText = await response.text();
-      console.log("RAW RESPONSE:", rawText);
-
-      if (!response.ok) {
-        throw new Error(rawText || "Sikertelen Worker-válasz.");
-      }
-
-      const data = JSON.parse(rawText);
-      const fullText = getOutputText(data);
-
-      if (!fullText) {
-        throw new Error("Az AI nem adott vissza értelmezhető szöveget.");
-      }
-
-      const quick = getSection(fullText, "GYORS");
-      const structure = getSection(fullText, "SZERKEZET");
-      const meaning = getSection(fullText, "TARTALOM");
-      const critique = getSection(fullText, "KRITIKA");
-      const impact = getSection(fullText, "HATÁS");
-      const finalDecision = getSection(fullText, "DÖNTÉS");
-
-      stopLoadingAnimation();
-      resultBox.style.display = "grid";
-
-      revealCard("cardQuick", "quickNotes", quick, 150);
-      revealCard("cardStructure", "structureText", structure, 450);
-      revealCard("cardMeaning", "meaningText", meaning, 750);
-      revealCard("cardCritique", "critiqueText", critique, 1050);
-      revealCard("cardImpact", "impactText", impact, 1350);
-      revealCard("cardFinal", "finalText", finalDecision, 1650);
-    } catch (error) {
-      stopLoadingAnimation();
-      showError("Hiba: " + error.message);
-      console.error(error);
-    } finally {
-      analyzeBtn.disabled = false;
-    }
-  });
+  btn.disabled = false;
+});
 </script>
+
 </body>
 </html>
