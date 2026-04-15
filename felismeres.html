@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Versfelismerés</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Georgia, serif;
+  background: #111;
+  color: #eee;
+}
+
+.wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 30px 20px 60px;
+}
+
+h1 {
+  font-size: 2.1rem;
+  margin-bottom: 10px;
+}
+
+.intro {
+  color: #bbb;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #d6b36a;
+  color: #111;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+button:hover {
+  opacity: 0.95;
+}
+
+button.secondary {
+  background: #2b2b2b;
+  color: #eee;
+  border: 1px solid #444;
+}
+
+button.next {
+  background: #4caf50;
+  color: #fff;
+}
+
+.loadingBox,
+.errorBox,
+.infoBox {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.loadingBox {
+  display: none;
+  background: #151515;
+  border: 1px solid #333;
+  color: #cfcfcf;
+}
+
+.errorBox {
+  display: none;
+  background: #2a1616;
+  border: 1px solid #6a2c2c;
+  color: #f0c7c7;
+}
+
+.infoBox {
+  display: none;
+  background: #162417;
+  border: 1px solid #2f6a35;
+  color: #cdeccf;
+}
+
+.layout {
+  display: none;
+  grid-template-columns: 320px 1fr;
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.card {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.card h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #d6b36a;
+  font-size: 1.15rem;
+}
+
+.miniTitle {
+  color: #c9b07a;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+.mainType {
+  font-size: 1.55rem;
+  line-height: 1.3;
+  color: #fff;
+  margin-bottom: 18px;
+}
+
+.list {
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.7;
+  color: #ddd;
+}
+
+.infoRow {
+  margin-bottom: 18px;
+}
+
+.infoRow:last-child {
+  margin-bottom: 0;
+}
+
+.valueBox {
+  background: #141414;
+  border: 1px solid #2c2c2c;
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #eee;
+  line-height: 1.7;
+}
+
+.poemPreview {
+  margin-top: 24px;
+  background: #151515;
+  border: 1px solid #303030;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.poemPreview h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #d6b36a;
+  font-size: 1.05rem;
+}
+
+.poemText {
+  white-space: pre-wrap;
+  color: #ddd;
+  line-height: 1.7;
+}
+
+.footerRow {
+  margin-top: 24px;
+  display: none;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 860px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+  <h1>Felismerés</h1>
+  <p class="intro">
+    Ez az első belső oldal. Itt még nincs végső kritika. Csak a vers alaptípusát, hangulatát és megszólalásának jellegét határozzuk meg.
+  </p>
+
+  <div class="topbar">
+    <button class="secondary" id="backBtn">← Vissza</button>
+    <button id="reloadBtn">Újraelemzés</button>
+  </div>
+
+  <div class="loadingBox" id="loadingBox">A vers típusának felismerése folyamatban...</div>
+  <div class="errorBox" id="errorBox"></div>
+  <div class="infoBox" id="infoBox"></div>
+
+  <div class="layout" id="resultLayout">
+    <div class="card">
+      <h2>Alapbesorolás</h2>
+
+      <div class="miniTitle">Fő típus</div>
+      <div class="mainType" id="mainType">—</div>
+
+      <div class="miniTitle">Másodlagos jegyek</div>
+      <ul class="list" id="secondaryTraits"></ul>
+    </div>
+
+    <div class="card">
+      <h2>Indoklás</h2>
+
+      <div class="infoRow">
+        <div class="miniTitle">Beszédmód</div>
+        <div class="valueBox" id="speechMode">—</div>
+      </div>
+
+      <div class="infoRow">
+        <div class="miniTitle">Hangulat</div>
+        <div class="valueBox" id="mood">—</div>
+      </div>
+
+      <div class="infoRow">
+        <div class="miniTitle">Miért ezt választotta</div>
+        <div class="valueBox" id="reasoning">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="poemPreview" id="poemPreview" style="display:none;">
+    <h2>A vizsgált vers</h2>
+    <div class="poemText" id="poemText"></div>
+  </div>
+
+  <div class="footerRow" id="footerRow">
+    <button class="next" id="nextBtn">Tovább a szerkezethez →</button>
+  </div>
+</div>
+
+<script>
+const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
+const NEXT_PAGE = "szerkezet.html";
+
+const loadingBox = document.getElementById("loadingBox");
+const errorBox = document.getElementById("errorBox");
+const infoBox = document.getElementById("infoBox");
+const resultLayout = document.getElementById("resultLayout");
+const poemPreview = document.getElementById("poemPreview");
+const poemText = document.getElementById("poemText");
+const footerRow = document.getElementById("footerRow");
+
+const mainTypeEl = document.getElementById("mainType");
+const secondaryTraitsEl = document.getElementById("secondaryTraits");
+const speechModeEl = document.getElementById("speechMode");
+const moodEl = document.getElementById("mood");
+const reasoningEl = document.getElementById("reasoning");
+
+const backBtn = document.getElementById("backBtn");
+const reloadBtn = document.getElementById("reloadBtn");
+const nextBtn = document.getElementById("nextBtn");
+
+function showLoading(message) {
+  loadingBox.textContent = message;
+  loadingBox.style.display = "block";
+}
+
+function hideLoading() {
+  loadingBox.style.display = "none";
+}
+
+function showError(message) {
+  errorBox.textContent = message;
+  errorBox.style.display = "block";
+}
+
+function hideError() {
+  errorBox.textContent = "";
+  errorBox.style.display = "none";
+}
+
+function showInfo(message) {
+  infoBox.textContent = message;
+  infoBox.style.display = "block";
+}
+
+function hideInfo() {
+  infoBox.textContent = "";
+  infoBox.style.display = "none";
+}
+
+function fillList(items) {
+  secondaryTraitsEl.innerHTML = "";
+
+  if (!Array.isArray(items) || !items.length) {
+    const li = document.createElement("li");
+    li.textContent = "Nincs külön megadott mellékjegy.";
+    secondaryTraitsEl.appendChild(li);
+    return;
+  }
+
+  items.forEach(item => {
+    const li = document.createElement("li");
+    li.textContent = item;
+    secondaryTraitsEl.appendChild(li);
+  });
+}
+
+function renderResult(result) {
+  mainTypeEl.textContent = result.main_type || "Nincs megadva";
+  speechModeEl.textContent = result.speech_mode || "Nincs megadva";
+  moodEl.textContent = result.mood || "Nincs megadva";
+  reasoningEl.textContent = result.reasoning || "Nincs indoklás.";
+  fillList(result.secondary_traits);
+
+  resultLayout.style.display = "grid";
+  footerRow.style.display = "flex";
+}
+
+async function runKindAnalysis(forceRefresh = false) {
+  const poem = sessionStorage.getItem("poem");
+
+  if (!poem) {
+    window.location.href = "index.html";
+    return;
+  }
+
+  poemText.textContent = poem;
+  poemPreview.style.display = "block";
+
+  hideError();
+  hideInfo();
+
+  if (!forceRefresh) {
+    const saved = sessionStorage.getItem("analysis_kind");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        renderResult(parsed);
+        showInfo("A korábbi felismerési eredmény betöltve.");
+        return;
+      } catch (err) {
+        sessionStorage.removeItem("analysis_kind");
+      }
+    }
+  }
+
+  showLoading("A vers típusának felismerése folyamatban...");
+  resultLayout.style.display = "none";
+  footerRow.style.display = "none";
+
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        poem,
+        step: "kind",
+        previous: {}
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || "A worker nem adott megfelelő választ.");
+    }
+
+    sessionStorage.setItem("analysis_kind", JSON.stringify(data.result));
+    renderResult(data.result);
+    showInfo("A felismerés elkészült.");
+  } catch (err) {
+    showError(err.message || "Ismeretlen hiba történt.");
+  } finally {
+    hideLoading();
+  }
+}
+
+backBtn.addEventListener("click", () => {
+  window.location.href = "index.html";
+});
+
+reloadBtn.addEventListener("click", () => {
+  sessionStorage.removeItem("analysis_kind");
+  runKindAnalysis(true);
+});
+
+nextBtn.addEventListener("click", () => {
+  window.location.href = NEXT_PAGE;
+});
+
+runKindAnalysis();
+</script>
+
+</body>
+</html>
