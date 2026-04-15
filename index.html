@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Verskritika</title>
+<title>Verselemzés</title>
 
 <style>
 body {
@@ -27,6 +27,7 @@ h1 {
 .intro {
   color: #bbb;
   margin-bottom: 25px;
+  line-height: 1.6;
 }
 
 textarea {
@@ -39,7 +40,7 @@ textarea {
   border-radius: 12px;
   font-family: Georgia, serif;
   font-size: 1rem;
-  line-height: 1.5;
+  line-height: 1.6;
   resize: vertical;
   box-sizing: border-box;
 }
@@ -61,14 +62,6 @@ button:disabled {
   cursor: default;
 }
 
-.loading {
-  margin-top: 20px;
-  color: #aaa;
-  font-style: italic;
-  display: none;
-  min-height: 24px;
-}
-
 .errorBox {
   display: none;
   margin-top: 20px;
@@ -80,48 +73,89 @@ button:disabled {
   white-space: pre-wrap;
 }
 
-.result {
-  margin-top: 40px;
+.processingOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10,10,10,0.92);
   display: none;
-  gap: 18px;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
-.card {
-  background: #1a1a1a;
+.processingBox {
+  width: min(680px, 100%);
+  background: #171717;
   border: 1px solid #333;
-  border-radius: 14px;
-  padding: 18px;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.4s ease, transform 0.4s ease;
+  border-radius: 18px;
+  padding: 26px 22px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.45);
 }
 
-.card.show {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.card h2 {
+.processingTitle {
   color: #d6b36a;
-  margin-top: 0;
+  font-size: 1.3rem;
   margin-bottom: 12px;
 }
 
-.card p {
-  margin: 0;
-  white-space: pre-wrap;
+.processingText {
+  color: #ddd;
+  min-height: 28px;
   line-height: 1.6;
+  margin-bottom: 18px;
 }
 
-.final {
-  border: 1px solid #6f5a2f;
-  background: #181511;
+.progressWrap {
+  width: 100%;
+  height: 10px;
+  background: #232323;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid #333;
 }
 
-/* ÉRTELMEZÉS kiemelés */
-#cardInterpret {
-  border: 1px solid #3a3a3a;
-  background: #151515;
+.progressBar {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, #8f7440, #d6b36a);
+  transition: width 0.35s ease;
+}
+
+.previewGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.previewCard {
+  background: #121212;
+  border: 1px solid #2c2c2c;
+  border-radius: 12px;
+  padding: 14px;
+  color: #aaa;
+  min-height: 78px;
+}
+
+.previewCard strong {
+  display: block;
+  color: #c9b07a;
+  margin-bottom: 8px;
+  font-size: 0.98rem;
+}
+
+.muted {
+  opacity: 0.75;
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 700px) {
+  .previewGrid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
 </head>
@@ -129,134 +163,133 @@ button:disabled {
 <body>
 
 <div class="wrap">
-  <h1>Verskritika</h1>
+  <h1>Verselemzés</h1>
   <p class="intro">
-    Először megérti. Aztán kimondja.
+    Illeszd be a verset. Innen indul a belső elemzési folyamat.
   </p>
 
   <textarea id="poemInput" placeholder="Illeszd be ide a versed..."></textarea>
-  <button id="analyzeBtn">Elemzés</button>
+  <button id="analyzeBtn">Tovább</button>
 
-  <div class="loading" id="loadingText">Elemzés folyamatban...</div>
   <div class="errorBox" id="errorBox"></div>
+</div>
 
-  <div class="result" id="resultBox">
+<div class="processingOverlay" id="processingOverlay">
+  <div class="processingBox">
+    <div class="processingTitle">Feldolgozás</div>
+    <div class="processingText" id="processingText">Szöveg beolvasása...</div>
 
-    <div class="card" id="cardInterpret">
-      <h2>Értelmezés</h2>
-      <p id="interpretText"></p>
+    <div class="progressWrap">
+      <div class="progressBar" id="progressBar"></div>
     </div>
 
-    <div class="card" id="cardQuick">
-      <h2>Gyors kép</h2>
-      <p id="quickText"></p>
+    <div class="previewGrid">
+      <div class="previewCard">
+        <strong>1. oldal</strong>
+        <div class="muted">Versfajta, beszédmód, hangulat, első indoklás.</div>
+      </div>
+      <div class="previewCard">
+        <strong>2. oldal</strong>
+        <div class="muted">Szerkezeti építkezés, belső mozgás, összetartás.</div>
+      </div>
+      <div class="previewCard">
+        <strong>3. oldal</strong>
+        <div class="muted">Ritmus, lüktetés, hangzás, ismétlődések.</div>
+      </div>
+      <div class="previewCard">
+        <strong>További lépések</strong>
+        <div class="muted">Rímek, képiség, hatás, végső összerakás.</div>
+      </div>
     </div>
-
-    <div class="card" id="cardAnalyzer">
-      <h2>Elemző</h2>
-      <p id="analyzerText"></p>
-    </div>
-
-    <div class="card" id="cardCritic">
-      <h2>Kritikus</h2>
-      <p id="criticText"></p>
-    </div>
-
-    <div class="card" id="cardReader">
-      <h2>Olvasó</h2>
-      <p id="readerText"></p>
-    </div>
-
-    <div class="card final" id="cardFinal">
-      <h2>Végső</h2>
-      <p id="finalText"></p>
-    </div>
-
   </div>
 </div>
 
 <script>
 const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
+const NEXT_PAGE = "felismeres.html"; // később ez lesz az 1. nem publikus oldal
 
 const btn = document.getElementById("analyzeBtn");
-const loading = document.getElementById("loadingText");
-const resultBox = document.getElementById("resultBox");
 const errorBox = document.getElementById("errorBox");
+const overlay = document.getElementById("processingOverlay");
+const processingText = document.getElementById("processingText");
+const progressBar = document.getElementById("progressBar");
 
-function resetCards() {
-  document.getElementById("interpretText").textContent = "";
-  document.getElementById("quickText").textContent = "";
-  document.getElementById("analyzerText").textContent = "";
-  document.getElementById("criticText").textContent = "";
-  document.getElementById("readerText").textContent = "";
-  document.getElementById("finalText").textContent = "";
+const steps = [
+  "Szöveg beolvasása...",
+  "Elemzési folyamat előkészítése...",
+  "Vers átadása a belső oldalaknak...",
+  "Első vizsgálati lépés indítása..."
+];
 
-  document.querySelectorAll(".card").forEach(c => c.classList.remove("show"));
+function showError(message) {
+  errorBox.textContent = message;
+  errorBox.style.display = "block";
 }
 
-function getSection(text, name, nextNames) {
-  const next = nextNames.join("|");
-  const regex = new RegExp(`${name}:([\\s\\S]*?)(?=\\n(?:${next}):|$)`, "i");
-  const match = text.match(regex);
-  return match ? match[1].trim() : "";
+function hideError() {
+  errorBox.style.display = "none";
+  errorBox.textContent = "";
 }
 
-function showCard(id, textId, text, delay) {
-  setTimeout(() => {
-    document.getElementById(textId).textContent =
-      text || "Nincs értékelhető tartalom.";
-    document.getElementById(id).classList.add("show");
-  }, delay);
+async function runFakeProgress() {
+  for (let i = 0; i < steps.length; i++) {
+    processingText.textContent = steps[i];
+    progressBar.style.width = `${(i + 1) / steps.length * 100}%`;
+    await new Promise(resolve => setTimeout(resolve, 450));
+  }
 }
 
 btn.addEventListener("click", async () => {
   const poem = document.getElementById("poemInput").value.trim();
+
   if (!poem) {
-    errorBox.textContent = "Írj be verset.";
-    errorBox.style.display = "block";
+    showError("Illessz be egy verset.");
     return;
   }
 
+  hideError();
   btn.disabled = true;
-  errorBox.style.display = "none";
-  resetCards();
-  loading.style.display = "block";
-  resultBox.style.display = "none";
+  overlay.style.display = "flex";
 
   try {
-    const res = await fetch(WORKER_URL, {
+    // Vers mentése a későbbi oldalaknak
+    sessionStorage.setItem("poem", poem);
+    sessionStorage.setItem("analysis_kind", "");
+    sessionStorage.setItem("analysis_structure", "");
+    sessionStorage.setItem("analysis_rhythm", "");
+    sessionStorage.setItem("analysis_rhyme", "");
+    sessionStorage.setItem("analysis_imagery", "");
+
+    // Gyors alap worker-kapcsolat, hogy él-e és fogadja-e a verset
+    const ping = await fetch(WORKER_URL, {
       method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ poem })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        poem,
+        step: "kind",
+        previous: {}
+      })
     });
 
-    const data = await res.json();
-    const text = data.result;
+    const data = await ping.json();
 
-    const interpret = getSection(text, "ÉRTELMEZÉS", ["GYORS","ELEMZŐ","KRITIKUS","OLVASÓ","VÉGSŐ"]);
-    const quick = getSection(text, "GYORS", ["ELEMZŐ","KRITIKUS","OLVASÓ","VÉGSŐ"]);
-    const analyzer = getSection(text, "ELEMZŐ", ["KRITIKUS","OLVASÓ","VÉGSŐ"]);
-    const critic = getSection(text, "KRITIKUS", ["OLVASÓ","VÉGSŐ"]);
-    const reader = getSection(text, "OLVASÓ", ["VÉGSŐ"]);
-    const final = getSection(text, "VÉGSŐ", []);
+    if (!ping.ok || !data.ok) {
+      throw new Error(data.error || "A worker nem válaszolt megfelelően.");
+    }
 
-    loading.style.display = "none";
-    resultBox.style.display = "grid";
+    // Az első oldal eredményét már most el lehet menteni,
+    // így a felismeres.html rögtön ebből is dolgozhat
+    sessionStorage.setItem("analysis_kind", JSON.stringify(data.result));
 
-    showCard("cardInterpret","interpretText",interpret,50);
-    showCard("cardQuick","quickText",quick,200);
-    showCard("cardAnalyzer","analyzerText",analyzer,400);
-    showCard("cardCritic","criticText",critic,600);
-    showCard("cardReader","readerText",reader,800);
-    showCard("cardFinal","finalText",final,1000);
+    await runFakeProgress();
 
+    window.location.href = NEXT_PAGE;
   } catch (err) {
-    loading.style.display = "none";
-    errorBox.textContent = err.message;
-    errorBox.style.display = "block";
+    overlay.style.display = "none";
+    showError(err.message || "Ismeretlen hiba történt.");
+  } finally {
+    btn.disabled = false;
   }
-
-  btn.disabled = false;
 });
 </script>
 
