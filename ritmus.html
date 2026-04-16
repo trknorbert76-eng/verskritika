@@ -308,29 +308,144 @@ button.next {
     <button class="next" id="nextBtn">Tovább a képekhez →</button>
   </div>
 </div>
-
 <script>
+const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
+const NEXT_PAGE = "kepek.html";
+
+const loadingBox = document.getElementById("loadingBox");
+const errorBox = document.getElementById("errorBox");
+const infoBox = document.getElementById("infoBox");
+const resultLayout = document.getElementById("resultLayout");
+const poemPreview = document.getElementById("poemPreview");
+const poemText = document.getElementById("poemText");
+const footerRow = document.getElementById("footerRow");
+const previousBox = document.getElementById("previousBox");
+
 const rhythmTypeEl = document.getElementById("rhythmType");
 const flowTypeEl = document.getElementById("flowType");
 const momentumEl = document.getElementById("momentum");
 const breaksEl = document.getElementById("breaks");
 const reasoningEl = document.getElementById("reasoning");
 
-const resultLayout = document.getElementById("resultLayout");
-const footerRow = document.getElementById("footerRow");
+const prevMainTypeEl = document.getElementById("prevMainType");
+const prevMoodEl = document.getElementById("prevMood");
+const prevSpeechModeEl = document.getElementById("prevSpeechMode");
+const prevTraitsEl = document.getElementById("prevTraits");
+const prevStructureTypeEl = document.getElementById("prevStructureType");
+const prevCohesionEl = document.getElementById("prevCohesion");
 
-const statusBox = document.getElementById("statusBox");
-const statusText = document.getElementById("statusText");
+const backBtn = document.getElementById("backBtn");
+const reloadBtn = document.getElementById("reloadBtn");
+const nextBtn = document.getElementById("nextBtn");
 
-async function runAnalysis() {
-  const poem = sessionStorage.getItem("analysis_poem") || "";
-  const previous = JSON.parse(sessionStorage.getItem("analysis_structure") || "{}");
+function showLoading(message) {
+  loadingBox.textContent = message;
+  loadingBox.style.display = "block";
+}
 
-  statusBox.style.display = "block";
-  statusText.textContent = "Ritmikai elemzés folyamatban...";
+function hideLoading() {
+  loadingBox.style.display = "none";
+}
+
+function showError(message) {
+  errorBox.textContent = message;
+  errorBox.style.display = "block";
+}
+
+function hideError() {
+  errorBox.textContent = "";
+  errorBox.style.display = "none";
+}
+
+function showInfo(message) {
+  infoBox.textContent = message;
+  infoBox.style.display = "block";
+}
+
+function hideInfo() {
+  infoBox.textContent = "";
+  infoBox.style.display = "none";
+}
+
+function safeParse(jsonText) {
+  try {
+    return JSON.parse(jsonText);
+  } catch (err) {
+    return null;
+  }
+}
+
+function renderPrevious(kindData, structureData) {
+  if (kindData) {
+    prevMainTypeEl.textContent = kindData.main_type || "Nincs megadva";
+    prevMoodEl.textContent = kindData.mood || "Nincs megadva";
+    prevSpeechModeEl.textContent = kindData.speech_mode || "Nincs megadva";
+    prevTraitsEl.textContent = Array.isArray(kindData.secondary_traits) && kindData.secondary_traits.length
+      ? kindData.secondary_traits.join(", ")
+      : "Nincs megadva";
+  }
+
+  if (structureData) {
+    prevStructureTypeEl.textContent = structureData.structure_type || "Nincs megadva";
+    prevCohesionEl.textContent = structureData.cohesion || "Nincs megadva";
+  }
+
+  previousBox.style.display = "block";
+}
+
+function renderResult(result) {
+  rhythmTypeEl.textContent = result.rhythm_type || "Nincs megadva";
+  flowTypeEl.textContent = result.flow || "Nincs megadva";
+  momentumEl.textContent = result.movement || "Nincs megadva";
+  breaksEl.textContent = result.breaks || "Nincs megadva";
+  reasoningEl.textContent = result.reasoning || "Nincs indoklás.";
+
+  resultLayout.style.display = "grid";
+  footerRow.style.display = "flex";
+}
+
+async function runRhythmAnalysis(forceRefresh = false) {
+  const poem = sessionStorage.getItem("poem");
+  const savedKind = safeParse(sessionStorage.getItem("analysis_kind") || "");
+  const savedStructure = safeParse(sessionStorage.getItem("analysis_structure") || "");
+
+  if (!poem) {
+    window.location.href = "index.html";
+    return;
+  }
+
+  if (!savedKind) {
+    window.location.href = "felismeres.html";
+    return;
+  }
+
+  if (!savedStructure) {
+    window.location.href = "szerkezet.html";
+    return;
+  }
+
+  poemText.textContent = poem;
+  poemPreview.style.display = "block";
+  renderPrevious(savedKind, savedStructure);
+
+  hideError();
+  hideInfo();
+
+  if (!forceRefresh) {
+    const savedRhythm = safeParse(sessionStorage.getItem("analysis_rhythm") || "");
+    if (savedRhythm) {
+      renderResult(savedRhythm);
+      showInfo("A korábbi ritmikai eredmény betöltve.");
+      return;
+    }
+  }
+
+  showLoading("A ritmikai elemzés folyamatban...");
+  resultLayout.style.display = "none";
+  footerRow.style.display = "none";
 
   try {
-    const res = await fetch("https://YOUR-WORKER-URL", {
+    const res = await fetch(WORKER_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -338,68 +453,43 @@ async function runAnalysis() {
       body: JSON.stringify({
         poem,
         step: "rhythm",
-        previous
+        previous: {
+          kind: savedKind,
+          structure: savedStructure
+        }
       })
     });
 
     const data = await res.json();
 
-    if (!data.ok) {
-      statusText.textContent = "Hiba történt.";
-      return;
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || "A worker nem adott megfelelő választ.");
     }
 
-    const result = data.result;
-
-    // 💥 EZ A LÉNYEG
-    rhythmTypeEl.textContent = result.rhythm_type || "Nincs megadva";
-    flowTypeEl.textContent = result.flow || "Nincs megadva";
-    momentumEl.textContent = result.movement || "Nincs megadva";
-    breaksEl.textContent = result.breaks || "Nincs megadva";
-    reasoningEl.textContent = result.reasoning || "Nincs indoklás.";
-
-    // megjelenítés
-    resultLayout.style.display = "grid";
-    footerRow.style.display = "flex";
-
-    statusText.textContent = "A ritmikai elemzés elkészült.";
-
-    // mentés
-    sessionStorage.setItem("analysis_rhythm", JSON.stringify(result));
-
+    sessionStorage.setItem("analysis_rhythm", JSON.stringify(data.result));
+    renderResult(data.result);
+    showInfo("A ritmikai elemzés elkészült.");
   } catch (err) {
-    statusText.textContent = "Hálózati hiba.";
+    showError(err.message || "Ismeretlen hiba történt.");
+  } finally {
+    hideLoading();
   }
 }
 
-// 🔁 újraelemzés gomb
-function rerunAnalysis() {
+backBtn.addEventListener("click", () => {
+  window.location.href = "szerkezet.html";
+});
+
+reloadBtn.addEventListener("click", () => {
   sessionStorage.removeItem("analysis_rhythm");
-  runAnalysis();
-}
+  runRhythmAnalysis(true);
+});
 
-// első betöltés
-window.onload = () => {
-  const saved = sessionStorage.getItem("analysis_rhythm");
+nextBtn.addEventListener("click", () => {
+  window.location.href = NEXT_PAGE;
+});
 
-  if (saved) {
-    const result = JSON.parse(saved);
-
-    rhythmTypeEl.textContent = result.rhythm_type || "Nincs megadva";
-    flowTypeEl.textContent = result.flow || "Nincs megadva";
-    momentumEl.textContent = result.movement || "Nincs megadva";
-    breaksEl.textContent = result.breaks || "Nincs megadva";
-    reasoningEl.textContent = result.reasoning || "Nincs indoklás.";
-
-    resultLayout.style.display = "grid";
-    footerRow.style.display = "flex";
-
-    statusBox.style.display = "block";
-    statusText.textContent = "A ritmikai elemzés betöltve.";
-  } else {
-    runAnalysis();
-  }
-};
+runRhythmAnalysis();
 </script>
 
 </body>
