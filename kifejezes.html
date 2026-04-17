@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kifejezésmód</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Georgia, serif;
+  background: #111;
+  color: #eee;
+}
+
+.wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 30px 20px 60px;
+}
+
+h1 {
+  font-size: 2.1rem;
+  margin-bottom: 10px;
+}
+
+.intro {
+  color: #bbb;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #d6b36a;
+  color: #111;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #2b2b2b;
+  color: #eee;
+  border: 1px solid #444;
+}
+
+button.next {
+  background: #4caf50;
+  color: #fff;
+}
+
+.loadingBox,
+.errorBox,
+.infoBox {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 12px;
+}
+
+.loadingBox { display:none; background:#151515; border:1px solid #333; }
+.errorBox { display:none; background:#2a1616; border:1px solid #6a2c2c; }
+.infoBox { display:none; background:#162417; border:1px solid #2f6a35; }
+
+.layout {
+  display:none;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.card {
+  background:#1a1a1a;
+  border:1px solid #333;
+  border-radius:14px;
+  padding:18px;
+}
+
+.miniTitle {
+  color:#c9b07a;
+  margin-bottom:6px;
+}
+
+.valueBox {
+  background:#141414;
+  border:1px solid #2c2c2c;
+  border-radius:10px;
+  padding:10px;
+}
+
+.noteBox {
+  margin-top:6px;
+  background:#101010;
+  border:1px solid #262626;
+  border-radius:10px;
+  padding:8px;
+}
+
+.footerRow {
+  margin-top:24px;
+  display:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+  <h1>Kifejezésmód</h1>
+  <p class="intro">
+    Itt azt vizsgáljuk, hogyan van a vers megírva: megmutat vagy magyaráz,
+    mennyire sűrített, pontos, egyedi és természetes a megszólalása.
+  </p>
+
+  <div class="topbar">
+    <button class="secondary" id="backBtn">← Vissza a képekhez</button>
+    <button id="reloadBtn">Újraelemzés</button>
+  </div>
+
+  <div class="loadingBox" id="loadingBox">Elemzés...</div>
+  <div class="errorBox" id="errorBox"></div>
+  <div class="infoBox" id="infoBox"></div>
+
+  <div class="layout" id="layout">
+    <div class="card">
+      <div class="miniTitle">Megmutatás / magyarázás</div>
+      <div class="valueBox" id="expressionMode"></div>
+      <div class="noteBox" id="expressionModeNote"></div>
+
+      <div class="miniTitle">Sűrítettség</div>
+      <div class="valueBox" id="density"></div>
+      <div class="noteBox" id="densityNote"></div>
+
+      <div class="miniTitle">Pontosság</div>
+      <div class="valueBox" id="precision"></div>
+      <div class="noteBox" id="precisionNote"></div>
+    </div>
+
+    <div class="card">
+      <div class="miniTitle">Hang egyedisége</div>
+      <div class="valueBox" id="originality"></div>
+      <div class="noteBox" id="originalityNote"></div>
+
+      <div class="miniTitle">Megszólalás természetessége</div>
+      <div class="valueBox" id="tone"></div>
+      <div class="noteBox" id="toneNote"></div>
+
+      <div class="miniTitle">Indoklás</div>
+      <div class="valueBox" id="reasoning"></div>
+    </div>
+  </div>
+
+  <div class="footerRow" id="footer">
+    <button class="next" id="nextBtn">Tovább az összegzéshez →</button>
+  </div>
+</div>
+
+<script>
+const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
+
+function $(id){ return document.getElementById(id); }
+
+function safeParse(t){
+  try{return JSON.parse(t);}catch{return null;}
+}
+
+async function run(){
+
+  const poem = sessionStorage.getItem("poem");
+  const kind = safeParse(sessionStorage.getItem("analysis_kind"));
+  const structure = safeParse(sessionStorage.getItem("analysis_structure"));
+  const rhythm = safeParse(sessionStorage.getItem("analysis_rhythm"));
+
+  const imagesPack = safeParse(sessionStorage.getItem("analysis_images"));
+  const images = imagesPack && imagesPack.result ? imagesPack.result : null;
+
+  if(!poem) return location.href="index.html";
+
+  $("loadingBox").style.display="block";
+
+  const res = await fetch(WORKER_URL,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      poem,
+      step:"expression",
+      previous:{ kind, structure, rhythm, images }
+    })
+  });
+
+  const data = await res.json();
+
+  $("loadingBox").style.display="none";
+
+  if(!data.ok){
+    $("errorBox").style.display="block";
+    $("errorBox").textContent = data.error;
+    return;
+  }
+
+  const r = data.result;
+
+  $("expressionMode").textContent = r.expression_mode;
+  $("expressionModeNote").textContent = r.expression_mode_note;
+
+  $("density").textContent = r.density;
+  $("densityNote").textContent = r.density_note;
+
+  $("precision").textContent = r.precision;
+  $("precisionNote").textContent = r.precision_note;
+
+  $("originality").textContent = r.originality_of_voice;
+  $("originalityNote").textContent = r.originality_of_voice_note;
+
+  $("tone").textContent = r.tone_naturalness;
+  $("toneNote").textContent = r.tone_naturalness_note;
+
+  $("reasoning").textContent = r.reasoning;
+
+  $("layout").style.display="grid";
+  $("footer").style.display="block";
+
+  sessionStorage.setItem("analysis_expression", JSON.stringify(r));
+}
+
+$("backBtn").onclick = ()=> location.href="kepek.html";
+$("reloadBtn").onclick = ()=> {
+  sessionStorage.removeItem("analysis_expression");
+  run();
+};
+$("nextBtn").onclick = ()=> location.href="osszegzes.html";
+
+run();
+</script>
+
+</body>
+</html>
