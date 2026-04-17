@@ -20,225 +20,246 @@ body {
 }
 
 h1 {
-  font-size: 2.1rem;
+  font-size: 2.2rem;
   margin-bottom: 10px;
 }
 
 .intro {
   color: #bbb;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   line-height: 1.6;
 }
 
+/* NAV */
 .topbar {
   display: flex;
-  flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 20px;
 }
 
 button {
-  padding: 12px 20px;
+  padding: 10px 16px;
   border: none;
   border-radius: 10px;
-  background: #d6b36a;
-  color: #111;
-  font-weight: bold;
   cursor: pointer;
 }
 
-button.secondary {
-  background: #2b2b2b;
-  color: #eee;
-  border: 1px solid #444;
-}
-
-button.next {
-  background: #4caf50;
+.back {
+  background: #333;
   color: #fff;
 }
 
-.loadingBox,
-.errorBox,
-.infoBox {
-  margin-top: 18px;
-  padding: 14px;
-  border-radius: 12px;
+.reload {
+  background: #d6b36a;
+  color: #111;
 }
 
-.loadingBox { display:none; background:#151515; border:1px solid #333; }
-.errorBox { display:none; background:#2a1616; border:1px solid #6a2c2c; }
-.infoBox { display:none; background:#162417; border:1px solid #2f6a35; }
+/* BLOKKOK */
+.box {
+  background: #151515;
+  border: 1px solid #303030;
+  border-radius: 14px;
+  padding: 18px;
+  margin-top: 20px;
+}
 
-.layout {
-  display:none;
+.box h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #d6b36a;
+  font-size: 1.05rem;
+}
+
+/* VERS */
+.poemText {
+  white-space: pre-wrap;
+  line-height: 1.7;
+  color: #ddd;
+}
+
+/* GRID */
+.grid {
+  display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 18px;
-  margin-top: 24px;
+  gap: 14px;
 }
 
-.card {
-  background:#1a1a1a;
-  border:1px solid #333;
-  border-radius:14px;
-  padding:18px;
+.item {
+  background: #121212;
+  border: 1px solid #2c2c2c;
+  border-radius: 10px;
+  padding: 12px;
 }
 
-.miniTitle {
-  color:#c9b07a;
-  margin-bottom:6px;
+.item strong {
+  display: block;
+  color: #c9b07a;
+  margin-bottom: 6px;
 }
 
-.valueBox {
-  background:#141414;
-  border:1px solid #2c2c2c;
-  border-radius:10px;
-  padding:10px;
-}
-
-.noteBox {
-  margin-top:6px;
-  background:#101010;
-  border:1px solid #262626;
-  border-radius:10px;
-  padding:8px;
+/* EREDMÉNY */
+.result {
+  margin-top: 20px;
 }
 
 .footerRow {
-  margin-top:24px;
-  display:none;
+  margin-top: 30px;
+}
+
+.next {
+  background: #3aa65a;
+  color: #fff;
+  padding: 12px 18px;
 }
 </style>
 </head>
 
 <body>
-
 <div class="wrap">
-  <h1>Kifejezésmód</h1>
-  <p class="intro">
-    Itt azt vizsgáljuk, hogyan van a vers megírva: megmutat vagy magyaráz,
-    mennyire sűrített, pontos, egyedi és természetes a megszólalása.
-  </p>
 
-  <div class="topbar">
-    <button class="secondary" id="backBtn">← Vissza a képekhez</button>
-    <button id="reloadBtn">Újraelemzés</button>
-  </div>
+<h1>Kifejezésmód</h1>
+<div class="intro">
+Itt azt vizsgáljuk, hogyan van a vers megírva:
+megmutat vagy magyaráz, mennyire sűrített, pontos és egyedi a megszólalása.
+</div>
 
-  <div class="loadingBox" id="loadingBox">Elemzés...</div>
-  <div class="errorBox" id="errorBox"></div>
-  <div class="infoBox" id="infoBox"></div>
+<div class="topbar">
+  <button class="back" onclick="history.back()">← Vissza</button>
+  <button class="reload" onclick="location.reload()">Újraelemzés</button>
+</div>
 
-  <div class="layout" id="layout">
-    <div class="card">
-      <div class="miniTitle">Megmutatás / magyarázás</div>
-      <div class="valueBox" id="expressionMode"></div>
-      <div class="noteBox" id="expressionModeNote"></div>
-
-      <div class="miniTitle">Sűrítettség</div>
-      <div class="valueBox" id="density"></div>
-      <div class="noteBox" id="densityNote"></div>
-
-      <div class="miniTitle">Pontosság</div>
-      <div class="valueBox" id="precision"></div>
-      <div class="noteBox" id="precisionNote"></div>
+<!-- ELŐZŐ EREDMÉNYEK -->
+<div class="box" id="previousBox" style="display:none;">
+  <h2>Előző lépések</h2>
+  <div class="grid">
+    <div class="item">
+      <strong>Vers típusa</strong>
+      <div id="prevMainType"></div>
     </div>
-
-    <div class="card">
-      <div class="miniTitle">Hang egyedisége</div>
-      <div class="valueBox" id="originality"></div>
-      <div class="noteBox" id="originalityNote"></div>
-
-      <div class="miniTitle">Megszólalás természetessége</div>
-      <div class="valueBox" id="tone"></div>
-      <div class="noteBox" id="toneNote"></div>
-
-      <div class="miniTitle">Indoklás</div>
-      <div class="valueBox" id="reasoning"></div>
+    <div class="item">
+      <strong>Hangulat</strong>
+      <div id="prevMood"></div>
     </div>
-  </div>
-
-  <div class="footerRow" id="footer">
-    <button class="next" id="nextBtn">Tovább az összegzéshez →</button>
+    <div class="item">
+      <strong>Szerkezet</strong>
+      <div id="prevStructure"></div>
+    </div>
+    <div class="item">
+      <strong>Ritmus</strong>
+      <div id="prevRhythm"></div>
+    </div>
+    <div class="item">
+      <strong>Képiség</strong>
+      <div id="prevImages"></div>
+    </div>
+    <div class="item">
+      <strong>Egyediség</strong>
+      <div id="prevOriginality"></div>
+    </div>
   </div>
 </div>
 
+<!-- VERS -->
+<div class="box" id="poemBox" style="display:none;">
+  <h2>A vizsgált vers</h2>
+  <div class="poemText" id="poemText"></div>
+</div>
+
+<!-- EREDMÉNY -->
+<div class="box result" id="resultBox" style="display:none;">
+  <h2>Eredmény</h2>
+  <div id="resultText"></div>
+</div>
+
+<div class="footerRow">
+  <button class="next" onclick="goNext()">Tovább az összegzéshez →</button>
+</div>
+
+</div>
+
 <script>
-const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
+const $ = id => document.getElementById(id);
 
-function $(id){ return document.getElementById(id); }
-
-function safeParse(t){
-  try{return JSON.parse(t);}catch{return null;}
+function safeParse(key){
+  try { return JSON.parse(sessionStorage.getItem(key)); }
+  catch { return null; }
 }
 
-async function run(){
+function loadData(){
+  const poem = sessionStorage.getItem("poem") || "";
 
-  const poem = sessionStorage.getItem("poem");
-  const kind = safeParse(sessionStorage.getItem("analysis_kind"));
-  const structure = safeParse(sessionStorage.getItem("analysis_structure"));
-  const rhythm = safeParse(sessionStorage.getItem("analysis_rhythm"));
+  const kind = safeParse("analysis_kind");
+  const structure = safeParse("analysis_structure");
+  const rhythm = safeParse("analysis_rhythm");
+  const images = safeParse("analysis_images");
 
-  const imagesPack = safeParse(sessionStorage.getItem("analysis_images"));
-  const images = imagesPack && imagesPack.result ? imagesPack.result : null;
-
-  if(!poem) return location.href="index.html";
-
-  $("loadingBox").style.display="block";
-
-  const res = await fetch(WORKER_URL,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      poem,
-      step:"expression",
-      previous:{ kind, structure, rhythm, images }
-    })
-  });
-
-  const data = await res.json();
-
-  $("loadingBox").style.display="none";
-
-  if(!data.ok){
-    $("errorBox").style.display="block";
-    $("errorBox").textContent = data.error;
-    return;
+  // VERS
+  if (poem){
+    $("poemText").textContent = poem;
+    $("poemBox").style.display = "block";
   }
 
-  const r = data.result;
+  // ELŐZŐK
+  if (kind || structure || rhythm || images){
+    $("previousBox").style.display = "block";
 
-  $("expressionMode").textContent = r.expression_mode;
-  $("expressionModeNote").textContent = r.expression_mode_note;
+    if (kind){
+      $("prevMainType").textContent = kind.main_type || "-";
+      $("prevMood").textContent = kind.mood || "-";
+    }
 
-  $("density").textContent = r.density;
-  $("densityNote").textContent = r.density_note;
+    if (structure){
+      $("prevStructure").textContent = structure.structure_type || "-";
+    }
 
-  $("precision").textContent = r.precision;
-  $("precisionNote").textContent = r.precision_note;
+    if (rhythm){
+      $("prevRhythm").textContent = rhythm.rhythm_type || "-";
+    }
 
-  $("originality").textContent = r.originality_of_voice;
-  $("originalityNote").textContent = r.originality_of_voice_note;
+    if (images){
+      $("prevImages").textContent = images.imagery_presence || "-";
+      $("prevOriginality").textContent = images.originality || "-";
+    }
+  }
 
-  $("tone").textContent = r.tone_naturalness;
-  $("toneNote").textContent = r.tone_naturalness_note;
-
-  $("reasoning").textContent = r.reasoning;
-
-  $("layout").style.display="grid";
-  $("footer").style.display="block";
-
-  sessionStorage.setItem("analysis_expression", JSON.stringify(r));
+  runAnalysis(poem, kind, structure, rhythm, images);
 }
 
-$("backBtn").onclick = ()=> location.href="kepek.html";
-$("reloadBtn").onclick = ()=> {
-  sessionStorage.removeItem("analysis_expression");
-  run();
-};
-$("nextBtn").onclick = ()=> location.href="osszegzes.html";
+async function runAnalysis(poem, kind, structure, rhythm, images){
 
-run();
+  try {
+    const res = await fetch("https://YOUR-WORKER-URL", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        poem,
+        step: "expression",
+        previous: {
+          kind,
+          structure,
+          rhythm,
+          images
+        }
+      })
+    });
+
+    const data = await res.json();
+
+    $("resultBox").style.display = "block";
+    $("resultText").textContent = data.result || "Nincs válasz.";
+
+    sessionStorage.setItem("analysis_expression", JSON.stringify(data.result));
+
+  } catch (err){
+    $("resultText").textContent = "Hiba történt.";
+  }
+}
+
+function goNext(){
+  window.location.href = "osszefoglalo.html";
+}
+
+loadData();
 </script>
 
 </body>
