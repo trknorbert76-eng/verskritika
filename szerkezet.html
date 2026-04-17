@@ -262,6 +262,19 @@ button.next {
     <div class="card">
       <h2>Indoklás</h2>
 
+<div class="card">
+  <h2>Indoklás</h2>
+
+  <div class="infoRow">
+    <div class="miniTitle">Kezdeti állapot</div>
+    <div class="valueBox" id="startState">—</div>
+  </div>
+
+  <div class="infoRow">
+    <div class="miniTitle">Záró állapot</div>
+    <div class="valueBox" id="endState">—</div>
+  </div>
+      
       <div class="infoRow">
         <div class="miniTitle">Mozgás</div>
         <div class="valueBox" id="movement">—</div>
@@ -327,6 +340,8 @@ const previousBox = document.getElementById("previousBox");
 const structureTypeEl = document.getElementById("structureType");
 const organizingPrincipleEl = document.getElementById("organizingPrinciple");
 const cohesionEl = document.getElementById("cohesion");
+const startStateEl = document.getElementById("startState");
+const endStateEl = document.getElementById("endState");
 const movementEl = document.getElementById("movement");
 const turningPointEl = document.getElementById("turningPoint");
 const reasoningEl = document.getElementById("reasoning");
@@ -397,6 +412,8 @@ function renderResult(result) {
   structureTypeEl.textContent = result.structure_type || "Nincs megadva";
   organizingPrincipleEl.textContent = result.organizing_principle || "Nincs megadva";
   cohesionEl.textContent = result.cohesion || "Nincs megadva";
+  startStateEl.textContent = result.start_state || "Nincs megadva";
+  endStateEl.textContent = result.end_state || "Nincs megadva";
   movementEl.textContent = result.movement || "Nincs megadva";
   turningPointEl.textContent = result.turning_point || "Nincs megadva";
   reasoningEl.textContent = result.reasoning || "Nincs indoklás.";
