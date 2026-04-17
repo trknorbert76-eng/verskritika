@@ -19,10 +19,7 @@ body {
   padding: 30px 20px 60px;
 }
 
-h1 {
-  font-size: 2.1rem;
-  margin-bottom: 10px;
-}
+h1 { font-size: 2.1rem; }
 
 .intro {
   color: #bbb;
@@ -32,24 +29,18 @@ h1 {
 
 .topbar {
   display: flex;
-  flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 20px;
 }
 
 button {
   padding: 12px 20px;
-  border: none;
   border-radius: 10px;
+  border: none;
   background: #d6b36a;
   color: #111;
   font-weight: bold;
   cursor: pointer;
-  font-size: 1rem;
-}
-
-button:hover {
-  opacity: 0.95;
 }
 
 button.secondary {
@@ -60,163 +51,67 @@ button.secondary {
 
 button.next {
   background: #4caf50;
-  color: #fff;
+  color: white;
 }
 
-.loadingBox,
-.errorBox,
-.infoBox {
+.loadingBox, .errorBox, .infoBox {
   margin-top: 18px;
-  padding: 14px 16px;
+  padding: 14px;
   border-radius: 12px;
-  line-height: 1.6;
-  white-space: pre-wrap;
 }
 
-.loadingBox {
-  display: none;
-  background: #151515;
-  border: 1px solid #333;
-  color: #cfcfcf;
-}
-
-.errorBox {
-  display: none;
-  background: #2a1616;
-  border: 1px solid #6a2c2c;
-  color: #f0c7c7;
-}
-
-.infoBox {
-  display: none;
-  background: #162417;
-  border: 1px solid #2f6a35;
-  color: #cdeccf;
-}
+.loadingBox { display:none; background:#151515; border:1px solid #333; }
+.errorBox { display:none; background:#2a1616; border:1px solid #6a2c2c; }
+.infoBox { display:none; background:#162417; border:1px solid #2f6a35; }
 
 .layout {
-  display: none;
+  display:none;
   grid-template-columns: 320px 1fr;
-  gap: 18px;
-  margin-top: 24px;
+  gap:18px;
+  margin-top:24px;
 }
 
 .card {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 14px;
-  padding: 18px;
-}
-
-.card h2 {
-  margin-top: 0;
-  margin-bottom: 12px;
-  color: #d6b36a;
-  font-size: 1.15rem;
+  background:#1a1a1a;
+  border:1px solid #333;
+  border-radius:14px;
+  padding:18px;
 }
 
 .miniTitle {
-  color: #c9b07a;
-  font-size: 0.95rem;
-  margin-bottom: 8px;
-}
-
-.mainType {
-  font-size: 1.35rem;
-  line-height: 1.35;
-  color: #fff;
-  margin-bottom: 18px;
-}
-
-.infoRow {
-  margin-bottom: 18px;
-}
-
-.infoRow:last-child {
-  margin-bottom: 0;
+  color:#c9b07a;
+  margin-bottom:6px;
 }
 
 .valueBox {
-  background: #141414;
-  border: 1px solid #2c2c2c;
-  border-radius: 10px;
-  padding: 12px 14px;
-  color: #eee;
-  line-height: 1.7;
-  white-space: pre-wrap;
+  background:#141414;
+  border:1px solid #2c2c2c;
+  border-radius:10px;
+  padding:10px;
+  margin-bottom:10px;
 }
 
-.poemPreview {
-  margin-top: 24px;
-  background: #151515;
-  border: 1px solid #303030;
-  border-radius: 14px;
-  padding: 18px;
-}
-
-.poemPreview h2 {
-  margin-top: 0;
-  margin-bottom: 12px;
-  color: #d6b36a;
-  font-size: 1.05rem;
-}
-
-.poemText {
-  white-space: pre-wrap;
-  color: #ddd;
-  line-height: 1.7;
+.mainType {
+  font-size:1.3rem;
+  margin-bottom:10px;
 }
 
 .previousBox {
-  margin-top: 24px;
-  background: #151515;
-  border: 1px solid #303030;
-  border-radius: 14px;
-  padding: 18px;
-}
-
-.previousBox h2 {
-  margin-top: 0;
-  margin-bottom: 12px;
-  color: #d6b36a;
-  font-size: 1.05rem;
+  margin-top:20px;
+  background:#151515;
+  padding:15px;
+  border-radius:12px;
 }
 
 .previousGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
-.previousItem {
-  background: #121212;
-  border: 1px solid #2c2c2c;
-  border-radius: 10px;
-  padding: 12px 14px;
-}
-
-.previousItem strong {
-  display: block;
-  color: #c9b07a;
-  margin-bottom: 8px;
-  font-size: 0.95rem;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
 }
 
 .footerRow {
-  margin-top: 24px;
-  display: none;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-@media (max-width: 860px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
-
-  .previousGrid {
-    grid-template-columns: 1fr;
-  }
+  margin-top:20px;
+  display:none;
 }
 </style>
 </head>
@@ -224,314 +119,125 @@ button.next {
 <body>
 
 <div class="wrap">
-  <h1>Képek</h1>
-  <p class="intro">
-    Ez a következő belső oldal. Itt azt nézzük, hogy a vers mennyire dolgozik valódi képekkel, ezek mennyire konkrétak vagy elvontak, összetartanak-e, és díszítik-e csak a szöveget, vagy tényleges jelentést is hordoznak.
-  </p>
+<h1>Képek</h1>
 
-  <div class="topbar">
-    <button class="secondary" id="backBtn">← Vissza a ritmushoz</button>
-    <button id="reloadBtn">Újraelemzés</button>
-  </div>
+<p class="intro">
+Itt azt nézzük, hogy a vers mennyire dolgozik valódi képekkel.
+</p>
 
-  <div class="loadingBox" id="loadingBox">A képi elemzés folyamatban...</div>
-  <div class="errorBox" id="errorBox"></div>
-  <div class="infoBox" id="infoBox"></div>
-
-  <div class="layout" id="resultLayout">
-    <div class="card">
-      <h2>Képiség</h2>
-
-      <div class="miniTitle">Képek jelenléte</div>
-<div class="mainType" id="imageryPresence">—</div>
-<div class="valueBox" id="imageryPresenceNote">—</div>
-
-<div class="miniTitle" style="margin-top:16px;">Konkrétság / elvontság</div>
-<div class="valueBox" id="concreteness">—</div>
-<div class="valueBox" id="concretenessNote" style="margin-top:8px;">—</div>
-
-    <div class="card">
-      <h2>Indoklás</h2>
-
-      <div class="infoRow">
-  <div class="miniTitle">A képek szerepe</div>
-  <div class="valueBox" id="imageryRole">—</div>
-  <div class="valueBox" id="imageryRoleNote" style="margin-top:8px;">—</div>
+<div class="topbar">
+  <button class="secondary" id="backBtn">← Vissza</button>
+  <button id="reloadBtn">Újraelemzés</button>
 </div>
 
-<div class="infoRow">
-  <div class="miniTitle">Képi összetartás</div>
-  <div class="valueBox" id="imageryCohesion">—</div>
-  <div class="valueBox" id="imageryCohesionNote" style="margin-top:8px;">—</div>
+<div class="loadingBox" id="loadingBox">Dolgozom...</div>
+<div class="errorBox" id="errorBox"></div>
+<div class="infoBox" id="infoBox"></div>
+
+<div class="layout" id="resultLayout">
+
+  <!-- BAL -->
+  <div class="card">
+    <h2>Képiség</h2>
+
+    <div class="miniTitle">Képek jelenléte</div>
+    <div class="mainType" id="imageryPresence">—</div>
+    <div class="valueBox" id="imageryPresenceNote">—</div>
+
+    <div class="miniTitle">Konkrétság</div>
+    <div class="valueBox" id="concreteness">—</div>
+    <div class="valueBox" id="concretenessNote">—</div>
+  </div>
+
+  <!-- JOBB -->
+  <div class="card">
+    <h2>Indoklás</h2>
+
+    <div class="miniTitle">Képek szerepe</div>
+    <div class="valueBox" id="imageryRole">—</div>
+    <div class="valueBox" id="imageryRoleNote">—</div>
+
+    <div class="miniTitle">Összetartás</div>
+    <div class="valueBox" id="imageryCohesion">—</div>
+    <div class="valueBox" id="imageryCohesionNote">—</div>
+
+    <div class="miniTitle">Egyediség</div>
+    <div class="valueBox" id="originality">—</div>
+    <div class="valueBox" id="originalityNote">—</div>
+
+    <div class="miniTitle">Indoklás</div>
+    <div class="valueBox" id="reasoning">—</div>
+  </div>
+
 </div>
 
-<div class="infoRow">
-  <div class="miniTitle">Egyediség</div>
-  <div class="valueBox" id="originality">—</div>
-  <div class="valueBox" id="originalityNote" style="margin-top:8px;">—</div>
+<div class="footerRow" id="footerRow">
+  <button class="next" id="nextBtn">Tovább</button>
 </div>
 
-      <div class="infoRow">
-        <div class="miniTitle">Egyediség</div>
-        <div class="valueBox" id="originality">—</div>
-      </div>
-
-      <div class="infoRow">
-        <div class="miniTitle">Miért ezt látja</div>
-        <div class="valueBox" id="reasoning">—</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="previousBox" id="previousBox" style="display:none;">
-    <h2>Az előző lépések eredménye</h2>
-    <div class="previousGrid">
-      <div class="previousItem">
-        <strong>Fő típus</strong>
-        <div id="prevMainType">—</div>
-      </div>
-      <div class="previousItem">
-        <strong>Hangulat</strong>
-        <div id="prevMood">—</div>
-      </div>
-      <div class="previousItem">
-        <strong>Szerkezet típusa</strong>
-        <div id="prevStructureType">—</div>
-      </div>
-      <div class="previousItem">
-        <strong>Ritmus jellege</strong>
-        <div id="prevRhythmType">—</div>
-      </div>
-      <div class="previousItem">
-        <strong>Folyás</strong>
-        <div id="prevFlow">—</div>
-      </div>
-      <div class="previousItem">
-        <strong>Lendület</strong>
-        <div id="prevMovement">—</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="poemPreview" id="poemPreview" style="display:none;">
-    <h2>A vizsgált vers</h2>
-    <div class="poemText" id="poemText"></div>
-  </div>
-
-  <div class="footerRow" id="footerRow">
-    <button class="next" id="nextBtn">Tovább →</button>
-  </div>
 </div>
 
 <script>
-const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
-const NEXT_PAGE = "index.html";
 
-const loadingBox = document.getElementById("loadingBox");
-const errorBox = document.getElementById("errorBox");
-const infoBox = document.getElementById("infoBox");
-const resultLayout = document.getElementById("resultLayout");
-const poemPreview = document.getElementById("poemPreview");
-const poemText = document.getElementById("poemText");
-const footerRow = document.getElementById("footerRow");
-const previousBox = document.getElementById("previousBox");
+const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
 
 const imageryPresenceEl = document.getElementById("imageryPresence");
-const concretenessEl = document.getElementById("concreteness");
-const imageryRoleEl = document.getElementById("imageryRole");
-const imageryCohesionEl = document.getElementById("imageryCohesion");
-const originalityEl = document.getElementById("originality");
-const reasoningEl = document.getElementById("reasoning");
-
 const imageryPresenceNoteEl = document.getElementById("imageryPresenceNote");
+
+const concretenessEl = document.getElementById("concreteness");
 const concretenessNoteEl = document.getElementById("concretenessNote");
+
+const imageryRoleEl = document.getElementById("imageryRole");
 const imageryRoleNoteEl = document.getElementById("imageryRoleNote");
+
+const imageryCohesionEl = document.getElementById("imageryCohesion");
 const imageryCohesionNoteEl = document.getElementById("imageryCohesionNote");
+
+const originalityEl = document.getElementById("originality");
 const originalityNoteEl = document.getElementById("originalityNote");
 
-  
+const reasoningEl = document.getElementById("reasoning");
 
-const prevMainTypeEl = document.getElementById("prevMainType");
-const prevMoodEl = document.getElementById("prevMood");
-const prevStructureTypeEl = document.getElementById("prevStructureType");
-const prevRhythmTypeEl = document.getElementById("prevRhythmType");
-const prevFlowEl = document.getElementById("prevFlow");
-const prevMovementEl = document.getElementById("prevMovement");
+function renderResult(r) {
+  imageryPresenceEl.textContent = r.imagery_presence;
+  imageryPresenceNoteEl.textContent = r.imagery_presence_note;
 
-const backBtn = document.getElementById("backBtn");
-const reloadBtn = document.getElementById("reloadBtn");
-const nextBtn = document.getElementById("nextBtn");
+  concretenessEl.textContent = r.concreteness;
+  concretenessNoteEl.textContent = r.concreteness_note;
 
-function showLoading(message) {
-  loadingBox.textContent = message;
-  loadingBox.style.display = "block";
+  imageryRoleEl.textContent = r.imagery_role;
+  imageryRoleNoteEl.textContent = r.imagery_role_note;
+
+  imageryCohesionEl.textContent = r.imagery_cohesion;
+  imageryCohesionNoteEl.textContent = r.imagery_cohesion_note;
+
+  originalityEl.textContent = r.originality;
+  originalityNoteEl.textContent = r.originality_note;
+
+  reasoningEl.textContent = r.reasoning;
+
+  document.getElementById("resultLayout").style.display = "grid";
+  document.getElementById("footerRow").style.display = "block";
 }
 
-function hideLoading() {
-  loadingBox.style.display = "none";
-}
-
-function showError(message) {
-  errorBox.textContent = message;
-  errorBox.style.display = "block";
-}
-
-function hideError() {
-  errorBox.textContent = "";
-  errorBox.style.display = "none";
-}
-
-function showInfo(message) {
-  infoBox.textContent = message;
-  infoBox.style.display = "block";
-}
-
-function hideInfo() {
-  infoBox.textContent = "";
-  infoBox.style.display = "none";
-}
-
-function safeParse(jsonText) {
-  try {
-    return JSON.parse(jsonText);
-  } catch (err) {
-    return null;
-  }
-}
-
-function renderPrevious(kindData, structureData, rhythmData) {
-  if (kindData) {
-    prevMainTypeEl.textContent = kindData.main_type || "Nincs megadva";
-    prevMoodEl.textContent = kindData.mood || "Nincs megadva";
-  }
-
-  if (structureData) {
-    prevStructureTypeEl.textContent = structureData.structure_type || "Nincs megadva";
-  }
-
-  if (rhythmData) {
-    prevRhythmTypeEl.textContent = rhythmData.rhythm_type || "Nincs megadva";
-    prevFlowEl.textContent = rhythmData.flow || "Nincs megadva";
-    prevMovementEl.textContent = rhythmData.movement || "Nincs megadva";
-  }
-
-  previousBox.style.display = "block";
-}
-
-function renderResult(result) {
-  imageryPresenceEl.textContent = result.imagery_presence || "Nincs megadva";
-  imageryPresenceNoteEl.textContent = result.imagery_presence_note || "—";
-
-  concretenessEl.textContent = result.concreteness || "Nincs megadva";
-  concretenessNoteEl.textContent = result.concreteness_note || "—";
-
-  imageryRoleEl.textContent = result.imagery_role || "Nincs megadva";
-  imageryRoleNoteEl.textContent = result.imagery_role_note || "—";
-
-  imageryCohesionEl.textContent = result.imagery_cohesion || "Nincs megadva";
-  imageryCohesionNoteEl.textContent = result.imagery_cohesion_note || "—";
-
-  originalityEl.textContent = result.originality || "Nincs megadva";
-  originalityNoteEl.textContent = result.originality_note || "—";
-
-  reasoningEl.textContent = result.reasoning || "Nincs indoklás.";
-
-  resultLayout.style.display = "grid";
-  footerRow.style.display = "flex";
-}
-async function runImagesAnalysis(forceRefresh = false) {
+async function run() {
   const poem = sessionStorage.getItem("poem");
-  const savedKind = safeParse(sessionStorage.getItem("analysis_kind") || "");
-  const savedStructure = safeParse(sessionStorage.getItem("analysis_structure") || "");
-  const savedRhythm = safeParse(sessionStorage.getItem("analysis_rhythm") || "");
 
-  if (!poem) {
-    window.location.href = "index.html";
-    return;
-  }
+  const res = await fetch(WORKER_URL, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ poem, step:"images" })
+  });
 
-  if (!savedKind) {
-    window.location.href = "felismeres.html";
-    return;
-  }
+  const data = await res.json();
 
-  if (!savedStructure) {
-    window.location.href = "szerkezet.html";
-    return;
-  }
+  console.log(data.result);
 
-  if (!savedRhythm) {
-    window.location.href = "ritmus.html";
-    return;
-  }
-
-  poemText.textContent = poem;
-  poemPreview.style.display = "block";
-  renderPrevious(savedKind, savedStructure, savedRhythm);
-
-  hideError();
-  hideInfo();
-
-  if (!forceRefresh) {
-    const savedImages = safeParse(sessionStorage.getItem("analysis_images") || "");
-    if (savedImages) {
-      renderResult(savedImages);
-      showInfo("A korábbi képi eredmény betöltve.");
-      return;
-    }
-  }
-
-  showLoading("A képi elemzés folyamatban...");
-  resultLayout.style.display = "none";
-  footerRow.style.display = "none";
-
-  try {
-    const res = await fetch(WORKER_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        poem,
-        step: "images",
-        previous: {
-          kind: savedKind,
-          structure: savedStructure,
-          rhythm: savedRhythm
-        }
-      })
-    });
-
-    const data = await res.json();
-
-    if (!res.ok || !data.ok) {
-      throw new Error(data.error || "A worker nem adott megfelelő választ.");
-    }
-
-    sessionStorage.setItem("analysis_images", JSON.stringify(data.result));
-    renderResult(data.result);
-    showInfo("A képi elemzés elkészült.");
-  } catch (err) {
-    showError(err.message || "Ismeretlen hiba történt.");
-  } finally {
-    hideLoading();
-  }
+  renderResult(data.result);
 }
 
-backBtn.addEventListener("click", () => {
-  window.location.href = "ritmus.html";
-});
+run();
 
-reloadBtn.addEventListener("click", () => {
-  sessionStorage.removeItem("analysis_images");
-  runImagesAnalysis(true);
-});
-
-nextBtn.addEventListener("click", () => {
-  window.location.href = NEXT_PAGE;
-});
-
-runImagesAnalysis();
 </script>
 
 </body>
