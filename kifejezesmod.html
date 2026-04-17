@@ -20,246 +20,568 @@ body {
 }
 
 h1 {
-  font-size: 2.2rem;
+  font-size: 2.1rem;
   margin-bottom: 10px;
 }
 
 .intro {
   color: #bbb;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   line-height: 1.6;
 }
 
-/* NAV */
 .topbar {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 20px;
 }
 
 button {
-  padding: 10px 16px;
+  padding: 12px 20px;
   border: none;
   border-radius: 10px;
+  background: #d6b36a;
+  color: #111;
+  font-weight: bold;
   cursor: pointer;
+  font-size: 1rem;
 }
 
-.back {
-  background: #333;
+button:hover {
+  opacity: 0.95;
+}
+
+button.secondary {
+  background: #2b2b2b;
+  color: #eee;
+  border: 1px solid #444;
+}
+
+button.next {
+  background: #4caf50;
   color: #fff;
 }
 
-.reload {
-  background: #d6b36a;
-  color: #111;
+.loadingBox,
+.errorBox,
+.infoBox {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
 }
 
-/* BLOKKOK */
-.box {
+.loadingBox {
+  display: none;
+  background: #151515;
+  border: 1px solid #333;
+  color: #cfcfcf;
+}
+
+.errorBox {
+  display: none;
+  background: #2a1616;
+  border: 1px solid #6a2c2c;
+  color: #f0c7c7;
+}
+
+.infoBox {
+  display: none;
+  background: #162417;
+  border: 1px solid #2f6a35;
+  color: #cdeccf;
+}
+
+.layout {
+  display: none;
+  grid-template-columns: 320px 1fr;
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.card {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.card h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #d6b36a;
+  font-size: 1.15rem;
+}
+
+.miniTitle {
+  color: #c9b07a;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+.mainType {
+  font-size: 1.35rem;
+  line-height: 1.35;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+.infoRow {
+  margin-bottom: 18px;
+}
+
+.infoRow:last-child {
+  margin-bottom: 0;
+}
+
+.valueBox {
+  background: #141414;
+  border: 1px solid #2c2c2c;
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #eee;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.noteBox {
+  margin-top: 8px;
+  background: #101010;
+  border: 1px solid #262626;
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: #d8d8d8;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.poemPreview {
+  margin-top: 24px;
   background: #151515;
   border: 1px solid #303030;
   border-radius: 14px;
   padding: 18px;
-  margin-top: 20px;
 }
 
-.box h2 {
+.poemPreview h2 {
   margin-top: 0;
   margin-bottom: 12px;
   color: #d6b36a;
   font-size: 1.05rem;
 }
 
-/* VERS */
 .poemText {
   white-space: pre-wrap;
-  line-height: 1.7;
   color: #ddd;
+  line-height: 1.7;
 }
 
-/* GRID */
-.grid {
+.previousBox {
+  margin-top: 24px;
+  background: #151515;
+  border: 1px solid #303030;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.previousBox h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #d6b36a;
+  font-size: 1.05rem;
+}
+
+.previousGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
 }
 
-.item {
+.previousItem {
   background: #121212;
   border: 1px solid #2c2c2c;
   border-radius: 10px;
-  padding: 12px;
+  padding: 12px 14px;
 }
 
-.item strong {
+.previousItem strong {
   display: block;
   color: #c9b07a;
-  margin-bottom: 6px;
-}
-
-/* EREDMÉNY */
-.result {
-  margin-top: 20px;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
 }
 
 .footerRow {
-  margin-top: 30px;
+  margin-top: 24px;
+  display: none;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.next {
-  background: #3aa65a;
-  color: #fff;
-  padding: 12px 18px;
+@media (max-width: 860px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .previousGrid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
 </head>
 
 <body>
+
 <div class="wrap">
+  <h1>Kifejezésmód</h1>
+  <p class="intro">
+    Ez az ötödik belső oldal. Itt azt vizsgáljuk, hogyan van a vers megírva: megmutat vagy magyaráz, mennyire sűrített, pontos, egyedi és természetes a megszólalása.
+  </p>
 
-<h1>Kifejezésmód</h1>
-<div class="intro">
-Itt azt vizsgáljuk, hogyan van a vers megírva:
-megmutat vagy magyaráz, mennyire sűrített, pontos és egyedi a megszólalása.
-</div>
+  <div class="topbar">
+    <button class="secondary" id="backBtn">← Vissza a képekhez</button>
+    <button id="reloadBtn">Újraelemzés</button>
+  </div>
 
-<div class="topbar">
-  <button class="back" onclick="history.back()">← Vissza</button>
-  <button class="reload" onclick="location.reload()">Újraelemzés</button>
-</div>
+  <div class="loadingBox" id="loadingBox">A kifejezésmód elemzése folyamatban...</div>
+  <div class="errorBox" id="errorBox"></div>
+  <div class="infoBox" id="infoBox"></div>
 
-<!-- ELŐZŐ EREDMÉNYEK -->
-<div class="box" id="previousBox" style="display:none;">
-  <h2>Előző lépések</h2>
-  <div class="grid">
-    <div class="item">
-      <strong>Vers típusa</strong>
-      <div id="prevMainType"></div>
+  <div class="layout" id="resultLayout">
+    <div class="card">
+      <h2>Kifejezésmód</h2>
+
+      <div class="miniTitle">Megmutatás / magyarázás</div>
+      <div class="mainType" id="expressionMode">—</div>
+      <div class="noteBox" id="expressionModeNote">—</div>
+
+      <div class="miniTitle" style="margin-top:16px;">Sűrítettség</div>
+      <div class="valueBox" id="density">—</div>
+      <div class="noteBox" id="densityNote">—</div>
+
+      <div class="miniTitle" style="margin-top:16px;">Pontosság</div>
+      <div class="valueBox" id="precision">—</div>
+      <div class="noteBox" id="precisionNote">—</div>
     </div>
-    <div class="item">
-      <strong>Hangulat</strong>
-      <div id="prevMood"></div>
+
+    <div class="card">
+      <h2>Indoklás</h2>
+
+      <div class="infoRow">
+        <div class="miniTitle">Hang egyedisége</div>
+        <div class="valueBox" id="originalityOfVoice">—</div>
+        <div class="noteBox" id="originalityOfVoiceNote">—</div>
+      </div>
+
+      <div class="infoRow">
+        <div class="miniTitle">Megszólalás természetessége</div>
+        <div class="valueBox" id="toneNaturalness">—</div>
+        <div class="noteBox" id="toneNaturalnessNote">—</div>
+      </div>
+
+      <div class="infoRow">
+        <div class="miniTitle">Miért ezt látja</div>
+        <div class="valueBox" id="reasoning">—</div>
+      </div>
     </div>
-    <div class="item">
-      <strong>Szerkezet</strong>
-      <div id="prevStructure"></div>
+  </div>
+
+  <div class="previousBox" id="previousBox" style="display:none;">
+    <h2>Az előző lépések eredménye</h2>
+    <div class="previousGrid">
+      <div class="previousItem">
+        <strong>Fő típus</strong>
+        <div id="prevMainType">—</div>
+      </div>
+      <div class="previousItem">
+        <strong>Hangulat</strong>
+        <div id="prevMood">—</div>
+      </div>
+      <div class="previousItem">
+        <strong>Beszédmód</strong>
+        <div id="prevSpeechMode">—</div>
+      </div>
+      <div class="previousItem">
+        <strong>Másodlagos jegyek</strong>
+        <div id="prevTraits">—</div>
+      </div>
+      <div class="previousItem">
+        <strong>Szerkezet típusa</strong>
+        <div id="prevStructureType">—</div>
+      </div>
+      <div class="previousItem">
+        <strong>Mozgás / szerkezeti irány</strong>
+        <div id="prevMovement">—</div>
+      </div>
+      <div class="previousItem">
+        <strong>Ritmus jellege</strong>
+        <div id="prevRhythmType">—</div>
+      </div>
+      <div class="previousItem">
+        <strong>Folyás</strong>
+        <div id="prevFlow">—</div>
+      </div>
+      <div class="previousItem">
+        <strong>Képiség</strong>
+        <div id="prevImageryPresence">—</div>
+      </div>
+      <div class="previousItem">
+        <strong>Egyediség</strong>
+        <div id="prevOriginality">—</div>
+      </div>
     </div>
-    <div class="item">
-      <strong>Ritmus</strong>
-      <div id="prevRhythm"></div>
-    </div>
-    <div class="item">
-      <strong>Képiség</strong>
-      <div id="prevImages"></div>
-    </div>
-    <div class="item">
-      <strong>Egyediség</strong>
-      <div id="prevOriginality"></div>
-    </div>
+  </div>
+
+  <div class="poemPreview" id="poemPreview" style="display:none;">
+    <h2>A vizsgált vers</h2>
+    <div class="poemText" id="poemText"></div>
+  </div>
+
+  <div class="footerRow" id="footerRow">
+    <button class="next" id="nextBtn">Tovább az összegzéshez →</button>
   </div>
 </div>
 
-<!-- VERS -->
-<div class="box" id="poemBox" style="display:none;">
-  <h2>A vizsgált vers</h2>
-  <div class="poemText" id="poemText"></div>
-</div>
-
-<!-- EREDMÉNY -->
-<div class="box result" id="resultBox" style="display:none;">
-  <h2>Eredmény</h2>
-  <div id="resultText"></div>
-</div>
-
-<div class="footerRow">
-  <button class="next" onclick="goNext()">Tovább az összegzéshez →</button>
-</div>
-
-</div>
-
 <script>
-const $ = id => document.getElementById(id);
+const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
+const NEXT_PAGE = "osszegzes.html";
 
-function safeParse(key){
-  try { return JSON.parse(sessionStorage.getItem(key)); }
-  catch { return null; }
+const loadingBox = document.getElementById("loadingBox");
+const errorBox = document.getElementById("errorBox");
+const infoBox = document.getElementById("infoBox");
+const resultLayout = document.getElementById("resultLayout");
+const poemPreview = document.getElementById("poemPreview");
+const poemText = document.getElementById("poemText");
+const footerRow = document.getElementById("footerRow");
+const previousBox = document.getElementById("previousBox");
+
+const expressionModeEl = document.getElementById("expressionMode");
+const expressionModeNoteEl = document.getElementById("expressionModeNote");
+const densityEl = document.getElementById("density");
+const densityNoteEl = document.getElementById("densityNote");
+const precisionEl = document.getElementById("precision");
+const precisionNoteEl = document.getElementById("precisionNote");
+const originalityOfVoiceEl = document.getElementById("originalityOfVoice");
+const originalityOfVoiceNoteEl = document.getElementById("originalityOfVoiceNote");
+const toneNaturalnessEl = document.getElementById("toneNaturalness");
+const toneNaturalnessNoteEl = document.getElementById("toneNaturalnessNote");
+const reasoningEl = document.getElementById("reasoning");
+
+const prevMainTypeEl = document.getElementById("prevMainType");
+const prevMoodEl = document.getElementById("prevMood");
+const prevSpeechModeEl = document.getElementById("prevSpeechMode");
+const prevTraitsEl = document.getElementById("prevTraits");
+const prevStructureTypeEl = document.getElementById("prevStructureType");
+const prevMovementEl = document.getElementById("prevMovement");
+const prevRhythmTypeEl = document.getElementById("prevRhythmType");
+const prevFlowEl = document.getElementById("prevFlow");
+const prevImageryPresenceEl = document.getElementById("prevImageryPresence");
+const prevOriginalityEl = document.getElementById("prevOriginality");
+
+const backBtn = document.getElementById("backBtn");
+const reloadBtn = document.getElementById("reloadBtn");
+const nextBtn = document.getElementById("nextBtn");
+
+function showLoading(message) {
+  loadingBox.textContent = message;
+  loadingBox.style.display = "block";
 }
 
-function loadData(){
-  const poem = sessionStorage.getItem("poem") || "";
-
-  const kind = safeParse("analysis_kind");
-  const structure = safeParse("analysis_structure");
-  const rhythm = safeParse("analysis_rhythm");
-  const images = safeParse("analysis_images");
-
-  // VERS
-  if (poem){
-    $("poemText").textContent = poem;
-    $("poemBox").style.display = "block";
-  }
-
-  // ELŐZŐK
-  if (kind || structure || rhythm || images){
-    $("previousBox").style.display = "block";
-
-    if (kind){
-      $("prevMainType").textContent = kind.main_type || "-";
-      $("prevMood").textContent = kind.mood || "-";
-    }
-
-    if (structure){
-      $("prevStructure").textContent = structure.structure_type || "-";
-    }
-
-    if (rhythm){
-      $("prevRhythm").textContent = rhythm.rhythm_type || "-";
-    }
-
-    if (images){
-      $("prevImages").textContent = images.imagery_presence || "-";
-      $("prevOriginality").textContent = images.originality || "-";
-    }
-  }
-
-  runAnalysis(poem, kind, structure, rhythm, images);
+function hideLoading() {
+  loadingBox.style.display = "none";
 }
 
-async function runAnalysis(poem, kind, structure, rhythm, images){
+function showError(message) {
+  errorBox.textContent = message;
+  errorBox.style.display = "block";
+}
+
+function hideError() {
+  errorBox.textContent = "";
+  errorBox.style.display = "none";
+}
+
+function showInfo(message) {
+  infoBox.textContent = message;
+  infoBox.style.display = "block";
+}
+
+function hideInfo() {
+  infoBox.textContent = "";
+  infoBox.style.display = "none";
+}
+
+function safeParse(jsonText) {
+  try {
+    return JSON.parse(jsonText);
+  } catch (err) {
+    return null;
+  }
+}
+
+function renderPrevious(kindData, structureData, rhythmData, imagesData) {
+  if (kindData) {
+    prevMainTypeEl.textContent = kindData.main_type || "Nincs megadva";
+    prevMoodEl.textContent = kindData.mood || "Nincs megadva";
+    prevSpeechModeEl.textContent = kindData.speech_mode || "Nincs megadva";
+    prevTraitsEl.textContent =
+      Array.isArray(kindData.secondary_traits) && kindData.secondary_traits.length
+        ? kindData.secondary_traits.join(", ")
+        : "Nincs megadva";
+  }
+
+  if (structureData) {
+    prevStructureTypeEl.textContent = structureData.structure_type || "Nincs megadva";
+    prevMovementEl.textContent = structureData.movement || "Nincs megadva";
+  }
+
+  if (rhythmData) {
+    prevRhythmTypeEl.textContent = rhythmData.rhythm_type || "Nincs megadva";
+    prevFlowEl.textContent = rhythmData.flow || "Nincs megadva";
+  }
+
+  if (imagesData) {
+    prevImageryPresenceEl.textContent = imagesData.imagery_presence || "Nincs megadva";
+    prevOriginalityEl.textContent = imagesData.originality || "Nincs megadva";
+  }
+
+  previousBox.style.display = "block";
+}
+
+function renderResult(result) {
+  expressionModeEl.textContent = result.expression_mode || "Nincs megadva";
+  expressionModeNoteEl.textContent = result.expression_mode_note || "Nincs külön magyarázat.";
+
+  densityEl.textContent = result.density || "Nincs megadva";
+  densityNoteEl.textContent = result.density_note || "Nincs külön magyarázat.";
+
+  precisionEl.textContent = result.precision || "Nincs megadva";
+  precisionNoteEl.textContent = result.precision_note || "Nincs külön magyarázat.";
+
+  originalityOfVoiceEl.textContent = result.originality_of_voice || "Nincs megadva";
+  originalityOfVoiceNoteEl.textContent = result.originality_of_voice_note || "Nincs külön magyarázat.";
+
+  toneNaturalnessEl.textContent = result.tone_naturalness || "Nincs megadva";
+  toneNaturalnessNoteEl.textContent = result.tone_naturalness_note || "Nincs külön magyarázat.";
+
+  reasoningEl.textContent = result.reasoning || "Nincs indoklás.";
+
+  resultLayout.style.display = "grid";
+  footerRow.style.display = "flex";
+}
+
+async function runExpressionAnalysis(forceRefresh = false) {
+  const poem = sessionStorage.getItem("poem");
+  const savedKind = safeParse(sessionStorage.getItem("analysis_kind") || "");
+  const savedStructure = safeParse(sessionStorage.getItem("analysis_structure") || "");
+  const savedRhythm = safeParse(sessionStorage.getItem("analysis_rhythm") || "");
+  const savedImagesPack = safeParse(sessionStorage.getItem("analysis_images") || "");
+  const savedImages = savedImagesPack && savedImagesPack.poem === poem
+    ? savedImagesPack.result
+    : null;
+
+  if (!poem) {
+    window.location.href = "index.html";
+    return;
+  }
+
+  if (!savedKind) {
+    window.location.href = "felismeres.html";
+    return;
+  }
+
+  if (!savedStructure) {
+    window.location.href = "szerkezet.html";
+    return;
+  }
+
+  if (!savedRhythm) {
+    window.location.href = "ritmus.html";
+    return;
+  }
+
+  if (!savedImages) {
+    window.location.href = "kepek.html";
+    return;
+  }
+
+  poemText.textContent = poem;
+  poemPreview.style.display = "block";
+  renderPrevious(savedKind, savedStructure, savedRhythm, savedImages);
+
+  hideError();
+  hideInfo();
+
+  if (!forceRefresh) {
+    const savedExpression = safeParse(sessionStorage.getItem("analysis_expression") || "");
+    if (savedExpression && savedExpression.poem === poem && savedExpression.result) {
+      renderResult(savedExpression.result);
+      showInfo("A korábbi kifejezésmód-eredmény betöltve.");
+      return;
+    }
+  }
+
+  showLoading("A kifejezésmód elemzése folyamatban...");
+  resultLayout.style.display = "none";
+  footerRow.style.display = "none";
 
   try {
-    const res = await fetch("https://YOUR-WORKER-URL", {
+    const res = await fetch(WORKER_URL, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
         poem,
         step: "expression",
         previous: {
-          kind,
-          structure,
-          rhythm,
-          images
+          kind: savedKind,
+          structure: savedStructure,
+          rhythm: savedRhythm,
+          images: savedImages
         }
       })
     });
 
     const data = await res.json();
 
-    $("resultBox").style.display = "block";
-    $("resultText").textContent = data.result || "Nincs válasz.";
+    if (!res.ok || !data.ok) {
+      throw new Error(
+        (data.error || "A worker nem adott megfelelő választ.") +
+        (data.raw ? "\n\nNYERS VÁLASZ:\n" + data.raw : "")
+      );
+    }
 
-    sessionStorage.setItem("analysis_expression", JSON.stringify(data.result));
+    sessionStorage.setItem("analysis_expression", JSON.stringify({
+      poem,
+      result: data.result
+    }));
 
-  } catch (err){
-    $("resultText").textContent = "Hiba történt.";
+    renderResult(data.result);
+    showInfo("A kifejezésmód elemzése elkészült.");
+  } catch (err) {
+    showError(err.message || "Ismeretlen hiba történt.");
+  } finally {
+    hideLoading();
   }
 }
 
-function goNext(){
-  window.location.href = "osszefoglalo.html";
-}
+backBtn.addEventListener("click", () => {
+  window.location.href = "kepek.html";
+});
 
-loadData();
+reloadBtn.addEventListener("click", () => {
+  sessionStorage.removeItem("analysis_expression");
+  runExpressionAnalysis(true);
+});
+
+nextBtn.addEventListener("click", () => {
+  window.location.href = NEXT_PAGE;
+});
+
+runExpressionAnalysis();
 </script>
 
 </body>
