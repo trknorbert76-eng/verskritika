@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Képek</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Georgia, serif;
+  background: #111;
+  color: #eee;
+}
+
+.wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 30px 20px 60px;
+}
+
+h1 {
+  font-size: 2.1rem;
+  margin-bottom: 10px;
+}
+
+.intro {
+  color: #bbb;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #d6b36a;
+  color: #111;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+button:hover {
+  opacity: 0.95;
+}
+
+button.secondary {
+  background: #2b2b2b;
+  color: #eee;
+  border: 1px solid #444;
+}
+
+button.next {
+  background: #4caf50;
+  color: #fff;
+}
+
+.loadingBox,
+.errorBox,
+.infoBox {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.loadingBox {
+  display: none;
+  background: #151515;
+  border: 1px solid #333;
+  color: #cfcfcf;
+}
+
+.errorBox {
+  display: none;
+  background: #2a1616;
+  border: 1px solid #6a2c2c;
+  color: #f0c7c7;
+}
+
+.infoBox {
+  display: none;
+  background: #162417;
+  border: 1px solid #2f6a35;
+  color: #cdeccf;
+}
+
+.layout {
+  display: none;
+  grid-template-columns: 320px 1fr;
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.card {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.card h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #d6b36a;
+  font-size: 1.15rem;
+}
+
+.miniTitle {
+  color: #c9b07a;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+.mainType {
+  font-size: 1.35rem;
+  line-height: 1.35;
+  color: #fff;
+  margin-bottom: 18px;
+}
+
+.infoRow {
+  margin-bottom: 18px;
+}
+
+.infoRow:last-child {
+  margin-bottom: 0;
+}
+
+.valueBox {
+  background: #141414;
+  border: 1px solid #2c2c2c;
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #eee;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.poemPreview {
+  margin-top: 24px;
+  background: #151515;
+  border: 1px solid #303030;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.poemPreview h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #d6b36a;
+  font-size: 1.05rem;
+}
+
+.poemText {
+  white-space: pre-wrap;
+  color: #ddd;
+  line-height: 1.7;
+}
+
+.previousBox {
+  margin-top: 24px;
+  background: #151515;
+  border: 1px solid #303030;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.previousBox h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #d6b36a;
+  font-size: 1.05rem;
+}
+
+.previousGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.previousItem {
+  background: #121212;
+  border: 1px solid #2c2c2c;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.previousItem strong {
+  display: block;
+  color: #c9b07a;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+.footerRow {
+  margin-top: 24px;
+  display: none;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 860px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .previousGrid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+  <h1>Képek</h1>
+  <p class="intro">
+    Ez a következő belső oldal. Itt azt nézzük, hogy a vers mennyire dolgozik valódi képekkel, ezek mennyire konkrétak vagy elvontak, összetartanak-e, és díszítik-e csak a szöveget, vagy tényleges jelentést is hordoznak.
+  </p>
+
+  <div class="topbar">
+    <button class="secondary" id="backBtn">← Vissza a ritmushoz</button>
+    <button id="reloadBtn">Újraelemzés</button>
+  </div>
+
+  <div class="loadingBox" id="loadingBox">A képi elemzés folyamatban...</div>
+  <div class="errorBox" id="errorBox"></div>
+  <div class="infoBox" id="infoBox"></div>
+
+  <div class="layout" id="resultLayout">
+    <div class="card">
+      <h2>Képiség</h2>
+
+      <div class="miniTitle">Képek jelenléte</div>
+      <div class="mainType" id="imageryPresence">—</div>
+
+      <div class="miniTitle">Konkrétság / elvontság</div>
+      <div class="valueBox" id="concreteness">—</div>
+    </div>
+
+    <div class="card">
+      <h2>Indoklás</h2>
+
+      <div class="infoRow">
+        <div class="miniTitle">A képek szerepe</div>
+        <div class="valueBox" id="imageryRole">—</div>
+      </div>
+
+      <div class="infoRow">
+        <div class="miniTitle">Képi összetartás</div>
+        <div class="valueBox" id="imageryCohesion">—</div>
+      </div>
+
+      <div class="infoRow">
+        <div class="miniTitle">Egyediség</div>
+        <div class="valueBox" id="originality">—</div>
+      </div>
+
+      <div class="infoRow">
+        <div class="miniTitle">Miért ezt látja</div>
+        <div class="valueBox" id="reasoning">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="previousBox" id="previousBox" style="display:none;">
+    <h2>Az előző lépések eredménye</h2>
+    <div class="previousGrid">
+      <div class="previousItem">
+        <strong>Fő típus</strong>
+        <div id="prevMainType">—</div>
+      </div>
+      <div class="previousItem">
+        <strong>Hangulat</strong>
+        <div id="prevMood">—</div>
+      </div>
+      <div class="previousItem">
+        <strong>Szerkezet típusa</strong>
+        <div id="prevStructureType">—</div>
+      </div>
+      <div class="previousItem">
+        <strong>Ritmus jellege</strong>
+        <div id="prevRhythmType">—</div>
+      </div>
+      <div class="previousItem">
+        <strong>Folyás</strong>
+        <div id="prevFlow">—</div>
+      </div>
+      <div class="previousItem">
+        <strong>Lendület</strong>
+        <div id="prevMovement">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="poemPreview" id="poemPreview" style="display:none;">
+    <h2>A vizsgált vers</h2>
+    <div class="poemText" id="poemText"></div>
+  </div>
+
+  <div class="footerRow" id="footerRow">
+    <button class="next" id="nextBtn">Tovább →</button>
+  </div>
+</div>
+
+<script>
+const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
+const NEXT_PAGE = "index.html";
+
+const loadingBox = document.getElementById("loadingBox");
+const errorBox = document.getElementById("errorBox");
+const infoBox = document.getElementById("infoBox");
+const resultLayout = document.getElementById("resultLayout");
+const poemPreview = document.getElementById("poemPreview");
+const poemText = document.getElementById("poemText");
+const footerRow = document.getElementById("footerRow");
+const previousBox = document.getElementById("previousBox");
+
+const imageryPresenceEl = document.getElementById("imageryPresence");
+const concretenessEl = document.getElementById("concreteness");
+const imageryRoleEl = document.getElementById("imageryRole");
+const imageryCohesionEl = document.getElementById("imageryCohesion");
+const originalityEl = document.getElementById("originality");
+const reasoningEl = document.getElementById("reasoning");
+
+const prevMainTypeEl = document.getElementById("prevMainType");
+const prevMoodEl = document.getElementById("prevMood");
+const prevStructureTypeEl = document.getElementById("prevStructureType");
+const prevRhythmTypeEl = document.getElementById("prevRhythmType");
+const prevFlowEl = document.getElementById("prevFlow");
+const prevMovementEl = document.getElementById("prevMovement");
+
+const backBtn = document.getElementById("backBtn");
+const reloadBtn = document.getElementById("reloadBtn");
+const nextBtn = document.getElementById("nextBtn");
+
+function showLoading(message) {
+  loadingBox.textContent = message;
+  loadingBox.style.display = "block";
+}
+
+function hideLoading() {
+  loadingBox.style.display = "none";
+}
+
+function showError(message) {
+  errorBox.textContent = message;
+  errorBox.style.display = "block";
+}
+
+function hideError() {
+  errorBox.textContent = "";
+  errorBox.style.display = "none";
+}
+
+function showInfo(message) {
+  infoBox.textContent = message;
+  infoBox.style.display = "block";
+}
+
+function hideInfo() {
+  infoBox.textContent = "";
+  infoBox.style.display = "none";
+}
+
+function safeParse(jsonText) {
+  try {
+    return JSON.parse(jsonText);
+  } catch (err) {
+    return null;
+  }
+}
+
+function renderPrevious(kindData, structureData, rhythmData) {
+  if (kindData) {
+    prevMainTypeEl.textContent = kindData.main_type || "Nincs megadva";
+    prevMoodEl.textContent = kindData.mood || "Nincs megadva";
+  }
+
+  if (structureData) {
+    prevStructureTypeEl.textContent = structureData.structure_type || "Nincs megadva";
+  }
+
+  if (rhythmData) {
+    prevRhythmTypeEl.textContent = rhythmData.rhythm_type || "Nincs megadva";
+    prevFlowEl.textContent = rhythmData.flow || "Nincs megadva";
+    prevMovementEl.textContent = rhythmData.movement || "Nincs megadva";
+  }
+
+  previousBox.style.display = "block";
+}
+
+function renderResult(result) {
+  imageryPresenceEl.textContent = result.imagery_presence || "Nincs megadva";
+  concretenessEl.textContent = result.concreteness || "Nincs megadva";
+  imageryRoleEl.textContent = result.imagery_role || "Nincs megadva";
+  imageryCohesionEl.textContent = result.imagery_cohesion || "Nincs megadva";
+  originalityEl.textContent = result.originality || "Nincs megadva";
+  reasoningEl.textContent = result.reasoning || "Nincs indoklás.";
+
+  resultLayout.style.display = "grid";
+  footerRow.style.display = "flex";
+}
+
+async function runImagesAnalysis(forceRefresh = false) {
+  const poem = sessionStorage.getItem("poem");
+  const savedKind = safeParse(sessionStorage.getItem("analysis_kind") || "");
+  const savedStructure = safeParse(sessionStorage.getItem("analysis_structure") || "");
+  const savedRhythm = safeParse(sessionStorage.getItem("analysis_rhythm") || "");
+
+  if (!poem) {
+    window.location.href = "index.html";
+    return;
+  }
+
+  if (!savedKind) {
+    window.location.href = "felismeres.html";
+    return;
+  }
+
+  if (!savedStructure) {
+    window.location.href = "szerkezet.html";
+    return;
+  }
+
+  if (!savedRhythm) {
+    window.location.href = "ritmus.html";
+    return;
+  }
+
+  poemText.textContent = poem;
+  poemPreview.style.display = "block";
+  renderPrevious(savedKind, savedStructure, savedRhythm);
+
+  hideError();
+  hideInfo();
+
+  if (!forceRefresh) {
+    const savedImages = safeParse(sessionStorage.getItem("analysis_images") || "");
+    if (savedImages) {
+      renderResult(savedImages);
+      showInfo("A korábbi képi eredmény betöltve.");
+      return;
+    }
+  }
+
+  showLoading("A képi elemzés folyamatban...");
+  resultLayout.style.display = "none";
+  footerRow.style.display = "none";
+
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        poem,
+        step: "images",
+        previous: {
+          kind: savedKind,
+          structure: savedStructure,
+          rhythm: savedRhythm
+        }
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || "A worker nem adott megfelelő választ.");
+    }
+
+    sessionStorage.setItem("analysis_images", JSON.stringify(data.result));
+    renderResult(data.result);
+    showInfo("A képi elemzés elkészült.");
+  } catch (err) {
+    showError(err.message || "Ismeretlen hiba történt.");
+  } finally {
+    hideLoading();
+  }
+}
+
+backBtn.addEventListener("click", () => {
+  window.location.href = "ritmus.html";
+});
+
+reloadBtn.addEventListener("click", () => {
+  sessionStorage.removeItem("analysis_images");
+  runImagesAnalysis(true);
+});
+
+nextBtn.addEventListener("click", () => {
+  window.location.href = NEXT_PAGE;
+});
+
+runImagesAnalysis();
+</script>
+
+</body>
+</html>
