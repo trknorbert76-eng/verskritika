@@ -243,24 +243,33 @@ button.next {
       <h2>Képiség</h2>
 
       <div class="miniTitle">Képek jelenléte</div>
-      <div class="mainType" id="imageryPresence">—</div>
+<div class="mainType" id="imageryPresence">—</div>
+<div class="valueBox" id="imageryPresenceNote">—</div>
 
-      <div class="miniTitle">Konkrétság / elvontság</div>
-      <div class="valueBox" id="concreteness">—</div>
-    </div>
+<div class="miniTitle" style="margin-top:16px;">Konkrétság / elvontság</div>
+<div class="valueBox" id="concreteness">—</div>
+<div class="valueBox" id="concretenessNote" style="margin-top:8px;">—</div>
 
     <div class="card">
       <h2>Indoklás</h2>
 
       <div class="infoRow">
-        <div class="miniTitle">A képek szerepe</div>
-        <div class="valueBox" id="imageryRole">—</div>
-      </div>
+  <div class="miniTitle">A képek szerepe</div>
+  <div class="valueBox" id="imageryRole">—</div>
+  <div class="valueBox" id="imageryRoleNote" style="margin-top:8px;">—</div>
+</div>
 
-      <div class="infoRow">
-        <div class="miniTitle">Képi összetartás</div>
-        <div class="valueBox" id="imageryCohesion">—</div>
-      </div>
+<div class="infoRow">
+  <div class="miniTitle">Képi összetartás</div>
+  <div class="valueBox" id="imageryCohesion">—</div>
+  <div class="valueBox" id="imageryCohesionNote" style="margin-top:8px;">—</div>
+</div>
+
+<div class="infoRow">
+  <div class="miniTitle">Egyediség</div>
+  <div class="valueBox" id="originality">—</div>
+  <div class="valueBox" id="originalityNote" style="margin-top:8px;">—</div>
+</div>
 
       <div class="infoRow">
         <div class="miniTitle">Egyediség</div>
@@ -333,6 +342,14 @@ const imageryRoleEl = document.getElementById("imageryRole");
 const imageryCohesionEl = document.getElementById("imageryCohesion");
 const originalityEl = document.getElementById("originality");
 const reasoningEl = document.getElementById("reasoning");
+
+const imageryPresenceNoteEl = document.getElementById("imageryPresenceNote");
+const concretenessNoteEl = document.getElementById("concretenessNote");
+const imageryRoleNoteEl = document.getElementById("imageryRoleNote");
+const imageryCohesionNoteEl = document.getElementById("imageryCohesionNote");
+const originalityNoteEl = document.getElementById("originalityNote");
+
+  
 
 const prevMainTypeEl = document.getElementById("prevMainType");
 const prevMoodEl = document.getElementById("prevMood");
@@ -412,7 +429,6 @@ function renderResult(result) {
   resultLayout.style.display = "grid";
   footerRow.style.display = "flex";
 }
-
 async function runImagesAnalysis(forceRefresh = false) {
   const poem = sessionStorage.getItem("poem");
   const savedKind = safeParse(sessionStorage.getItem("analysis_kind") || "");
