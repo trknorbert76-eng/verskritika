@@ -530,8 +530,11 @@ async function runImagesAnalysis(forceRefresh = false) {
       );
     }
 
-    sessionStorage.setItem("analysis_images", JSON.stringify(data.result));
-    renderResult(data.result);
+    sessionStorage.setItem("analysis_images", JSON.stringify({
+  poem,
+  result: data.result
+}));
+renderResult(data.result);
     showInfo("A képi elemzés elkészült.");
   } catch (err) {
     showError(err.message || "Ismeretlen hiba történt.");
