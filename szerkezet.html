@@ -252,6 +252,9 @@ button.next {
       <div class="miniTitle">Szerkezet típusa</div>
       <div class="mainType" id="structureType">—</div>
 
+      <div class="miniTitle">Szervezőelv</div>
+<div class="valueBox" id="organizingPrinciple">—</div>
+
       <div class="miniTitle">Kohézió</div>
       <div class="valueBox" id="cohesion">—</div>
     </div>
@@ -322,6 +325,7 @@ const footerRow = document.getElementById("footerRow");
 const previousBox = document.getElementById("previousBox");
 
 const structureTypeEl = document.getElementById("structureType");
+const organizingPrincipleEl = document.getElementById("organizingPrinciple");
 const cohesionEl = document.getElementById("cohesion");
 const movementEl = document.getElementById("movement");
 const turningPointEl = document.getElementById("turningPoint");
@@ -391,6 +395,7 @@ function renderPrevious(kindData) {
 
 function renderResult(result) {
   structureTypeEl.textContent = result.structure_type || "Nincs megadva";
+  organizingPrincipleEl.textContent = result.organizing_principle || "Nincs megadva";
   cohesionEl.textContent = result.cohesion || "Nincs megadva";
   movementEl.textContent = result.movement || "Nincs megadva";
   turningPointEl.textContent = result.turning_point || "Nincs megadva";
