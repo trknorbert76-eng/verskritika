@@ -493,14 +493,13 @@ async function runImagesAnalysis(forceRefresh = false) {
   hideInfo();
 
   if (!forceRefresh) {
-    const savedImages = safeParse(sessionStorage.getItem("analysis_images") || "");
-    if (savedImages) {
-      renderResult(savedImages);
-      showInfo("A korábbi képi eredmény betöltve.");
-      return;
-    }
+  const savedImages = safeParse(sessionStorage.getItem("analysis_images") || "");
+  if (savedImages && savedImages.poem === poem && savedImages.result) {
+    renderResult(savedImages.result);
+    showInfo("A korábbi képi eredmény betöltve.");
+    return;
   }
-
+}
   showLoading("A képi elemzés folyamatban...");
   resultLayout.style.display = "none";
   footerRow.style.display = "none";
