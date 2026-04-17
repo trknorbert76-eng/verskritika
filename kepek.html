@@ -420,10 +420,20 @@ function renderPrevious(kindData, structureData, rhythmData) {
 
 function renderResult(result) {
   imageryPresenceEl.textContent = result.imagery_presence || "Nincs megadva";
+  imageryPresenceNoteEl.textContent = result.imagery_presence_note || "—";
+
   concretenessEl.textContent = result.concreteness || "Nincs megadva";
+  concretenessNoteEl.textContent = result.concreteness_note || "—";
+
   imageryRoleEl.textContent = result.imagery_role || "Nincs megadva";
+  imageryRoleNoteEl.textContent = result.imagery_role_note || "—";
+
   imageryCohesionEl.textContent = result.imagery_cohesion || "Nincs megadva";
+  imageryCohesionNoteEl.textContent = result.imagery_cohesion_note || "—";
+
   originalityEl.textContent = result.originality || "Nincs megadva";
+  originalityNoteEl.textContent = result.originality_note || "—";
+
   reasoningEl.textContent = result.reasoning || "Nincs indoklás.";
 
   resultLayout.style.display = "grid";
