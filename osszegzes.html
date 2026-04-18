@@ -305,13 +305,19 @@ function renderSummary() {
   pointerEl.style.left = level.position + "%";
 }
 
-function determineLevel(kind, structure, rhythm, images, expression) {
+
+
+function buildSummary(kind, structure, rhythm, images, expression, level) {
+  const parts = [];
+
+  function determineLevel(kind, structure, rhythm, images, expression) {
   let score = 0;
 
   // Kifejezés
   if (expression.overall_expression === "inkább közhelyes") score += 0;
-  else if (expression.overall_expression === "vegyes") score += 1;
-  else if (expression.overall_expression === "inkább egyedi") score += 2;
+  else if (expression.overall_expression === "inkább hagyományos") score += 1;
+  else if (expression.overall_expression === "vegyes") score += 2;
+  else if (expression.overall_expression === "inkább egyedi") score += 3;
 
   if (expression.originality_of_voice === "többnyire közhelyes") score -= 1;
   else if (expression.originality_of_voice === "részben ismerős") score += 1;
@@ -356,16 +362,16 @@ function determineLevel(kind, structure, rhythm, images, expression) {
     return { label: "vegyes / közepes", position: 30 };
   }
   if (score <= 9) {
-    return { label: "részben egyedi", position: 52 };
+    return { label: "részben egyedi", position: 44 };
   }
   if (score <= 12) {
+    return { label: "inkább egyedi", position: 58 };
+  }
+  if (score <= 15) {
     return { label: "erős, saját hang felé", position: 74 };
   }
   return { label: "kiemelkedő", position: 92 };
 }
-
-function buildSummary(kind, structure, rhythm, images, expression, level) {
-  const parts = [];
 
   if (images.imagery_presence === "erősen képszerű") {
     parts.push("A vers erősen képi módon működik");
