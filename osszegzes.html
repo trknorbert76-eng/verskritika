@@ -172,21 +172,17 @@ button.secondary {
 
 <body>
 
-<div class="wrap">
+<<div class="wrap">
   <h1>Összegzés</h1>
-  <p class="intro">
-
-    <div class="topbar">
-  <button class="secondary" onclick="goBack()">← Vissza</button>
-  <button onclick="newPoem()">Új vers</button>
-</div>
-
-  Ez az utolsó oldal. Itt az előző lépések eredményei egy közös mérlegben találkoznak: nem pontszámot adunk, hanem megmutatjuk, hol helyezkedik el a vers a teljes skálán.
-  </p>
 
   <div class="topbar">
-    <button class="secondary" id="backBtn">← Vissza a kifejezésmódhoz</button>
+    <button class="secondary" onclick="goBack()">← Vissza</button>
+    <button onclick="newPoem()">Új vers</button>
   </div>
+
+  <p class="intro">
+    Ez az utolsó oldal. Itt az előző lépések eredményei egy közös mérlegben találkoznak: nem pontszámot adunk, hanem megmutatjuk, hol helyezkedik el a vers a teljes skálán.
+  </p>
 
   <div class="errorBox" id="errorBox"></div>
 
@@ -228,7 +224,6 @@ button.secondary {
 </div>
 
 <script>
-const backBtn = document.getElementById("backBtn");
 const errorBox = document.getElementById("errorBox");
 const summaryEl = document.getElementById("summary");
 const levelTextEl = document.getElementById("levelText");
@@ -261,17 +256,22 @@ const rhythmPack = safeParse(sessionStorage.getItem("analysis_rhythm") || "");
 const imagesPack = safeParse(sessionStorage.getItem("analysis_images") || "");
 const expressionPack = safeParse(sessionStorage.getItem("analysis_expression") || "");
 
-const kind = kindPack && kindPack.result ? kindPack.result : null;
-const structure = structurePack && structurePack.result ? structurePack.result : null;
-const rhythm = rhythmPack && rhythmPack.result ? rhythmPack.result : null;
-const images = imagesPack && imagesPack.result ? imagesPack.result : null;
-const expression = expressionPack && expressionPack.result ? expressionPack.result : null;
-
+const kind = kindPack ? (kindPack.result || kindPack) : null;
+const structure = structurePack ? (structurePack.result || structurePack) : null;
+const rhythm = rhythmPack ? (rhythmPack.result || rhythmPack) : null;
+const images = imagesPack ? (imagesPack.result || imagesPack) : null;
+const expression = expressionPack ? (expressionPack.result || expressionPack) : null;
+  
 if (!poem || !kind || !structure || !rhythm || !images || !expression) {
-  showError("Hiányoznak az elemzés adatai. Kérlek, indulj újra az első oldaltól.");
-  setTimeout(() => {
-    window.location.href = "index.html";
-  }, 1800);
+  showError("Hiányoznak az elemzés adatai.");
+  console.log("HIÁNYZÓ ADATOK:", {
+    poem,
+    kind,
+    structure,
+    rhythm,
+    images,
+    expression
+  });
 } else {
   renderSummary();
 }
