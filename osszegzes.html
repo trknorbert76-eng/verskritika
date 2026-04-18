@@ -402,6 +402,29 @@ function determineLevel(kind, structure, rhythm, images, expression) {
   return { label: "kiemelkedő", position: 92 };
 }
 
+ function applyCaps(level, structure, images, expression) {
+  let cappedLevel = { ...level };
+
+  const weakStructure = structure.structure_type === "statikus";
+  const weakExpression =
+    expression.overall_expression === "inkább közhelyes" ||
+    expression.originality_of_voice === "többnyire közhelyes";
+
+  if (weakStructure && weakExpression) {
+    cappedLevel = { label: "vegyes / közepes", position: 30 };
+  }
+
+  if (
+    weakStructure &&
+    weakExpression &&
+    images.originality === "többnyire közismert"
+  ) {
+    cappedLevel = { label: "közhelyes működés", position: 8 };
+  }
+
+  return cappedLevel;
+} 
+  
 function buildSummary(kind, structure, rhythm, images, expression, level) {
   const parts = [];
 
