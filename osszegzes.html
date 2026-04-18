@@ -175,7 +175,13 @@ button.secondary {
 <div class="wrap">
   <h1>Összegzés</h1>
   <p class="intro">
-    Ez az utolsó oldal. Itt az előző lépések eredményei egy közös mérlegben találkoznak: nem pontszámot adunk, hanem megmutatjuk, hol helyezkedik el a vers a teljes skálán.
+
+    <div class="topbar">
+  <button class="secondary" onclick="goBack()">← Vissza</button>
+  <button onclick="newPoem()">Új vers</button>
+</div>
+
+  Ez az utolsó oldal. Itt az előző lépések eredményei egy közös mérlegben találkoznak: nem pontszámot adunk, hanem megmutatjuk, hol helyezkedik el a vers a teljes skálán.
   </p>
 
   <div class="topbar">
@@ -437,6 +443,15 @@ function buildWeaknesses(kind, structure, rhythm, images, expression) {
   }
 
   return items.slice(0, 4);
+}
+
+  function goBack() {
+  window.location.href = "kifejezesmod.html";
+}
+
+function newPoem() {
+  sessionStorage.clear();
+  window.location.href = "index.html";
 }
 </script>
 
