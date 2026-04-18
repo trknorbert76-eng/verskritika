@@ -138,6 +138,7 @@ button.secondary {
   padding: 12px 14px;
   color: #eee;
   line-height: 1.6;
+  white-space: pre-wrap;
 }
 
 .poemText {
@@ -232,13 +233,12 @@ const strengthsEl = document.getElementById("strengths");
 const weaknessesEl = document.getElementById("weaknesses");
 const poemTextEl = document.getElementById("poemText");
 
-  console.log("poem:", sessionStorage.getItem("poem"));
+console.log("poem:", sessionStorage.getItem("poem"));
 console.log("analysis_kind:", sessionStorage.getItem("analysis_kind"));
 console.log("analysis_structure:", sessionStorage.getItem("analysis_structure"));
 console.log("analysis_rhythm:", sessionStorage.getItem("analysis_rhythm"));
 console.log("analysis_images:", sessionStorage.getItem("analysis_images"));
 console.log("analysis_expression:", sessionStorage.getItem("analysis_expression"));
-
 
 function showError(message) {
   errorBox.textContent = message;
@@ -266,7 +266,7 @@ const rhythm = rhythmPack ? (rhythmPack.result || rhythmPack) : null;
 const images = imagesPack ? (imagesPack.result || imagesPack) : null;
 const expression = expressionPack ? (expressionPack.result || expressionPack) : null;
 
-  console.log("parsed:", {
+console.log("parsed:", {
   poem,
   kind,
   structure,
@@ -274,7 +274,7 @@ const expression = expressionPack ? (expressionPack.result || expressionPack) : 
   images,
   expression
 });
-  
+
 if (!poem || !kind || !structure || !rhythm || !images || !expression) {
   showError("Hiányoznak az elemzés adatai.");
   console.log("HIÁNYZÓ ADATOK:", {
@@ -301,32 +301,63 @@ function renderSummary() {
   strengthsEl.textContent = strengths.join("\n• ").replace(/^/, "• ");
   weaknessesEl.textContent = weaknesses.join("\n• ").replace(/^/, "• ");
   levelTextEl.textContent = "Szint: " + level.label;
-
   pointerEl.style.left = level.position + "%";
 }
 
-
-
-function buildSummary(kind, structure, rhythm, images, expression, level) {
-  const parts = [];
-
-  function determineLevel(kind, structure, rhythm, images, expression) {
+function determineLevel(kind, structure, rhythm, images, expression) {
   let score = 0;
 
-  // Kifejezés
+  const mainType = (kind.main_type || "").toLowerCase();
+  const speechMode = (kind.speech_mode || "").toLowerCase();
+  const expressionMode = (expression.expression_mode || "").toLowerCase();
+  const rhythmText = ((rhythm.flow || "") + " " + (rhythm.movement || "") + " " + (rhythm.breaks || "")).toLowerCase();
+
+  // Kifejezés összképe
   if (expression.overall_expression === "inkább közhelyes") score += 0;
   else if (expression.overall_expression === "inkább hagyományos") score += 1;
   else if (expression.overall_expression === "vegyes") score += 2;
   else if (expression.overall_expression === "inkább egyedi") score += 3;
 
+  // Hang egyedisége
   if (expression.originality_of_voice === "többnyire közhelyes") score -= 1;
   else if (expression.originality_of_voice === "részben ismerős") score += 1;
   else if (expression.originality_of_voice === "saját hangú") score += 2;
 
+  // Pontosság
   if (expression.precision === "pontos") score += 2;
   else if (expression.precision === "részben pontos") score += 1;
 
+  // Természetesség
   if (expression.tone_naturalness === "természetes") score += 1;
+
+  // Retorikai / buzdító erő külön jutalma
+  if (expression.expression_mode === "felszólító / retorikai") {
+    score += 2;
+  }
+
+  if (
+    expression.expression_mode === "felszólító / retorikai" &&
+    expression.tone_naturalness === "természetes" &&
+    expression.precision === "pontos"
+  ) {
+    score += 1;
+  }
+
+  // Hazafias / felszólító + működő szerkezet együtt külön erő
+  if (
+    (
+      mainType === "hazafias" ||
+      speechMode.includes("buzdító") ||
+      speechMode.includes("felszólító") ||
+      expressionMode.includes("retorikai")
+    ) &&
+    (
+      structure.structure_type === "finoman kibontakozó" ||
+      structure.structure_type === "markánsan fejlődő"
+    )
+  ) {
+    score += 2;
+  }
 
   // Képek
   if (images.originality === "erősen eredeti") score += 2;
@@ -343,8 +374,6 @@ function buildSummary(kind, structure, rhythm, images, expression, level) {
   else if (structure.structure_type === "markánsan fejlődő") score += 2;
 
   // Ritmus
-  const rhythmText = ((rhythm.flow || "") + " " + (rhythm.movement || "") + " " + (rhythm.breaks || "")).toLowerCase();
-
   if (
     rhythmText.includes("folyamatos") ||
     rhythmText.includes("egyenletes") ||
@@ -359,19 +388,22 @@ function buildSummary(kind, structure, rhythm, images, expression, level) {
     return { label: "közhelyes működés", position: 8 };
   }
   if (score <= 6) {
-    return { label: "vegyes / közepes", position: 30 };
+    return { label: "vegyes / közepes", position: 28 };
   }
   if (score <= 9) {
-    return { label: "részben egyedi", position: 44 };
+    return { label: "részben egyedi", position: 46 };
   }
   if (score <= 12) {
-    return { label: "inkább egyedi", position: 58 };
+    return { label: "inkább egyedi", position: 60 };
   }
   if (score <= 15) {
-    return { label: "erős, saját hang felé", position: 74 };
+    return { label: "erős", position: 76 };
   }
   return { label: "kiemelkedő", position: 92 };
 }
+
+function buildSummary(kind, structure, rhythm, images, expression, level) {
+  const parts = [];
 
   if (images.imagery_presence === "erősen képszerű") {
     parts.push("A vers erősen képi módon működik");
@@ -389,8 +421,14 @@ function buildSummary(kind, structure, rhythm, images, expression, level) {
     parts.push("szerkezetileg erős belső változást hordoz");
   }
 
+  if (expression.expression_mode === "felszólító / retorikai") {
+    parts.push("kifejezésmódjában erős, közvetlen retorikai hatással dolgozik");
+  }
+
   if (expression.overall_expression === "inkább közhelyes") {
     parts.push("nyelvileg azonban többnyire ismerős, közhelyes elemekre támaszkodik");
+  } else if (expression.overall_expression === "inkább hagyományos") {
+    parts.push("nyelvileg inkább hagyományos, ismert megszólalási mintákra épül");
   } else if (expression.overall_expression === "vegyes") {
     parts.push("nyelvileg vegyes képet mutat: vannak működő és kevésbé eredeti megoldásai is");
   } else {
@@ -415,6 +453,10 @@ function buildStrengths(kind, structure, rhythm, images, expression) {
     items.push("A megszólalás természetes, nem erőltetett.");
   }
 
+  if (expression.expression_mode === "felszólító / retorikai") {
+    items.push("A vers kifejezésmódja közvetlen, mozgósító és retorikailag hatásos.");
+  }
+
   if (expression.originality_of_voice === "saját hangú" || expression.originality_of_voice === "részben ismerős") {
     items.push("A hangban legalább részben felismerhető saját irány vagy működő egyéni kombináció.");
   }
@@ -435,6 +477,10 @@ function buildWeaknesses(kind, structure, rhythm, images, expression) {
 
   if (expression.overall_expression === "inkább közhelyes") {
     items.push("A nyelvi megoldások nagy része ismerős, közhelyes fordulatokra épül.");
+  }
+
+  if (expression.overall_expression === "inkább hagyományos") {
+    items.push("A megszólalás több ponton a hagyományos költői formulákra támaszkodik.");
   }
 
   if (expression.originality_of_voice === "többnyire közhelyes") {
@@ -464,7 +510,7 @@ function buildWeaknesses(kind, structure, rhythm, images, expression) {
   return items.slice(0, 4);
 }
 
-  function goBack() {
+function goBack() {
   window.location.href = "kifejezesmod.html";
 }
 
