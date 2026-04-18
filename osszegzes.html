@@ -313,7 +313,7 @@ function determineLevel(kind, structure, rhythm, images, expression) {
   else if (expression.overall_expression === "vegyes") score += 1;
   else if (expression.overall_expression === "inkább egyedi") score += 2;
 
-  if (expression.originality_of_voice === "többnyire közhelyes") score += 0;
+  if (expression.originality_of_voice === "többnyire közhelyes") score -= 1;
   else if (expression.originality_of_voice === "részben ismerős") score += 1;
   else if (expression.originality_of_voice === "saját hangú") score += 2;
 
