@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Összegzés</title>
+
+<style>
+body {
+  margin: 0;
+  background: #111;
+  color: #eee;
+  font-family: Georgia, serif;
+}
+
+.wrap {
+  max-width: 900px;
+  margin: auto;
+  padding: 30px 20px 60px;
+}
+
+h1 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.summary {
+  line-height: 1.6;
+  color: #ccc;
+  margin-bottom: 40px;
+}
+
+/* SKÁLA */
+.scale {
+  position: relative;
+  margin-top: 40px;
+}
+
+.bar {
+  height: 6px;
+  background: linear-gradient(
+    to right,
+    #ff4d4d,
+    #ff944d,
+    #ffd24d,
+    #4dff88,
+    #4da6ff
+  );
+  border-radius: 4px;
+}
+
+.labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  margin-top: 10px;
+  color: #aaa;
+}
+
+.pointer {
+  position: absolute;
+  top: -8px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 12px solid #fff;
+  transform: translateX(-50%);
+}
+
+/* SZINT SZÖVEG */
+.level-text {
+  margin-top: 20px;
+  font-size: 1.1rem;
+  color: #fff;
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+<h1>Összegzés</h1>
+
+<div class="summary" id="summary">
+Betöltés...
+</div>
+
+<div class="level-text" id="levelText"></div>
+
+<div class="scale">
+  <div class="bar"></div>
+  <div class="pointer" id="pointer"></div>
+
+  <div class="labels">
+    <span>Közhelyes</span>
+    <span>Vegyes</span>
+    <span>Egyedi</span>
+    <span>Erős</span>
+    <span>Kiemelkedő</span>
+  </div>
+</div>
+
+</div>
+
+<script>
+// EZT majd a rendszered adja
+const result = {
+  overall: "vegyes", // ide jön a final döntés
+  summary: "A vers képekben működik, de nyelvileg nem teljesen egyedi."
+};
+
+// POZÍCIÓK
+const positions = {
+  "közhelyes": 0,
+  "vegyes": 25,
+  "részben egyedi": 50,
+  "egyedi": 65,
+  "erős": 80,
+  "kiemelkedő": 100
+};
+
+// POINTER
+const pointer = document.getElementById("pointer");
+const levelText = document.getElementById("levelText");
+const summary = document.getElementById("summary");
+
+summary.innerText = result.summary;
+levelText.innerText = "Szint: " + result.overall;
+
+const pos = positions[result.overall] || 25;
+pointer.style.left = pos + "%";
+</script>
+
+</body>
+</html>
