@@ -193,7 +193,7 @@ button.next {
 <div class="wrap">
   <h1>Felismerés</h1>
   <p class="intro">
-    Ez az első belső oldal. Itt még nincs végső kritika. Csak a vers alaptípusát, hangulatát és megszólalásának jellegét határozzuk meg.
+   Ez az első belső oldal. Itt még nincs végső kritika. Csak a vers alaptípusát, hangulatát, megszólalásának jellegét és stíluskarakterét határozzuk meg.
   </p>
 
   <div class="topbar">
@@ -220,6 +220,16 @@ button.next {
       <h2>Indoklás</h2>
 
       <div class="infoRow">
+  <div class="miniTitle">Stílusjelleg</div>
+  <div class="valueBox" id="styleLabel">—</div>
+</div>
+
+<div class="infoRow">
+  <div class="miniTitle">Stílusjegyek</div>
+  <div class="valueBox" id="styleTraits">—</div>
+</div>
+
+      <div class="infoRow">
         <div class="miniTitle">Beszédmód</div>
         <div class="valueBox" id="speechMode">—</div>
       </div>
@@ -233,6 +243,11 @@ button.next {
         <div class="miniTitle">Miért ezt választotta</div>
         <div class="valueBox" id="reasoning">—</div>
       </div>
+
+      <div class="infoRow">
+  <div class="miniTitle">Stílus indoklása</div>
+  <div class="valueBox" id="styleReasoning">—</div>
+</div>
     </div>
   </div>
 
@@ -263,6 +278,10 @@ const secondaryTraitsEl = document.getElementById("secondaryTraits");
 const speechModeEl = document.getElementById("speechMode");
 const moodEl = document.getElementById("mood");
 const reasoningEl = document.getElementById("reasoning");
+  const styleLabelEl = document.getElementById("styleLabel");
+const styleTraitsEl = document.getElementById("styleTraits");
+const styleReasoningEl = document.getElementById("styleReasoning");
+  
 
 const backBtn = document.getElementById("backBtn");
 const reloadBtn = document.getElementById("reloadBtn");
@@ -318,6 +337,11 @@ function renderResult(result) {
   mainTypeEl.textContent = result.main_type || "Nincs megadva";
   speechModeEl.textContent = result.speech_mode || "Nincs megadva";
   moodEl.textContent = result.mood || "Nincs megadva";
+  styleLabelEl.textContent = result.style_label || "Nincs megadva";
+  styleTraitsEl.textContent = Array.isArray(result.style_traits) && result.style_traits.length
+    ? result.style_traits.join(", ")
+    : "Nincs megadva";
+  styleReasoningEl.textContent = result.style_reasoning || "Nincs külön indoklás.";
   reasoningEl.textContent = result.reasoning || "Nincs indoklás.";
   fillList(result.secondary_traits);
 
