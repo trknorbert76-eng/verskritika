@@ -190,7 +190,24 @@ button.secondary {
   <div class="card">
     <h2>Összkép</h2>
 
-      <div class="card">
+    <div class="summary" id="summary">Betöltés...</div>
+    <div class="level-text" id="levelText"></div>
+
+    <div class="scale">
+      <div class="bar"></div>
+      <div class="pointer" id="pointer"></div>
+
+      <div class="labels">
+        <span>Közhelyes</span>
+        <span>Vegyes</span>
+        <span>Egyedi</span>
+        <span>Erős</span>
+        <span>Kiemelkedő</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
     <h2>Stílus</h2>
 
     <div class="grid">
@@ -208,23 +225,6 @@ button.secondary {
     <div style="margin-top: 14px;">
       <div style="color:#c9b07a; margin-bottom:8px;">Stílus indoklása</div>
       <div class="valueBox" id="styleReasoning">—</div>
-    </div>
- 
-      </div>
-     <div class="summary" id="summary">Betöltés...</div>
-    <div class="level-text" id="levelText"></div>
-    
-    <div class="scale">
-      <div class="bar"></div>
-      <div class="pointer" id="pointer"></div>
-
-      <div class="labels">
-        <span>Közhelyes</span>
-        <span>Vegyes</span>
-        <span>Egyedi</span>
-        <span>Erős</span>
-        <span>Kiemelkedő</span>
-      </div>
     </div>
   </div>
 
@@ -289,12 +289,11 @@ const images = imagesPack ? (imagesPack.result || imagesPack) : null;
 const expression = expressionPack ? (expressionPack.result || expressionPack) : null;
 const check = checkPack ? (checkPack.result || checkPack) : null;
 
-if (!poem || !kind || !structure || !rhythm || !images || !expression || !check) {
+if (!poem || !kind || !structure || !rhythm || !images || !expression) {
   showError("Hiányoznak az elemzés adatai.");
 } else {
   renderSummary();
 }
-
 function renderSummary() {
   poemTextEl.textContent = poem;
 
