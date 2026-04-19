@@ -348,6 +348,9 @@ button.next {
 const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
 const NEXT_PAGE = "osszegzes.html";
 
+const params = new URLSearchParams(window.location.search);
+const autorun = params.get("autorun") === "1";
+
 const loadingBox = document.getElementById("loadingBox");
 const errorBox = document.getElementById("errorBox");
 const infoBox = document.getElementById("infoBox");
@@ -514,7 +517,7 @@ async function runExpressionAnalysis(forceRefresh = false) {
   hideError();
   hideInfo();
 
-  if (!forceRefresh) {
+  if (!forceRefresh && !autorun) {
     const savedExpression = safeParse(sessionStorage.getItem("analysis_expression") || "");
     if (savedExpression && savedExpression.poem === poem && savedExpression.result) {
       renderResult(savedExpression.result);
@@ -558,6 +561,7 @@ async function runExpressionAnalysis(forceRefresh = false) {
       poem,
       result: data.result
     }));
+    sessionStorage.setItem("step_expression_done", Date.now().toString());
 
     renderResult(data.result);
     showInfo("A kifejezésmód elemzése elkészült.");
@@ -574,6 +578,7 @@ backBtn.addEventListener("click", () => {
 
 reloadBtn.addEventListener("click", () => {
   sessionStorage.removeItem("analysis_expression");
+  sessionStorage.removeItem("step_expression_done");
   runExpressionAnalysis(true);
 });
 
@@ -581,7 +586,7 @@ nextBtn.addEventListener("click", () => {
   window.location.href = NEXT_PAGE;
 });
 
-runExpressionAnalysis();
+runExpressionAnalysis(autorun);
 </script>
 
 </body>
