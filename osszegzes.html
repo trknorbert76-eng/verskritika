@@ -363,6 +363,18 @@ if (check && Array.isArray(check.weaknesses) && check.weaknesses.length) {
   weaknessesEl.textContent = weaknesses.join("\n• ").replace(/^/, "• ");
   levelTextEl.textContent = "Szint: " + finalLevel.label;
   pointerEl.style.left = finalLevel.position + "%";
+
+  // Ellenőr bekötése
+if (check) {
+  reviewTextEl.textContent =
+    check.review_text || check.reasoning || "Nincs részletes ellenőrzés.";
+
+  reviewAdjustmentEl.textContent =
+    check.adjustment || check.correction || "Nincs korrekció.";
+} else {
+  reviewTextEl.textContent = "Nincs végső ellenőrzés.";
+  reviewAdjustmentEl.textContent = "Nincs korrekció.";
+}
   
 reviewTextEl.textContent = "Nincs végső ellenőrzés.";
 reviewAdjustmentEl.textContent = "Nincs korrekció.";
