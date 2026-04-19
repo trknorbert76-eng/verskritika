@@ -262,8 +262,6 @@ button.secondary {
   </div>
 </div>
 
-</body>
-
 <script>
 const params = new URLSearchParams(window.location.search);
 const autorun = params.get("autorun") === "1";
@@ -358,29 +356,38 @@ if (check && Array.isArray(check.weaknesses) && check.weaknesses.length) {
   weaknesses = check.weaknesses;
 }
 
-  summaryEl.textContent = summary;
-  strengthsEl.textContent = strengths.join("\n• ").replace(/^/, "• ");
-  weaknessesEl.textContent = weaknesses.join("\n• ").replace(/^/, "• ");
-  levelTextEl.textContent = "Szint: " + finalLevel.label;
-  pointerEl.style.left = finalLevel.position + "%";
+summaryEl.textContent = summary;
+strengthsEl.textContent = strengths.length
+  ? strengths.join("\n• ").replace(/^/, "• ")
+  : "—";
+weaknessesEl.textContent = weaknesses.length
+  ? weaknesses.join("\n• ").replace(/^/, "• ")
+  : "—";
+levelTextEl.textContent = "Szint: " + finalLevel.label;
+pointerEl.style.left = finalLevel.position + "%";
 
-  // Ellenőr bekötése
 if (check) {
   reviewTextEl.textContent =
-    check.review_text || check.reasoning || "Nincs részletes ellenőrzés.";
+  check.summary_text ||
+  check.reasoning ||
+  check.note ||
+  "Nincs részletes ellenőrzés.";
 
-  reviewAdjustmentEl.textContent =
-    check.adjustment || check.correction || "Nincs korrekció.";
+const change = (check.slider_change || "").trim().toLowerCase();
+
+if (change === "feljebb") {
+  reviewAdjustmentEl.textContent = "A végső ellenőrzés felfelé módosította a besorolást.";
+} else if (change === "lejjebb") {
+  reviewAdjustmentEl.textContent = "A végső ellenőrzés lefelé módosította a besorolást.";
+} else {
+  reviewAdjustmentEl.textContent = "Nem történt szintkorrekció.";
+}
 } else {
   reviewTextEl.textContent = "Nincs végső ellenőrzés.";
   reviewAdjustmentEl.textContent = "Nincs korrekció.";
 }
-  
-reviewTextEl.textContent = "Nincs végső ellenőrzés.";
-reviewAdjustmentEl.textContent = "Nincs korrekció.";
 
-  
-  sessionStorage.setItem("step_summary_done", Date.now().toString());
+sessionStorage.setItem("step_summary_done", Date.now().toString());
 }
 
 function determineLevel(kind, structure, rhythm, images, expression) {
