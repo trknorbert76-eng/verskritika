@@ -225,6 +225,9 @@ button.secondary {
 </div>
 
 <script>
+const params = new URLSearchParams(window.location.search);
+const autorun = params.get("autorun") === "1";
+
 const errorBox = document.getElementById("errorBox");
 const summaryEl = document.getElementById("summary");
 const levelTextEl = document.getElementById("levelText");
@@ -292,7 +295,8 @@ if (!poem || !kind || !structure || !rhythm || !images || !expression) {
 function renderSummary() {
   poemTextEl.textContent = poem;
 
-  const level = determineLevel(kind, structure, rhythm, images, expression);
+  const baseLevel = determineLevel(kind, structure, rhythm, images, expression);
+  const level = applyCaps(baseLevel, structure, images, expression);
   const summary = buildSummary(kind, structure, rhythm, images, expression, level);
   const strengths = buildStrengths(kind, structure, rhythm, images, expression);
   const weaknesses = buildWeaknesses(kind, structure, rhythm, images, expression);
@@ -302,6 +306,8 @@ function renderSummary() {
   weaknessesEl.textContent = weaknesses.join("\n• ").replace(/^/, "• ");
   levelTextEl.textContent = "Szint: " + level.label;
   pointerEl.style.left = level.position + "%";
+
+  sessionStorage.setItem("step_summary_done", Date.now().toString());
 }
 
 function determineLevel(kind, structure, rhythm, images, expression) {
@@ -312,25 +318,20 @@ function determineLevel(kind, structure, rhythm, images, expression) {
   const expressionMode = (expression.expression_mode || "").toLowerCase();
   const rhythmText = ((rhythm.flow || "") + " " + (rhythm.movement || "") + " " + (rhythm.breaks || "")).toLowerCase();
 
-  // Kifejezés összképe
   if (expression.overall_expression === "inkább közhelyes") score += 0;
   else if (expression.overall_expression === "inkább hagyományos") score += 1;
   else if (expression.overall_expression === "vegyes") score += 2;
   else if (expression.overall_expression === "inkább egyedi") score += 3;
 
-  // Hang egyedisége
   if (expression.originality_of_voice === "többnyire közhelyes") score -= 1;
   else if (expression.originality_of_voice === "részben ismerős") score += 1;
   else if (expression.originality_of_voice === "saját hangú") score += 2;
 
-  // Pontosság
   if (expression.precision === "pontos") score += 2;
   else if (expression.precision === "részben pontos") score += 1;
 
-  // Természetesség
   if (expression.tone_naturalness === "természetes") score += 1;
 
-  // Retorikai / buzdító erő külön jutalma
   if (expression.expression_mode === "felszólító / retorikai") {
     score += 2;
   }
@@ -343,7 +344,6 @@ function determineLevel(kind, structure, rhythm, images, expression) {
     score += 1;
   }
 
-  // Hazafias / felszólító + működő szerkezet együtt külön erő
   if (
     (
       mainType === "hazafias" ||
@@ -359,7 +359,6 @@ function determineLevel(kind, structure, rhythm, images, expression) {
     score += 2;
   }
 
-  // Képek
   if (images.originality === "erősen eredeti") score += 2;
   else if (images.originality === "részben egyedi") score += 1;
 
@@ -369,11 +368,9 @@ function determineLevel(kind, structure, rhythm, images, expression) {
   if (images.imagery_cohesion === "összefüggő") score += 1;
   else if (images.imagery_cohesion === "lazán kapcsolódó") score += 0.5;
 
-  // Szerkezet
   if (structure.structure_type === "finoman kibontakozó") score += 1;
   else if (structure.structure_type === "markánsan fejlődő") score += 2;
 
-  // Ritmus
   if (
     rhythmText.includes("folyamatos") ||
     rhythmText.includes("egyenletes") ||
@@ -383,7 +380,6 @@ function determineLevel(kind, structure, rhythm, images, expression) {
     score += 1;
   }
 
-  // Szint
   if (score <= 3) {
     return { label: "közhelyes működés", position: 8 };
   }
@@ -402,7 +398,7 @@ function determineLevel(kind, structure, rhythm, images, expression) {
   return { label: "kiemelkedő", position: 92 };
 }
 
- function applyCaps(level, structure, images, expression) {
+function applyCaps(level, structure, images, expression) {
   let cappedLevel = { ...level };
 
   const weakStructure = structure.structure_type === "statikus";
@@ -423,8 +419,8 @@ function determineLevel(kind, structure, rhythm, images, expression) {
   }
 
   return cappedLevel;
-} 
-  
+}
+
 function buildSummary(kind, structure, rhythm, images, expression, level) {
   const parts = [];
 
