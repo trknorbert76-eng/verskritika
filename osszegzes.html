@@ -213,6 +213,7 @@ button.secondary {
       </div>
      <div class="summary" id="summary">Betöltés...</div>
     <div class="level-text" id="levelText"></div>
+    <div class="valueBox" id="checkBox" style="display:none; margin-top:14px;"></div>
 
     <div class="scale">
       <div class="bar"></div>
@@ -260,6 +261,8 @@ const poemTextEl = document.getElementById("poemText");
 const styleLabelEl = document.getElementById("styleLabel");
 const styleTraitsEl = document.getElementById("styleTraits");
 const styleReasoningEl = document.getElementById("styleReasoning");
+const checkBoxEl = document.getElementById("checkBox");
+const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
 
 console.log("poem:", sessionStorage.getItem("poem"));
 console.log("analysis_kind:", sessionStorage.getItem("analysis_kind"));
@@ -317,7 +320,7 @@ if (!poem || !kind || !structure || !rhythm || !images || !expression) {
   renderSummary();
 }
 
-function renderSummary() {
+async function renderSummary() {
   poemTextEl.textContent = poem;
 
    styleLabelEl.textContent = kind.style_label || "Nincs megadva";
@@ -326,17 +329,73 @@ function renderSummary() {
     : "Nincs megadva";
   styleReasoningEl.textContent = kind.style_reasoning || "Nincs külön indoklás.";
 
-  const baseLevel = determineLevel(kind, structure, rhythm, images, expression);
-  const level = applyCaps(baseLevel, structure, images, expression);
-  const summary = buildSummary(kind, structure, rhythm, images, expression, level);
-  const strengths = buildStrengths(kind, structure, rhythm, images, expression);
-  const weaknesses = buildWeaknesses(kind, structure, rhythm, images, expression);
+ const baseLevel = determineLevel(kind, structure, rhythm, images, expression);
+const level = applyCaps(baseLevel, structure, images, expression);
+
+let finalLevel = { ...level };
+let checkNote = "";
+
+try {
+  const res = await fetch(WORKER_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      poem,
+      step: "check",
+      previous: {
+        kind,
+        structure,
+        rhythm,
+        images,
+        expression,
+        summary_base: baseLevel,
+        summary_current: level
+      }
+    })
+  });
+
+  const data = await res.json();
+
+  if (res.ok && data.ok && data.result) {
+    const check = data.result;
+
+    if (
+      typeof check.final_level_label === "string" &&
+      typeof check.final_level_position === "number"
+    ) {
+      finalLevel = {
+        label: check.final_level_label,
+        position: check.final_level_position
+      };
+    }
+
+    if (check.note) {
+      checkNote = check.note;
+    }
+  }
+} catch (err) {
+  console.log("CHECK hiba:", err);
+}
+
+const summary = buildSummary(kind, structure, rhythm, images, expression, finalLevel);
+const strengths = buildStrengths(kind, structure, rhythm, images, expression);
+const weaknesses = buildWeaknesses(kind, structure, rhythm, images, expression);
 
   summaryEl.textContent = summary;
   strengthsEl.textContent = strengths.join("\n• ").replace(/^/, "• ");
   weaknessesEl.textContent = weaknesses.join("\n• ").replace(/^/, "• ");
-  levelTextEl.textContent = "Szint: " + level.label;
-  pointerEl.style.left = level.position + "%";
+  levelTextEl.textContent = "Szint: " + finalLevel.label;
+pointerEl.style.left = finalLevel.position + "%";
+
+  if (checkNote) {
+  checkBoxEl.style.display = "block";
+  checkBoxEl.textContent = checkNote;
+} else {
+  checkBoxEl.style.display = "none";
+  checkBoxEl.textContent = "";
+}
 
   sessionStorage.setItem("step_summary_done", Date.now().toString());
 }
