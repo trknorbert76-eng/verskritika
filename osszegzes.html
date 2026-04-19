@@ -189,7 +189,29 @@ button.secondary {
 
   <div class="card">
     <h2>Összkép</h2>
-    <div class="summary" id="summary">Betöltés...</div>
+
+      <div class="card">
+    <h2>Stílus</h2>
+
+    <div class="grid">
+      <div>
+        <div style="color:#c9b07a; margin-bottom:8px;">Stílusjelleg</div>
+        <div class="valueBox" id="styleLabel">—</div>
+      </div>
+
+      <div>
+        <div style="color:#c9b07a; margin-bottom:8px;">Stílusjegyek</div>
+        <div class="valueBox" id="styleTraits">—</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 14px;">
+      <div style="color:#c9b07a; margin-bottom:8px;">Stílus indoklása</div>
+      <div class="valueBox" id="styleReasoning">—</div>
+    </div>
+ 
+      </div>
+     <div class="summary" id="summary">Betöltés...</div>
     <div class="level-text" id="levelText"></div>
 
     <div class="scale">
@@ -235,6 +257,9 @@ const pointerEl = document.getElementById("pointer");
 const strengthsEl = document.getElementById("strengths");
 const weaknessesEl = document.getElementById("weaknesses");
 const poemTextEl = document.getElementById("poemText");
+const styleLabelEl = document.getElementById("styleLabel");
+const styleTraitsEl = document.getElementById("styleTraits");
+const styleReasoningEl = document.getElementById("styleReasoning");
 
 console.log("poem:", sessionStorage.getItem("poem"));
 console.log("analysis_kind:", sessionStorage.getItem("analysis_kind"));
@@ -294,6 +319,12 @@ if (!poem || !kind || !structure || !rhythm || !images || !expression) {
 
 function renderSummary() {
   poemTextEl.textContent = poem;
+
+   styleLabelEl.textContent = kind.style_label || "Nincs megadva";
+  styleTraitsEl.textContent = Array.isArray(kind.style_traits) && kind.style_traits.length
+    ? kind.style_traits.join(", ")
+    : "Nincs megadva";
+  styleReasoningEl.textContent = kind.style_reasoning || "Nincs külön indoklás.";
 
   const baseLevel = determineLevel(kind, structure, rhythm, images, expression);
   const level = applyCaps(baseLevel, structure, images, expression);
