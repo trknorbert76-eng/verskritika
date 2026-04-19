@@ -645,12 +645,13 @@ async function runFinalCheckAndGo() {
       result: data.result
     }));
 
-    sessionStorage.setItem("analysis_check", JSON.stringify({
-      poem,
-      result: data.result
-    }));
+   sessionStorage.setItem("analysis_check", JSON.stringify({
+  poem,
+  result: data.result
+}));
+sessionStorage.setItem("step_summary_done", Date.now().toString());
 
-    window.location.href = NEXT_PAGE;
+window.location.href = NEXT_PAGE;
   } catch (err) {
     showError(err.message || "Ismeretlen hiba történt a végső ellenőrzésnél.");
   } finally {
@@ -750,12 +751,12 @@ async function runExpressionAnalysis(forceRefresh = false) {
       );
     }
 
-    sessionStorage.setItem("analysis_expression", JSON.stringify({
-      poem,
-      result: data.result
-    }));
-
-    renderResult(data.result);
+   sessionStorage.setItem("analysis_expression", JSON.stringify({
+  poem,
+  result: data.result
+}));
+sessionStorage.setItem("step_expression_done", Date.now().toString());
+ renderResult(data.result);
     showInfo("A kifejezésmód elemzése elkészült.");
 
     if (autorun) {
@@ -776,6 +777,8 @@ backBtn.addEventListener("click", () => {
 reloadBtn.addEventListener("click", () => {
   sessionStorage.removeItem("analysis_expression");
   sessionStorage.removeItem("analysis_check");
+  sessionStorage.removeItem("step_expression_done");
+  sessionStorage.removeItem("step_summary_done");
   runExpressionAnalysis(true);
 });
 
