@@ -259,10 +259,7 @@ button.next {
       <div class="valueBox" id="cohesion">—</div>
     </div>
 
-    <div class="card">
-      <h2>Indoklás</h2>
-
-<div class="card">
+   <div class="card">
   <h2>Indoklás</h2>
 
   <div class="infoRow">
@@ -325,6 +322,9 @@ button.next {
 </div>
 
 <script>
+const params = new URLSearchParams(window.location.search);
+const autorun = params.get("autorun") === "1";
+  
 const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
 const NEXT_PAGE = "ritmus.html";
 
@@ -443,15 +443,14 @@ async function runStructureAnalysis(forceRefresh = false) {
   hideError();
   hideInfo();
 
-  if (!forceRefresh) {
-    const savedStructure = safeParse(sessionStorage.getItem("analysis_structure") || "");
-    if (savedStructure) {
-      renderResult(savedStructure);
-      showInfo("A korábbi szerkezeti eredmény betöltve.");
-      return;
-    }
+ if (!forceRefresh && !autorun) {
+  const savedStructure = safeParse(sessionStorage.getItem("analysis_structure") || "");
+  if (savedStructure) {
+    renderResult(savedStructure);
+    showInfo("A korábbi szerkezeti eredmény betöltve.");
+    return;
   }
-
+}
   showLoading("A szerkezeti elemzés folyamatban...");
   resultLayout.style.display = "none";
   footerRow.style.display = "none";
@@ -477,9 +476,10 @@ async function runStructureAnalysis(forceRefresh = false) {
       throw new Error(data.error || "A worker nem adott megfelelő választ.");
     }
 
-    sessionStorage.setItem("analysis_structure", JSON.stringify(data.result));
-    renderResult(data.result);
-    showInfo("A szerkezeti elemzés elkészült.");
+   sessionStorage.setItem("analysis_structure", JSON.stringify(data.result));
+sessionStorage.setItem("step_structure_done", Date.now().toString());
+renderResult(data.result);
+showInfo("A szerkezeti elemzés elkészült.");
   } catch (err) {
     showError(err.message || "Ismeretlen hiba történt.");
   } finally {
@@ -500,7 +500,7 @@ nextBtn.addEventListener("click", () => {
   window.location.href = NEXT_PAGE;
 });
 
-runStructureAnalysis();
+runStructureAnalysis(autorun);
 </script>
 
 </body>
