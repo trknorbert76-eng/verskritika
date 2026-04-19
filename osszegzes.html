@@ -320,13 +320,22 @@ function renderSummary() {
     };
   }
 
-  let summary = buildSummary(kind, structure, rhythm, images, expression, finalLevel);
+let summary = buildSummary(kind, structure, rhythm, images, expression, finalLevel);
 
 if (check && typeof check.summary_text === "string" && check.summary_text.trim()) {
   summary = check.summary_text.trim();
 }
-  const strengths = buildStrengths(kind, structure, rhythm, images, expression);
-  const weaknesses = buildWeaknesses(kind, structure, rhythm, images, expression);
+
+let strengths = buildStrengths(kind, structure, rhythm, images, expression);
+let weaknesses = buildWeaknesses(kind, structure, rhythm, images, expression);
+
+if (check && Array.isArray(check.strengths) && check.strengths.length) {
+  strengths = check.strengths;
+}
+
+if (check && Array.isArray(check.weaknesses) && check.weaknesses.length) {
+  weaknesses = check.weaknesses;
+}
 
   summaryEl.textContent = summary;
   strengthsEl.textContent = strengths.join("\n• ").replace(/^/, "• ");
@@ -345,14 +354,14 @@ function determineLevel(kind, structure, rhythm, images, expression) {
   const expressionMode = (expression.expression_mode || "").toLowerCase();
   const rhythmText = ((rhythm.flow || "") + " " + (rhythm.movement || "") + " " + (rhythm.breaks || "")).toLowerCase();
 
-  if (expression.overall_expression === "inkább közhelyes") score += 0;
-  else if (expression.overall_expression === "inkább hagyományos") score += 1;
-  else if (expression.overall_expression === "vegyes") score += 2;
-  else if (expression.overall_expression === "inkább egyedi") score += 3;
+if (expression.overall_expression === "inkább közhelyes") score += 0;
+else if (expression.overall_expression === "inkább hagyományos") score += 0.5;
+else if (expression.overall_expression === "vegyes") score += 1;
+else if (expression.overall_expression === "inkább egyedi") score += 2.5;
 
-  if (expression.originality_of_voice === "többnyire közhelyes") score -= 1;
-  else if (expression.originality_of_voice === "részben ismerős") score += 1;
-  else if (expression.originality_of_voice === "saját hangú") score += 2;
+if (expression.originality_of_voice === "többnyire közhelyes") score -= 1;
+else if (expression.originality_of_voice === "részben ismerős") score += 0;
+else if (expression.originality_of_voice === "saját hangú") score += 1.5;
 
   if (expression.precision === "pontos") score += 2;
   else if (expression.precision === "részben pontos") score += 1;
@@ -386,11 +395,11 @@ function determineLevel(kind, structure, rhythm, images, expression) {
     score += 2;
   }
 
-  if (images.originality === "erősen eredeti") score += 2;
-  else if (images.originality === "részben egyedi") score += 1;
+ if (images.originality === "erősen eredeti") score += 2;
+else if (images.originality === "részben egyedi") score += 0.5;
 
-  if (images.imagery_role === "erősen jelentéshordozó") score += 1;
-  else if (images.imagery_role === "részben jelentéshordozó") score += 0.5;
+if (images.imagery_role === "erősen jelentéshordozó") score += 1;
+else if (images.imagery_role === "részben jelentéshordozó") score += 0.25;
 
   if (images.imagery_cohesion === "összefüggő") score += 1;
   else if (images.imagery_cohesion === "lazán kapcsolódó") score += 0.5;
@@ -444,6 +453,18 @@ function applyCaps(level, structure, images, expression) {
   ) {
     cappedLevel = { label: "közhelyes működés", position: 8 };
   }
+
+  // 👇 EZ AZ ÚJ RÉSZ
+  if (
+    structure.structure_type === "statikus" &&
+    expression.overall_expression === "vegyes" &&
+    expression.originality_of_voice !== "saját hangú"
+  ) {
+    cappedLevel = { label: "vegyes / közepes", position: 32 };
+  }
+
+  return cappedLevel;
+}
 
   return cappedLevel;
 }
