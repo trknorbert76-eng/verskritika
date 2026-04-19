@@ -278,8 +278,7 @@ const poemTextEl = document.getElementById("poemText");
 const styleLabelEl = document.getElementById("styleLabel");
 const styleTraitsEl = document.getElementById("styleTraits");
 const styleReasoningEl = document.getElementById("styleReasoning");
-  const reviewCard = document.getElementById("reviewCard");
-const reviewTextEl = document.getElementById("reviewText");
+ const reviewTextEl = document.getElementById("reviewText");
 const reviewAdjustmentEl = document.getElementById("reviewAdjustment");
   
 
@@ -367,7 +366,7 @@ if (check && Array.isArray(check.weaknesses) && check.weaknesses.length) {
   
 reviewTextEl.textContent = "Nincs végső ellenőrzés.";
 reviewAdjustmentEl.textContent = "Nincs korrekció.";
-reviewCard.style.display = "block";
+
   
   sessionStorage.setItem("step_summary_done", Date.now().toString());
 }
