@@ -565,6 +565,11 @@ async function runExpressionAnalysis(forceRefresh = false) {
 
     renderResult(data.result);
     showInfo("A kifejezésmód elemzése elkészült.");
+
+    if (autorun) {
+  await runFinalCheckAndGo();
+  return;
+}
   } catch (err) {
     showError(err.message || "Ismeretlen hiba történt.");
   } finally {
