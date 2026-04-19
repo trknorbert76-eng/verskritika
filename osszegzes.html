@@ -454,6 +454,7 @@ function applyCaps(level, structure, images, expression) {
     cappedLevel = { label: "közhelyes működés", position: 8 };
   }
 
+  // ✅ IDE jön
   if (
     structure.structure_type === "statikus" &&
     expression.overall_expression === "vegyes" &&
@@ -461,21 +462,6 @@ function applyCaps(level, structure, images, expression) {
   ) {
     cappedLevel = { label: "vegyes / közepes", position: 32 };
   }
-
-  return cappedLevel;
-}
-
-  // 👇 EZ AZ ÚJ RÉSZ
-  if (
-    structure.structure_type === "statikus" &&
-    expression.overall_expression === "vegyes" &&
-    expression.originality_of_voice !== "saját hangú"
-  ) {
-    cappedLevel = { label: "vegyes / közepes", position: 32 };
-  }
-
-  return cappedLevel;
-}
 
   return cappedLevel;
 }
