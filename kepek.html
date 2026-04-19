@@ -339,6 +339,8 @@ button.next {
 </div>
 
 <script>
+const params = new URLSearchParams(window.location.search);
+const autorun = params.get("autorun") === "1";
 const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
 const NEXT_PAGE = "kifejezesmod.html";
 
@@ -492,7 +494,7 @@ async function runImagesAnalysis(forceRefresh = false) {
   hideError();
   hideInfo();
 
-  if (!forceRefresh) {
+  if (!forceRefresh && !autorun) {
   const savedImages = safeParse(sessionStorage.getItem("analysis_images") || "");
   if (savedImages && savedImages.poem === poem && savedImages.result) {
     renderResult(savedImages.result);
@@ -530,12 +532,13 @@ async function runImagesAnalysis(forceRefresh = false) {
       );
     }
 
-    sessionStorage.setItem("analysis_images", JSON.stringify({
+sessionStorage.setItem("analysis_images", JSON.stringify({
   poem,
   result: data.result
 }));
+sessionStorage.setItem("step_imagery_done", Date.now().toString());
 renderResult(data.result);
-    showInfo("A képi elemzés elkészült.");
+showInfo("A képi elemzés elkészült.");
   } catch (err) {
     showError(err.message || "Ismeretlen hiba történt.");
   } finally {
@@ -549,6 +552,7 @@ backBtn.addEventListener("click", () => {
 
 reloadBtn.addEventListener("click", () => {
   sessionStorage.removeItem("analysis_images");
+  sessionStorage.removeItem("step_imagery_done");
   runImagesAnalysis(true);
 });
 
@@ -556,7 +560,7 @@ nextBtn.addEventListener("click", () => {
   window.location.href = NEXT_PAGE;
 });
 
-runImagesAnalysis();
+runImagesAnalysis(autorun);
 </script>
 
 </body>
