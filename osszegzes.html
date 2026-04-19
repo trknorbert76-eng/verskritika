@@ -320,7 +320,11 @@ function renderSummary() {
     };
   }
 
-  const summary = buildSummary(kind, structure, rhythm, images, expression, finalLevel);
+  let summary = buildSummary(kind, structure, rhythm, images, expression, finalLevel);
+
+if (check && typeof check.summary_text === "string" && check.summary_text.trim()) {
+  summary = check.summary_text.trim();
+}
   const strengths = buildStrengths(kind, structure, rhythm, images, expression);
   const weaknesses = buildWeaknesses(kind, structure, rhythm, images, expression);
 
