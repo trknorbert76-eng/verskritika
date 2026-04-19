@@ -213,8 +213,7 @@ button.secondary {
       </div>
      <div class="summary" id="summary">Betöltés...</div>
     <div class="level-text" id="levelText"></div>
-    <div class="valueBox" id="checkBox" style="display:none; margin-top:14px;"></div>
-
+    
     <div class="scale">
       <div class="bar"></div>
       <div class="pointer" id="pointer"></div>
@@ -261,15 +260,6 @@ const poemTextEl = document.getElementById("poemText");
 const styleLabelEl = document.getElementById("styleLabel");
 const styleTraitsEl = document.getElementById("styleTraits");
 const styleReasoningEl = document.getElementById("styleReasoning");
-const checkBoxEl = document.getElementById("checkBox");
-const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
-
-console.log("poem:", sessionStorage.getItem("poem"));
-console.log("analysis_kind:", sessionStorage.getItem("analysis_kind"));
-console.log("analysis_structure:", sessionStorage.getItem("analysis_structure"));
-console.log("analysis_rhythm:", sessionStorage.getItem("analysis_rhythm"));
-console.log("analysis_images:", sessionStorage.getItem("analysis_images"));
-console.log("analysis_expression:", sessionStorage.getItem("analysis_expression"));
 
 function showError(message) {
   errorBox.textContent = message;
@@ -290,112 +280,56 @@ const structurePack = safeParse(sessionStorage.getItem("analysis_structure") || 
 const rhythmPack = safeParse(sessionStorage.getItem("analysis_rhythm") || "");
 const imagesPack = safeParse(sessionStorage.getItem("analysis_images") || "");
 const expressionPack = safeParse(sessionStorage.getItem("analysis_expression") || "");
+const checkPack = safeParse(sessionStorage.getItem("analysis_check") || "");
 
 const kind = kindPack ? (kindPack.result || kindPack) : null;
 const structure = structurePack ? (structurePack.result || structurePack) : null;
 const rhythm = rhythmPack ? (rhythmPack.result || rhythmPack) : null;
 const images = imagesPack ? (imagesPack.result || imagesPack) : null;
 const expression = expressionPack ? (expressionPack.result || expressionPack) : null;
+const check = checkPack ? (checkPack.result || checkPack) : null;
 
-console.log("parsed:", {
-  poem,
-  kind,
-  structure,
-  rhythm,
-  images,
-  expression
-});
-
-if (!poem || !kind || !structure || !rhythm || !images || !expression) {
+if (!poem || !kind || !structure || !rhythm || !images || !expression || !check) {
   showError("Hiányoznak az elemzés adatai.");
-  console.log("HIÁNYZÓ ADATOK:", {
-    poem,
-    kind,
-    structure,
-    rhythm,
-    images,
-    expression
-  });
 } else {
   renderSummary();
 }
 
-async function renderSummary() {
+function renderSummary() {
   poemTextEl.textContent = poem;
 
-   styleLabelEl.textContent = kind.style_label || "Nincs megadva";
-  styleTraitsEl.textContent = Array.isArray(kind.style_traits) && kind.style_traits.length
-    ? kind.style_traits.join(", ")
-    : "Nincs megadva";
+  styleLabelEl.textContent = kind.style_label || "Nincs megadva";
+  styleTraitsEl.textContent =
+    Array.isArray(kind.style_traits) && kind.style_traits.length
+      ? kind.style_traits.join(", ")
+      : "Nincs megadva";
   styleReasoningEl.textContent = kind.style_reasoning || "Nincs külön indoklás.";
 
- const baseLevel = determineLevel(kind, structure, rhythm, images, expression);
-const level = applyCaps(baseLevel, structure, images, expression);
+  const baseLevel = determineLevel(kind, structure, rhythm, images, expression);
+  const level = applyCaps(baseLevel, structure, images, expression);
 
-let finalLevel = { ...level };
-let checkNote = "";
+  let finalLevel = { ...level };
 
-try {
-  const res = await fetch(WORKER_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      poem,
-      step: "check",
-      previous: {
-        kind,
-        structure,
-        rhythm,
-        images,
-        expression,
-        summary_base: baseLevel,
-        summary_current: level
-      }
-    })
-  });
-
-  const data = await res.json();
-
-  if (res.ok && data.ok && data.result) {
-    const check = data.result;
-
-    if (
-      typeof check.final_level_label === "string" &&
-      typeof check.final_level_position === "number"
-    ) {
-      finalLevel = {
-        label: check.final_level_label,
-        position: check.final_level_position
-      };
-    }
-
-    if (check.note) {
-      checkNote = check.note;
-    }
+  if (
+    check &&
+    typeof check.final_level_label === "string" &&
+    typeof check.final_level_position === "number"
+  ) {
+    finalLevel = {
+      label: check.final_level_label,
+      position: check.final_level_position
+    };
   }
-} catch (err) {
-  console.log("CHECK hiba:", err);
-}
 
-const summary = buildSummary(kind, structure, rhythm, images, expression, finalLevel);
-const strengths = buildStrengths(kind, structure, rhythm, images, expression);
-const weaknesses = buildWeaknesses(kind, structure, rhythm, images, expression);
+  const summary = buildSummary(kind, structure, rhythm, images, expression, finalLevel);
+  const strengths = buildStrengths(kind, structure, rhythm, images, expression);
+  const weaknesses = buildWeaknesses(kind, structure, rhythm, images, expression);
 
   summaryEl.textContent = summary;
   strengthsEl.textContent = strengths.join("\n• ").replace(/^/, "• ");
   weaknessesEl.textContent = weaknesses.join("\n• ").replace(/^/, "• ");
   levelTextEl.textContent = "Szint: " + finalLevel.label;
-pointerEl.style.left = finalLevel.position + "%";
-
-  if (checkNote) {
-  checkBoxEl.style.display = "block";
-  checkBoxEl.textContent = checkNote;
-} else {
-  checkBoxEl.style.display = "none";
-  checkBoxEl.textContent = "";
-}
+  pointerEl.style.left = finalLevel.position + "%";
 
   sessionStorage.setItem("step_summary_done", Date.now().toString());
 }
