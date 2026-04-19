@@ -345,6 +345,19 @@ button.next {
 </div>
 
 <script>
+function safeParse(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+function unwrapPack(pack) {
+  if (!pack) return null;
+  return pack.result || pack;
+}
+
 const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
 const NEXT_PAGE = "osszegzes.html";
 
@@ -414,19 +427,6 @@ function showInfo(message) {
 function hideInfo() {
   infoBox.textContent = "";
   infoBox.style.display = "none";
-}
-
-function safeParse(text) {
-  try {
-    return JSON.parse(text);
-  } catch {
-    return null;
-  }
-}
-
-function unwrapPack(pack) {
-  if (!pack) return null;
-  return pack.result || pack;
 }
 
 function getStoredPack(key) {
@@ -638,6 +638,12 @@ async function runFinalCheckAndGo() {
         (data.raw ? "\n\nNYERS VÁLASZ:\n" + data.raw : "")
       );
     }
+
+    console.log("CHECK RESULT:", data.result);
+    console.log("CHECK SAVED:", JSON.stringify({
+      poem,
+      result: data.result
+    }));
 
     sessionStorage.setItem("analysis_check", JSON.stringify({
       poem,
