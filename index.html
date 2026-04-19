@@ -14,7 +14,7 @@ body {
 }
 
 .wrap {
-  max-width: 900px;
+  max-width: 980px;
   margin: 0 auto;
   padding: 30px 20px 60px;
 }
@@ -64,14 +64,8 @@ button {
 }
 
 button:disabled {
-  opacity: 0.65;
+  opacity: 0.8;
   cursor: default;
-}
-
-#nextBtn {
-  display: none;
-  background: #4caf50;
-  color: #fff;
 }
 
 .statusBox {
@@ -94,6 +88,112 @@ button:disabled {
   border: 1px solid #2f6a35;
   color: #cdeccf;
 }
+
+.stepsWrap {
+  display: none;
+  margin-top: 28px;
+}
+
+.stepsTitle {
+  font-size: 1.15rem;
+  color: #d6b36a;
+  margin-bottom: 14px;
+}
+
+.stepRow {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.stepBtn {
+  text-align: left;
+  background: #7b1e1e;
+  color: #f5dddd;
+  border: 1px solid #9a3c3c;
+}
+
+.stepBtn.loading {
+  background: #a35d00;
+  color: #fff3df;
+  border: 1px solid #d38a1f;
+}
+
+.stepBtn.done {
+  background: #2e7d32;
+  color: #fff;
+  border: 1px solid #4caf50;
+}
+
+.progressBox {
+  height: 14px;
+  background: #2a1616;
+  border: 1px solid #5d2b2b;
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progressFill {
+  height: 100%;
+  width: 0%;
+  background: #7b1e1e;
+  transition: width 0.35s ease;
+}
+
+.progressBox.loading {
+  background: #3a2605;
+  border-color: #a35d00;
+}
+
+.progressBox.loading .progressFill {
+  width: 100%;
+  background: linear-gradient(90deg, #ff9800 0%, #ffb74d 50%, #ff9800 100%);
+  background-size: 200% 100%;
+  animation: moveBar 1s linear infinite;
+}
+
+.progressBox.done {
+  background: #19301b;
+  border-color: #2e7d32;
+}
+
+.progressBox.done .progressFill {
+  width: 100%;
+  background: #4caf50;
+  animation: none;
+}
+
+.stepNote {
+  margin-top: 4px;
+  font-size: 0.92rem;
+  color: #bbb;
+}
+
+.runnerInfo {
+  margin-top: 18px;
+  padding: 14px 16px;
+  background: #151515;
+  border: 1px solid #333;
+  border-radius: 12px;
+  color: #ddd;
+  line-height: 1.6;
+  display: none;
+  white-space: pre-wrap;
+}
+
+@keyframes moveBar {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (max-width: 760px) {
+  .stepRow {
+    grid-template-columns: 1fr;
+  }
+}
 </style>
 </head>
 
@@ -109,20 +209,153 @@ button:disabled {
 
   <div class="btnRow">
     <button id="analyzeBtn">Elemzés</button>
-    <button id="nextBtn">Tovább →</button>
   </div>
 
   <div class="statusBox errorBox" id="errorBox"></div>
   <div class="statusBox okBox" id="okBox"></div>
+
+  <div class="stepsWrap" id="stepsWrap">
+    <div class="stepsTitle">Elemző oldalak állapota</div>
+
+    <div class="stepRow">
+      <button class="stepBtn" id="btn-kind" disabled>Felismerés várakozik</button>
+      <div>
+        <div class="progressBox" id="box-kind"><div class="progressFill"></div></div>
+        <div class="stepNote" id="note-kind">Még nem indult el.</div>
+      </div>
+    </div>
+
+    <div class="stepRow">
+      <button class="stepBtn" id="btn-structure" disabled>Szerkezet várakozik</button>
+      <div>
+        <div class="progressBox" id="box-structure"><div class="progressFill"></div></div>
+        <div class="stepNote" id="note-structure">Még nem indult el.</div>
+      </div>
+    </div>
+
+    <div class="stepRow">
+      <button class="stepBtn" id="btn-rhythm" disabled>Ritmus várakozik</button>
+      <div>
+        <div class="progressBox" id="box-rhythm"><div class="progressFill"></div></div>
+        <div class="stepNote" id="note-rhythm">Még nem indult el.</div>
+      </div>
+    </div>
+
+    <div class="stepRow">
+      <button class="stepBtn" id="btn-imagery" disabled>Kép várakozik</button>
+      <div>
+        <div class="progressBox" id="box-imagery"><div class="progressFill"></div></div>
+        <div class="stepNote" id="note-imagery">Még nem indult el.</div>
+      </div>
+    </div>
+
+    <div class="stepRow">
+      <button class="stepBtn" id="btn-expression" disabled>Kifejezés várakozik</button>
+      <div>
+        <div class="progressBox" id="box-expression"><div class="progressFill"></div></div>
+        <div class="stepNote" id="note-expression">Még nem indult el.</div>
+      </div>
+    </div>
+
+    <div class="stepRow">
+      <button class="stepBtn" id="btn-summary" disabled>Összegzés várakozik</button>
+      <div>
+        <div class="progressBox" id="box-summary"><div class="progressFill"></div></div>
+        <div class="stepNote" id="note-summary">Még nem indult el.</div>
+      </div>
+    </div>
+
+    <div class="runnerInfo" id="runnerInfo"></div>
+  </div>
+
+  <iframe id="runnerFrame" style="display:none;"></iframe>
 </div>
 
 <script>
 const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
+
 const analyzeBtn = document.getElementById("analyzeBtn");
-const nextBtn = document.getElementById("nextBtn");
 const poemInput = document.getElementById("poemInput");
 const errorBox = document.getElementById("errorBox");
 const okBox = document.getElementById("okBox");
+const stepsWrap = document.getElementById("stepsWrap");
+const runnerInfo = document.getElementById("runnerInfo");
+const runnerFrame = document.getElementById("runnerFrame");
+
+const pipeline = [
+  {
+    key: "kind",
+    doneKey: "step_kind_done",
+    page: "felismeres.html?autorun=1",
+    targetPage: "felismeres.html",
+    buttonId: "btn-kind",
+    boxId: "box-kind",
+    noteId: "note-kind",
+    waitingText: "Felismerés várakozik",
+    loadingText: "Felismerés folyamatban",
+    doneText: "Felismerés kész"
+  },
+  {
+    key: "structure",
+    doneKey: "step_structure_done",
+    page: "szerkezet.html?autorun=1",
+    targetPage: "szerkezet.html",
+    buttonId: "btn-structure",
+    boxId: "box-structure",
+    noteId: "note-structure",
+    waitingText: "Szerkezet várakozik",
+    loadingText: "Szerkezet folyamatban",
+    doneText: "Szerkezet kész"
+  },
+  {
+    key: "rhythm",
+    doneKey: "step_rhythm_done",
+    page: "ritmus.html?autorun=1",
+    targetPage: "ritmus.html",
+    buttonId: "btn-rhythm",
+    boxId: "box-rhythm",
+    noteId: "note-rhythm",
+    waitingText: "Ritmus várakozik",
+    loadingText: "Ritmus folyamatban",
+    doneText: "Ritmus kész"
+  },
+  {
+    key: "imagery",
+    doneKey: "step_imagery_done",
+    page: "kepek.html?autorun=1",
+    targetPage: "kepek.html",
+    buttonId: "btn-imagery",
+    boxId: "box-imagery",
+    noteId: "note-imagery",
+    waitingText: "Kép várakozik",
+    loadingText: "Kép folyamatban",
+    doneText: "Kép kész"
+  },
+  {
+    key: "expression",
+    doneKey: "step_expression_done",
+    page: "kifejezesmod.html?autorun=1",
+    targetPage: "kifejezesmod.html",
+    buttonId: "btn-expression",
+    boxId: "box-expression",
+    noteId: "note-expression",
+    waitingText: "Kifejezés várakozik",
+    loadingText: "Kifejezés folyamatban",
+    doneText: "Kifejezés kész"
+  },
+  {
+    key: "summary",
+    doneKey: "step_summary_done",
+    page: "osszegzes.html?autorun=1",
+    targetPage: "osszegzes.html",
+    buttonId: "btn-summary",
+    boxId: "box-summary",
+    noteId: "note-summary",
+    waitingText: "Összegzés várakozik",
+    loadingText: "Összegzés folyamatban",
+    doneText: "Összegzés kész"
+  }
+];
 
 function showError(message) {
   okBox.style.display = "none";
@@ -150,11 +383,129 @@ function setLoading(isLoading) {
   analyzeBtn.textContent = isLoading ? "Ellenőrzés..." : "Elemzés";
 }
 
+function appendRunnerInfo(message) {
+  runnerInfo.style.display = "block";
+  runnerInfo.textContent += (runnerInfo.textContent ? "\n" : "") + message;
+}
+
+function resetRunnerInfo() {
+  runnerInfo.style.display = "none";
+  runnerInfo.textContent = "";
+}
+
+function resetStepUi(step) {
+  const btn = document.getElementById(step.buttonId);
+  const box = document.getElementById(step.boxId);
+  const note = document.getElementById(step.noteId);
+
+  btn.disabled = true;
+  btn.textContent = step.waitingText;
+  btn.classList.remove("loading", "done");
+
+  box.classList.remove("loading", "done");
+  note.textContent = "Még nem indult el.";
+}
+
+function setStepLoading(step) {
+  const btn = document.getElementById(step.buttonId);
+  const box = document.getElementById(step.boxId);
+  const note = document.getElementById(step.noteId);
+
+  btn.disabled = true;
+  btn.textContent = step.loadingText;
+  btn.classList.remove("done");
+  btn.classList.add("loading");
+
+  box.classList.remove("done");
+  box.classList.add("loading");
+
+  note.textContent = "Az oldal háttérben dolgozik...";
+}
+
+function setStepDone(step) {
+  const btn = document.getElementById(step.buttonId);
+  const box = document.getElementById(step.boxId);
+  const note = document.getElementById(step.noteId);
+
+  btn.disabled = false;
+  btn.textContent = step.doneText;
+  btn.classList.remove("loading");
+  btn.classList.add("done");
+
+  box.classList.remove("loading");
+  box.classList.add("done");
+
+  note.textContent = "Az eredmény elkészült, az oldal megnyitható.";
+
+  btn.onclick = () => {
+    window.location.href = step.targetPage;
+  };
+}
+
+function clearStepStorage() {
+  sessionStorage.removeItem("analysis_kind");
+  sessionStorage.removeItem("analysis_structure");
+  sessionStorage.removeItem("analysis_rhythm");
+  sessionStorage.removeItem("analysis_rhyme");
+  sessionStorage.removeItem("analysis_imagery");
+  sessionStorage.removeItem("analysis_expression");
+  sessionStorage.removeItem("analysis_summary");
+
+  sessionStorage.removeItem("step_kind_done");
+  sessionStorage.removeItem("step_structure_done");
+  sessionStorage.removeItem("step_rhythm_done");
+  sessionStorage.removeItem("step_imagery_done");
+  sessionStorage.removeItem("step_expression_done");
+  sessionStorage.removeItem("step_summary_done");
+}
+
+function resetAllStepUi() {
+  pipeline.forEach(resetStepUi);
+}
+
+function waitForStep(doneKey, timeoutMs = 120000) {
+  return new Promise((resolve, reject) => {
+    const startedAt = Date.now();
+
+    const timer = setInterval(() => {
+      const done = sessionStorage.getItem(doneKey);
+
+      if (done) {
+        clearInterval(timer);
+        resolve(true);
+        return;
+      }
+
+      if (Date.now() - startedAt > timeoutMs) {
+        clearInterval(timer);
+        reject(new Error("Időtúllépés: " + doneKey));
+      }
+    }, 400);
+  });
+}
+
+async function runPipeline() {
+  for (const step of pipeline) {
+    appendRunnerInfo(step.loadingText + "...");
+    setStepLoading(step);
+
+    runnerFrame.src = step.page + "&t=" + Date.now();
+
+    await waitForStep(step.doneKey);
+
+    setStepDone(step);
+    appendRunnerInfo(step.doneText + ".");
+  }
+
+  showOk("A vers elfogadva. Az elemző oldalak elkészültek, bármelyikbe beléphetsz.");
+}
+
 analyzeBtn.addEventListener("click", async () => {
   const poem = poemInput.value.trim();
 
   clearMessages();
-  nextBtn.style.display = "none";
+  resetRunnerInfo();
+  stepsWrap.style.display = "none";
 
   if (!poem) {
     showError("Illessz be egy verset.");
@@ -188,27 +539,37 @@ analyzeBtn.addEventListener("click", async () => {
     }
 
     sessionStorage.setItem("poem", poem);
+    clearStepStorage();
+    resetAllStepUi();
 
+    // Az első eredményt rögtön eltesszük, hogy a felismerés oldal már kész adattal nyíljon meg.
     sessionStorage.setItem("analysis_kind", JSON.stringify(data.result));
+    sessionStorage.setItem("step_kind_done", Date.now().toString());
 
-    sessionStorage.removeItem("analysis_structure");
-    sessionStorage.removeItem("analysis_rhythm");
-    sessionStorage.removeItem("analysis_rhyme");
-    sessionStorage.removeItem("analysis_imagery");
-    sessionStorage.removeItem("analysis_summary");
+    stepsWrap.style.display = "block";
+    setStepDone(pipeline[0]);
+    appendRunnerInfo("A vers felismerhető versként. Háttérelemzés indul...");
+    showOk("A vers elfogadva. A háttérelemzés elindult.");
 
-    showOk("A vers elmentve. Tovább mehetsz az első belső elemző oldalra.");
-    nextBtn.style.display = "inline-block";
+    // A többi oldal sorban fusson.
+    for (let i = 1; i < pipeline.length; i++) {
+      const step = pipeline[i];
+      appendRunnerInfo(step.loadingText + "...");
+      setStepLoading(step);
 
+      runnerFrame.src = step.page + "&t=" + Date.now();
+      await waitForStep(step.doneKey);
+
+      setStepDone(step);
+      appendRunnerInfo(step.doneText + ".");
+    }
+
+    showOk("Minden elemzés elkészült. Beléphetsz bármelyik oldalra.");
   } catch (err) {
-    showError("Nem sikerült kapcsolódni az elemzőhöz.");
+    showError(err.message || "Nem sikerült kapcsolódni az elemzőhöz.");
   } finally {
     setLoading(false);
   }
-});
-
-nextBtn.addEventListener("click", () => {
-  window.location.href = "felismeres.html";
 });
 </script>
 
