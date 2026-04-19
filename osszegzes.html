@@ -228,6 +228,23 @@ button.secondary {
     </div>
   </div>
 
+  <div class="card" id="reviewCard" style="display:none;">
+  <h2>Ellenőrzés</h2>
+
+  <div class="grid">
+    <div>
+      <div style="color:#c9b07a; margin-bottom:8px;">Ellenőr megállapítása</div>
+      <div class="valueBox" id="reviewText">—</div>
+    </div>
+
+    <div>
+      <div style="color:#c9b07a; margin-bottom:8px;">Korrekció</div>
+      <div class="valueBox" id="reviewAdjustment">—</div>
+    </div>
+  </div>
+</div>
+
+
   <div class="grid">
     <div class="card">
       <h2>Mi emeli</h2>
@@ -260,6 +277,10 @@ const poemTextEl = document.getElementById("poemText");
 const styleLabelEl = document.getElementById("styleLabel");
 const styleTraitsEl = document.getElementById("styleTraits");
 const styleReasoningEl = document.getElementById("styleReasoning");
+  const reviewCard = document.getElementById("reviewCard");
+const reviewTextEl = document.getElementById("reviewText");
+const reviewAdjustmentEl = document.getElementById("reviewAdjustment");
+  
 
 function showError(message) {
   errorBox.textContent = message;
@@ -342,7 +363,11 @@ if (check && Array.isArray(check.weaknesses) && check.weaknesses.length) {
   weaknessesEl.textContent = weaknesses.join("\n• ").replace(/^/, "• ");
   levelTextEl.textContent = "Szint: " + finalLevel.label;
   pointerEl.style.left = finalLevel.position + "%";
-
+  
+reviewTextEl.textContent = "Nincs végső ellenőrzés.";
+reviewAdjustmentEl.textContent = "Nincs korrekció.";
+reviewCard.style.display = "block";
+  
   sessionStorage.setItem("step_summary_done", Date.now().toString());
 }
 
