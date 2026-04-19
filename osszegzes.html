@@ -263,8 +263,26 @@ button.secondary {
 </div>
 
 <script>
-const params = new URLSearchParams(window.location.search);
-const autorun = params.get("autorun") === "1";
+function safeParse(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+function unwrapPack(pack) {
+  if (!pack) return null;
+  return pack.result || pack;
+}
+
+function getStoredPack(key) {
+  return safeParse(sessionStorage.getItem(key) || "");
+}
+
+function getStoredResult(key) {
+  return unwrapPack(getStoredPack(key));
+}
 
 const errorBox = document.getElementById("errorBox");
 const summaryEl = document.getElementById("summary");
@@ -276,43 +294,31 @@ const poemTextEl = document.getElementById("poemText");
 const styleLabelEl = document.getElementById("styleLabel");
 const styleTraitsEl = document.getElementById("styleTraits");
 const styleReasoningEl = document.getElementById("styleReasoning");
- const reviewTextEl = document.getElementById("reviewText");
+const reviewTextEl = document.getElementById("reviewText");
 const reviewAdjustmentEl = document.getElementById("reviewAdjustment");
-  
 
 function showError(message) {
   errorBox.textContent = message;
   errorBox.style.display = "block";
 }
 
-function safeParse(jsonText) {
-  try {
-    return JSON.parse(jsonText);
-  } catch {
-    return null;
-  }
-}
-
 const poem = sessionStorage.getItem("poem");
-const kindPack = safeParse(sessionStorage.getItem("analysis_kind") || "");
-const structurePack = safeParse(sessionStorage.getItem("analysis_structure") || "");
-const rhythmPack = safeParse(sessionStorage.getItem("analysis_rhythm") || "");
-const imagesPack = safeParse(sessionStorage.getItem("analysis_images") || "");
-const expressionPack = safeParse(sessionStorage.getItem("analysis_expression") || "");
-const checkPack = safeParse(sessionStorage.getItem("analysis_check") || "");
+const kind = getStoredResult("analysis_kind");
+const structure = getStoredResult("analysis_structure");
+const rhythm = getStoredResult("analysis_rhythm");
+const images = getStoredResult("analysis_images");
+const expression = getStoredResult("analysis_expression");
+const check = getStoredResult("analysis_check");
 
-const kind = kindPack ? (kindPack.result || kindPack) : null;
-const structure = structurePack ? (structurePack.result || structurePack) : null;
-const rhythm = rhythmPack ? (rhythmPack.result || rhythmPack) : null;
-const images = imagesPack ? (imagesPack.result || imagesPack) : null;
-const expression = expressionPack ? (expressionPack.result || expressionPack) : null;
-const check = checkPack ? (checkPack.result || checkPack) : null;
+console.log("SUMMARY CHECK RAW:", getStoredPack("analysis_check"));
+console.log("SUMMARY CHECK UNWRAPPED:", check);
 
 if (!poem || !kind || !structure || !rhythm || !images || !expression) {
   showError("Hiányoznak az elemzés adatai.");
 } else {
   renderSummary();
 }
+
 function renderSummary() {
   poemTextEl.textContent = poem;
 
@@ -331,6 +337,7 @@ function renderSummary() {
   if (
     check &&
     typeof check.final_level_label === "string" &&
+    check.final_level_label.trim() &&
     typeof check.final_level_position === "number"
   ) {
     finalLevel = {
@@ -339,55 +346,55 @@ function renderSummary() {
     };
   }
 
-let summary = buildSummary(kind, structure, rhythm, images, expression, finalLevel);
+  let summary = buildSummary(kind, structure, rhythm, images, expression, finalLevel);
 
-if (check && typeof check.summary_text === "string" && check.summary_text.trim()) {
-  summary = check.summary_text.trim();
-}
+  if (check && typeof check.summary_text === "string" && check.summary_text.trim()) {
+    summary = check.summary_text.trim();
+  }
 
-let strengths = buildStrengths(kind, structure, rhythm, images, expression);
-let weaknesses = buildWeaknesses(kind, structure, rhythm, images, expression);
+  let strengths = buildStrengths(kind, structure, rhythm, images, expression);
+  let weaknesses = buildWeaknesses(kind, structure, rhythm, images, expression);
 
-if (check && Array.isArray(check.strengths) && check.strengths.length) {
-  strengths = check.strengths;
-}
+  if (check && Array.isArray(check.strengths) && check.strengths.length) {
+    strengths = check.strengths;
+  }
 
-if (check && Array.isArray(check.weaknesses) && check.weaknesses.length) {
-  weaknesses = check.weaknesses;
-}
+  if (check && Array.isArray(check.weaknesses) && check.weaknesses.length) {
+    weaknesses = check.weaknesses;
+  }
 
-summaryEl.textContent = summary;
-strengthsEl.textContent = strengths.length
-  ? strengths.join("\n• ").replace(/^/, "• ")
-  : "—";
-weaknessesEl.textContent = weaknesses.length
-  ? weaknesses.join("\n• ").replace(/^/, "• ")
-  : "—";
-levelTextEl.textContent = "Szint: " + finalLevel.label;
-pointerEl.style.left = finalLevel.position + "%";
+  summaryEl.textContent = summary;
+  strengthsEl.textContent = strengths.length
+    ? strengths.join("\n• ").replace(/^/, "• ")
+    : "—";
+  weaknessesEl.textContent = weaknesses.length
+    ? weaknesses.join("\n• ").replace(/^/, "• ")
+    : "—";
+  levelTextEl.textContent = "Szint: " + finalLevel.label;
+  pointerEl.style.left = finalLevel.position + "%";
 
-if (check) {
-  reviewTextEl.textContent =
-  check.summary_text ||
-  check.reasoning ||
-  check.note ||
-  "Nincs részletes ellenőrzés.";
+  if (check) {
+    reviewTextEl.textContent =
+      check.summary_text ||
+      check.reasoning ||
+      check.note ||
+      "Nincs részletes ellenőrzés.";
 
-const change = (check.slider_change || "").trim().toLowerCase();
+    const change = String(check.slider_change || "").trim().toLowerCase();
 
-if (change === "feljebb") {
-  reviewAdjustmentEl.textContent = "A végső ellenőrzés felfelé módosította a besorolást.";
-} else if (change === "lejjebb") {
-  reviewAdjustmentEl.textContent = "A végső ellenőrzés lefelé módosította a besorolást.";
-} else {
-  reviewAdjustmentEl.textContent = "Nem történt szintkorrekció.";
-}
-} else {
-  reviewTextEl.textContent = "Nincs végső ellenőrzés.";
-  reviewAdjustmentEl.textContent = "Nincs korrekció.";
-}
+    if (change === "feljebb") {
+      reviewAdjustmentEl.textContent = "A végső ellenőrzés felfelé módosította a besorolást.";
+    } else if (change === "lejjebb") {
+      reviewAdjustmentEl.textContent = "A végső ellenőrzés lefelé módosította a besorolást.";
+    } else {
+      reviewAdjustmentEl.textContent = "Nem történt szintkorrekció.";
+    }
+  } else {
+    reviewTextEl.textContent = "Nincs végső ellenőrzés.";
+    reviewAdjustmentEl.textContent = "Nincs korrekció.";
+  }
 
-sessionStorage.setItem("step_summary_done", Date.now().toString());
+  sessionStorage.setItem("step_summary_done", Date.now().toString());
 }
 
 function determineLevel(kind, structure, rhythm, images, expression) {
@@ -396,16 +403,20 @@ function determineLevel(kind, structure, rhythm, images, expression) {
   const mainType = (kind.main_type || "").toLowerCase();
   const speechMode = (kind.speech_mode || "").toLowerCase();
   const expressionMode = (expression.expression_mode || "").toLowerCase();
-  const rhythmText = ((rhythm.flow || "") + " " + (rhythm.movement || "") + " " + (rhythm.breaks || "")).toLowerCase();
+  const rhythmText = (
+    (rhythm.flow || "") + " " +
+    (rhythm.movement || "") + " " +
+    (rhythm.breaks || "")
+  ).toLowerCase();
 
-if (expression.overall_expression === "inkább közhelyes") score += 0;
-else if (expression.overall_expression === "inkább hagyományos") score += 0.5;
-else if (expression.overall_expression === "vegyes") score += 1;
-else if (expression.overall_expression === "inkább egyedi") score += 2.5;
+  if (expression.overall_expression === "inkább közhelyes") score += 0;
+  else if (expression.overall_expression === "inkább hagyományos") score += 0.5;
+  else if (expression.overall_expression === "vegyes") score += 1;
+  else if (expression.overall_expression === "inkább egyedi") score += 2.5;
 
-if (expression.originality_of_voice === "többnyire közhelyes") score -= 1;
-else if (expression.originality_of_voice === "részben ismerős") score += 0;
-else if (expression.originality_of_voice === "saját hangú") score += 1.5;
+  if (expression.originality_of_voice === "többnyire közhelyes") score -= 1;
+  else if (expression.originality_of_voice === "részben ismerős") score += 0;
+  else if (expression.originality_of_voice === "saját hangú") score += 1.5;
 
   if (expression.precision === "pontos") score += 2;
   else if (expression.precision === "részben pontos") score += 1;
@@ -439,11 +450,11 @@ else if (expression.originality_of_voice === "saját hangú") score += 1.5;
     score += 2;
   }
 
- if (images.originality === "erősen eredeti") score += 2;
-else if (images.originality === "részben egyedi") score += 0.5;
+  if (images.originality === "erősen eredeti") score += 2;
+  else if (images.originality === "részben egyedi") score += 0.5;
 
-if (images.imagery_role === "erősen jelentéshordozó") score += 1;
-else if (images.imagery_role === "részben jelentéshordozó") score += 0.25;
+  if (images.imagery_role === "erősen jelentéshordozó") score += 1;
+  else if (images.imagery_role === "részben jelentéshordozó") score += 0.25;
 
   if (images.imagery_cohesion === "összefüggő") score += 1;
   else if (images.imagery_cohesion === "lazán kapcsolódó") score += 0.5;
@@ -498,7 +509,6 @@ function applyCaps(level, structure, images, expression) {
     cappedLevel = { label: "közhelyes működés", position: 8 };
   }
 
-  // ✅ IDE jön
   if (
     structure.structure_type === "statikus" &&
     expression.overall_expression === "vegyes" &&
