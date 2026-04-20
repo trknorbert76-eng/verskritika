@@ -282,6 +282,11 @@
         </div>
 
         <div class="infoRow">
+          <div class="miniTitle">Összkép</div>
+          <div class="valueBox" id="overallExpression">—</div>
+        </div>
+
+        <div class="infoRow">
           <div class="miniTitle">Miért ezt látja</div>
           <div class="valueBox" id="reasoning">—</div>
         </div>
@@ -368,6 +373,14 @@
       return pack.result || pack;
     }
 
+    function getStoredPack(key) {
+      return safeParse(sessionStorage.getItem(key) || "");
+    }
+
+    function getStoredResult(key) {
+      return unwrapPack(getStoredPack(key));
+    }
+
     const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
     const NEXT_PAGE = "osszegzes.html";
 
@@ -393,6 +406,7 @@
     const originalityOfVoiceNoteEl = document.getElementById("originalityOfVoiceNote");
     const toneNaturalnessEl = document.getElementById("toneNaturalness");
     const toneNaturalnessNoteEl = document.getElementById("toneNaturalnessNote");
+    const overallExpressionEl = document.getElementById("overallExpression");
     const reasoningEl = document.getElementById("reasoning");
 
     const prevMainTypeEl = document.getElementById("prevMainType");
@@ -439,14 +453,6 @@
       infoBox.style.display = "none";
     }
 
-    function getStoredPack(key) {
-      return safeParse(sessionStorage.getItem(key) || "");
-    }
-
-    function getStoredResult(key) {
-      return unwrapPack(getStoredPack(key));
-    }
-
     function renderPrevious(kindData, structureData, rhythmData, imagesData) {
       prevMainTypeEl.textContent = kindData?.main_type || "Nincs megadva";
       prevMoodEl.textContent = kindData?.mood || "Nincs megadva";
@@ -485,197 +491,11 @@
       toneNaturalnessNoteEl.textContent =
         result?.tone_naturalness_note || "Nincs külön magyarázat.";
 
+      overallExpressionEl.textContent = result?.overall_expression || "Nincs megadva";
       reasoningEl.textContent = result?.reasoning || "Nincs indoklás.";
 
       resultLayout.style.display = "grid";
       footerRow.style.display = "flex";
-    }
-
-    function determineSummaryBase(kind, structure, rhythm, images, expression) {
-      let score = 0;
-
-      const mainType = (kind?.main_type || "").toLowerCase();
-      const speechMode = (kind?.speech_mode || "").toLowerCase();
-      const expressionMode = (expression?.expression_mode || "").toLowerCase();
-      const rhythmText = (
-        (rhythm?.flow || "") + " " + (rhythm?.movement || "") + " " + (rhythm?.breaks || "")
-      ).toLowerCase();
-
-      if (expression?.overall_expression === "inkább közhelyes") score += 0;
-      else if (expression?.overall_expression === "inkább hagyományos") score += 1;
-      else if (expression?.overall_expression === "vegyes") score += 2;
-      else if (expression?.overall_expression === "inkább egyedi") score += 3;
-
-      if (expression?.originality_of_voice === "többnyire közhelyes") score -= 1;
-      else if (expression?.originality_of_voice === "részben ismerős") score += 1;
-      else if (expression?.originality_of_voice === "saját hangú") score += 2;
-
-      if (expression?.precision === "pontos") score += 2;
-      else if (expression?.precision === "részben pontos") score += 1;
-
-      if (expression?.tone_naturalness === "természetes") score += 1;
-
-      if (expression?.expression_mode === "felszólító / retorikai") {
-        score += 2;
-      }
-
-      if (
-        expression?.expression_mode === "felszólító / retorikai" &&
-        expression?.tone_naturalness === "természetes" &&
-        expression?.precision === "pontos"
-      ) {
-        score += 1;
-      }
-
-      if (
-        (
-          mainType === "hazafias" ||
-          speechMode.includes("buzdító") ||
-          speechMode.includes("felszólító") ||
-          expressionMode.includes("retorikai")
-        ) &&
-        (
-          structure?.structure_type === "finoman kibontakozó" ||
-          structure?.structure_type === "markánsan fejlődő"
-        )
-      ) {
-        score += 2;
-      }
-
-      if (images?.originality === "erősen eredeti") score += 2;
-      else if (images?.originality === "részben egyedi") score += 1;
-
-      if (images?.imagery_role === "erősen jelentéshordozó") score += 1;
-      else if (images?.imagery_role === "részben jelentéshordozó") score += 0.5;
-
-      if (images?.imagery_cohesion === "összefüggő") score += 1;
-      else if (images?.imagery_cohesion === "lazán kapcsolódó") score += 0.5;
-
-      if (structure?.structure_type === "finoman kibontakozó") score += 1;
-      else if (structure?.structure_type === "markánsan fejlődő") score += 2;
-
-      if (
-        rhythmText.includes("folyamatos") ||
-        rhythmText.includes("egyenletes") ||
-        rhythmText.includes("lüktet") ||
-        rhythmText.includes("lendület")
-      ) {
-        score += 1;
-      }
-
-      if (score <= 3) return { label: "közhelyes működés", position: 8 };
-      if (score <= 6) return { label: "vegyes / közepes", position: 28 };
-      if (score <= 9) return { label: "részben egyedi", position: 46 };
-      if (score <= 12) return { label: "inkább egyedi", position: 60 };
-      if (score <= 15) return { label: "erős", position: 76 };
-      return { label: "kiemelkedő", position: 92 };
-    }
-
-    function applySummaryCaps(level, structure, images, expression) {
-      let cappedLevel = { ...level };
-
-      const weakStructure = structure?.structure_type === "statikus";
-      const weakExpression =
-        expression?.overall_expression === "inkább közhelyes" ||
-        expression?.originality_of_voice === "többnyire közhelyes";
-
-      if (weakStructure && weakExpression) {
-        cappedLevel = { label: "vegyes / közepes", position: 30 };
-      }
-
-      if (
-        weakStructure &&
-        weakExpression &&
-        images?.originality === "többnyire közismert"
-      ) {
-        cappedLevel = { label: "közhelyes működés", position: 8 };
-      }
-
-      return cappedLevel;
-    }
-
-    async function runFinalCheckAndGo() {
-      const poem = sessionStorage.getItem("poem");
-      const savedKind = getStoredResult("analysis_kind");
-      const savedStructure = getStoredResult("analysis_structure");
-      const savedRhythm = getStoredResult("analysis_rhythm");
-      const savedImages = getStoredResult("analysis_images");
-      const savedExpression = getStoredResult("analysis_expression");
-
-      if (!poem || !savedKind || !savedStructure || !savedRhythm || !savedImages || !savedExpression) {
-        showError("Hiányoznak az ellenőrzéshez szükséges adatok.");
-        return;
-      }
-
-      hideError();
-      hideInfo();
-      showLoading("Végső ellenőrzés folyamatban...");
-
-      nextBtn.disabled = true;
-      reloadBtn.disabled = true;
-      backBtn.disabled = true;
-
-      try {
-        const baseLevel = determineSummaryBase(
-          savedKind,
-          savedStructure,
-          savedRhythm,
-          savedImages,
-          savedExpression
-        );
-
-        const currentLevel = applySummaryCaps(
-          baseLevel,
-          savedStructure,
-          savedImages,
-          savedExpression
-        );
-
-        const res = await fetch(WORKER_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            poem,
-            step: "check",
-            previous: {
-              kind: savedKind,
-              structure: savedStructure,
-              rhythm: savedRhythm,
-              images: savedImages,
-              expression: savedExpression,
-              summary_base: baseLevel,
-              summary_current: currentLevel
-            }
-          })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok || !data.ok) {
-          throw new Error(
-            (data.error || "A végső ellenőrzés nem sikerült.") +
-            (data.raw ? "\n\nNYERS VÁLASZ:\n" + data.raw : "")
-          );
-        }
-
-        console.log("CHECK RESULT:", data.result);
-        console.log("CHECK SAVED:", JSON.stringify({ poem, result: data.result }));
-
-        sessionStorage.setItem(
-          "analysis_check",
-          JSON.stringify({ poem, result: data.result })
-        );
-        sessionStorage.setItem("step_summary_done", Date.now().toString());
-
-        window.location.href = NEXT_PAGE;
-      } catch (err) {
-        showError(err.message || "Ismeretlen hiba történt a végső ellenőrzésnél.");
-      } finally {
-        hideLoading();
-        nextBtn.disabled = false;
-        reloadBtn.disabled = false;
-        backBtn.disabled = false;
-      }
     }
 
     async function runExpressionAnalysis(forceRefresh = false) {
@@ -688,7 +508,8 @@
       const savedKind = unwrapPack(kindPack);
       const savedStructure = unwrapPack(structurePack);
       const savedRhythm = unwrapPack(rhythmPack);
-      const savedImages = imagesPack && imagesPack.poem === poem ? unwrapPack(imagesPack) : null;
+      const savedImages =
+        imagesPack && imagesPack.poem === poem ? unwrapPack(imagesPack) : null;
 
       if (!poem) {
         window.location.href = "index.html";
@@ -738,6 +559,10 @@
       resultLayout.style.display = "none";
       footerRow.style.display = "none";
 
+      reloadBtn.disabled = true;
+      backBtn.disabled = true;
+      nextBtn.disabled = true;
+
       try {
         const res = await fetch(WORKER_URL, {
           method: "POST",
@@ -769,17 +594,24 @@
         );
         sessionStorage.setItem("step_expression_done", Date.now().toString());
 
+        sessionStorage.removeItem("analysis_check");
+        sessionStorage.removeItem("step_check_done");
+        sessionStorage.removeItem("step_summary_done");
+
         renderResult(data.result);
         showInfo("A kifejezésmód elemzése elkészült.");
 
         if (autorun) {
-          await runFinalCheckAndGo();
+          window.location.href = NEXT_PAGE;
           return;
         }
       } catch (err) {
         showError(err.message || "Ismeretlen hiba történt.");
       } finally {
         hideLoading();
+        reloadBtn.disabled = false;
+        backBtn.disabled = false;
+        nextBtn.disabled = false;
       }
     }
 
@@ -791,15 +623,16 @@
       sessionStorage.removeItem("analysis_expression");
       sessionStorage.removeItem("analysis_check");
       sessionStorage.removeItem("step_expression_done");
+      sessionStorage.removeItem("step_check_done");
       sessionStorage.removeItem("step_summary_done");
       runExpressionAnalysis(true);
     });
 
-    nextBtn.addEventListener("click", async () => {
-      await runFinalCheckAndGo();
+    nextBtn.addEventListener("click", () => {
+      window.location.href = NEXT_PAGE;
     });
 
-    runExpressionAnalysis(autorun);
+    runExpressionAnalysis(false);
   </script>
 </body>
 </html>
