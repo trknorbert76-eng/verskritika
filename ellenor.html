@@ -361,15 +361,21 @@ button.secondary,
 </div>
 
 <script>
-const poemFallback = "Nincs betöltött vers.";
-
-function readJSON(key) {
+function safeParse(text) {
   try {
-    const raw = sessionStorage.getItem(key);
-    return raw ? JSON.parse(raw) : null;
+    return JSON.parse(text);
   } catch {
     return null;
   }
+}
+
+function readJSON(key) {
+  return safeParse(sessionStorage.getItem(key) || "");
+}
+
+function unwrapPack(pack) {
+  if (!pack) return null;
+  return pack.result || pack;
 }
 
 function setText(id, value, fallback = "—") {
@@ -379,18 +385,28 @@ function setText(id, value, fallback = "—") {
   el.textContent = text;
 }
 
+const poemFallback = "Nincs betöltött vers.";
+
 function fillDemoData() {
   const poem =
     sessionStorage.getItem("poemText") ||
     sessionStorage.getItem("poem") ||
     poemFallback;
 
- const kind = (readJSON("analysis_kind") || {}).result || {};
-const structure = (readJSON("analysis_structure") || {}).result || {};
-const rhythm = (readJSON("analysis_rhythm") || {}).result || {};
-const images = (readJSON("analysis_images") || {}).result || {};
-const expression = (readJSON("analysis_expression") || {}).result || {};
-const check = (readJSON("analysis_check") || {}).result || {};
+  const kindPack = readJSON("analysis_kind");
+  const structurePack = readJSON("analysis_structure");
+  const rhythmPack = readJSON("analysis_rhythm");
+  const imagesPack = readJSON("analysis_images");
+  const expressionPack = readJSON("analysis_expression");
+  const checkPack = readJSON("analysis_check");
+
+  const kind = unwrapPack(kindPack) || {};
+  const structure = unwrapPack(structurePack) || {};
+  const rhythm = unwrapPack(rhythmPack) || {};
+  const images = unwrapPack(imagesPack) || {};
+  const expression = unwrapPack(expressionPack) || {};
+  const check = unwrapPack(checkPack) || {};
+
   setText("poemBox", poem, poemFallback);
 
   setText("kindMainType", kind.main_type);
