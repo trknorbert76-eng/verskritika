@@ -220,12 +220,12 @@
         </div>
       </div>
 
-      <div style="margin-top: 14px;">
+      <div style="margin-top:14px;">
         <div style="color:#c9b07a; margin-bottom:8px;">Stílus indoklása</div>
         <div class="valueBox" id="styleReasoning">—</div>
       </div>
 
-      <div style="margin-top: 20px;">
+      <div style="margin-top:20px;">
         <div style="color:#c9b07a; margin-bottom:8px;">Ellenőrzés</div>
 
         <div class="grid">
@@ -308,9 +308,6 @@
     const expression = getStoredResult("analysis_expression");
     const check = getStoredResult("analysis_check");
 
-    console.log("SUMMARY CHECK RAW:", getStoredPack("analysis_check"));
-    console.log("SUMMARY CHECK UNWRAPPED:", check);
-
     if (!poem || !kind || !structure || !rhythm || !images || !expression) {
       showError("Hiányoznak az elemzés adatai.");
     } else {
@@ -328,55 +325,29 @@
       styleReasoningEl.textContent = kind.style_reasoning || "Nincs külön indoklás.";
 
       const baseLevel = determineLevel(kind, structure, rhythm, images, expression);
-      const level = applyCaps(baseLevel, structure, images, expression);
+      const finalLevel = getFinalLevel(baseLevel, check);
 
-      let finalLevel = { ...level };
+      const summaryText = getSummaryText(kind, structure, rhythm, images, expression, finalLevel, check);
+      const strengths = getStrengths(kind, structure, rhythm, images, expression, check);
+      const weaknesses = getWeaknesses(kind, structure, rhythm, images, expression, check);
 
-      if (
-        check &&
-        typeof check.final_level_label === "string" &&
-        check.final_level_label.trim() &&
-        typeof check.final_level_position === "number"
-      ) {
-        finalLevel = {
-          label: check.final_level_label,
-          position: check.final_level_position
-        };
-      }
+      summaryEl.textContent = summaryText;
+      levelTextEl.textContent = "Szint: " + finalLevel.label;
+      pointerEl.style.left = finalLevel.position + "%";
 
-      let summary = buildSummary(kind, structure, rhythm, images, expression, finalLevel);
-
-      if (check && typeof check.summary_text === "string" && check.summary_text.trim()) {
-        summary = check.summary_text.trim();
-      }
-
-      let strengths = buildStrengths(kind, structure, rhythm, images, expression);
-      let weaknesses = buildWeaknesses(kind, structure, rhythm, images, expression);
-
-      if (check && Array.isArray(check.strengths) && check.strengths.length) {
-        strengths = check.strengths;
-      }
-
-      if (check && Array.isArray(check.weaknesses) && check.weaknesses.length) {
-        weaknesses = check.weaknesses;
-      }
-
-      summaryEl.textContent = summary;
       strengthsEl.textContent = strengths.length
         ? strengths.join("\n• ").replace(/^/, "• ")
         : "—";
+
       weaknessesEl.textContent = weaknesses.length
         ? weaknesses.join("\n• ").replace(/^/, "• ")
         : "—";
 
-      levelTextEl.textContent = "Szint: " + finalLevel.label;
-      pointerEl.style.left = finalLevel.position + "%";
-
       if (check) {
         reviewTextEl.textContent =
-          check.summary_text ||
           check.reasoning ||
           check.note ||
+          check.summary_text ||
           "Nincs részletes ellenőrzés.";
 
         const change = String(check.slider_change || "").trim().toLowerCase();
@@ -394,6 +365,46 @@
       }
 
       sessionStorage.setItem("step_summary_done", Date.now().toString());
+    }
+
+    function getFinalLevel(baseLevel, checkData) {
+      if (
+        checkData &&
+        typeof checkData.final_level_label === "string" &&
+        checkData.final_level_label.trim() &&
+        typeof checkData.final_level_position === "number"
+      ) {
+        return {
+          label: checkData.final_level_label,
+          position: checkData.final_level_position
+        };
+      }
+
+      return baseLevel;
+    }
+
+    function getSummaryText(kind, structure, rhythm, images, expression, level, checkData) {
+      if (checkData && typeof checkData.summary_text === "string" && checkData.summary_text.trim()) {
+        return checkData.summary_text.trim();
+      }
+
+      return buildSummary(kind, structure, rhythm, images, expression, level);
+    }
+
+    function getStrengths(kind, structure, rhythm, images, expression, checkData) {
+      if (checkData && Array.isArray(checkData.strengths) && checkData.strengths.length) {
+        return checkData.strengths;
+      }
+
+      return buildStrengths(kind, structure, rhythm, images, expression);
+    }
+
+    function getWeaknesses(kind, structure, rhythm, images, expression, checkData) {
+      if (checkData && Array.isArray(checkData.weaknesses) && checkData.weaknesses.length) {
+        return checkData.weaknesses;
+      }
+
+      return buildWeaknesses(kind, structure, rhythm, images, expression);
     }
 
     function determineLevel(kind, structure, rhythm, images, expression) {
@@ -422,9 +433,7 @@
 
       if (expression.tone_naturalness === "természetes") score += 1;
 
-      if (expression.expression_mode === "felszólító / retorikai") {
-        score += 2;
-      }
+      if (expression.expression_mode === "felszólító / retorikai") score += 2;
 
       if (
         expression.expression_mode === "felszólító / retorikai" &&
@@ -470,54 +479,12 @@
         score += 1;
       }
 
-      if (score <= 3) {
-        return { label: "közhelyes működés", position: 8 };
-      }
-      if (score <= 6) {
-        return { label: "vegyes / közepes", position: 28 };
-      }
-      if (score <= 9) {
-        return { label: "részben egyedi", position: 46 };
-      }
-      if (score <= 12) {
-        return { label: "inkább egyedi", position: 60 };
-      }
-      if (score <= 15) {
-        return { label: "erős", position: 76 };
-      }
-
+      if (score <= 3) return { label: "közhelyes működés", position: 8 };
+      if (score <= 6) return { label: "vegyes / közepes", position: 28 };
+      if (score <= 9) return { label: "részben egyedi", position: 46 };
+      if (score <= 12) return { label: "inkább egyedi", position: 60 };
+      if (score <= 15) return { label: "erős", position: 76 };
       return { label: "kiemelkedő", position: 92 };
-    }
-
-    function applyCaps(level, structure, images, expression) {
-      let cappedLevel = { ...level };
-
-      const weakStructure = structure.structure_type === "statikus";
-      const weakExpression =
-        expression.overall_expression === "inkább közhelyes" ||
-        expression.originality_of_voice === "többnyire közhelyes";
-
-      if (weakStructure && weakExpression) {
-        cappedLevel = { label: "vegyes / közepes", position: 30 };
-      }
-
-      if (
-        weakStructure &&
-        weakExpression &&
-        images.originality === "többnyire közismert"
-      ) {
-        cappedLevel = { label: "közhelyes működés", position: 8 };
-      }
-
-      if (
-        structure.structure_type === "statikus" &&
-        expression.overall_expression === "vegyes" &&
-        expression.originality_of_voice !== "saját hangú"
-      ) {
-        cappedLevel = { label: "vegyes / közepes", position: 32 };
-      }
-
-      return cappedLevel;
     }
 
     function buildSummary(kind, structure, rhythm, images, expression, level) {
