@@ -201,8 +201,7 @@ button.secondary,
     <button id="reanalyzeBtn">Újraellenőrzés</button>
   </div>
 
-  <div id="notice" class="notice">A demó ellenőrző oldal betöltve. A lánc nem szakad meg.</div>
-
+ <div id="notice" class="notice" style="display:none;"></div>
   <div class="grid-top">
     <section class="card">
       <h2>A vizsgált vers</h2>
@@ -386,8 +385,17 @@ function setText(id, value, fallback = "—") {
 }
 
 const poemFallback = "Nincs betöltött vers.";
+const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
 
-function fillDemoData() {
+const noticeEl = document.getElementById("notice");
+const reanalyzeBtn = document.getElementById("reanalyzeBtn");
+
+function showNotice(message) {
+  noticeEl.textContent = message;
+  noticeEl.style.display = "block";
+}
+
+function fillView() {
   const poem =
     sessionStorage.getItem("poemText") ||
     sessionStorage.getItem("poem") ||
@@ -425,25 +433,124 @@ function fillDemoData() {
   setText("expressionOverall", expression.overall_expression);
   setText("expressionVoice", expression.originality_of_voice);
 
-  setText("ownImpression", check.own_impression);
-  setText("ownLevel", check.own_level);
-  setText("ownReason", check.own_reasoning);
-  setText("ownConfidence", check.own_confidence);
+  setText("ownImpression", check.own_impression, "Még nincs ellenőrzési eredmény.");
+  setText("ownLevel", check.own_level, "—");
+  setText("ownReason", check.own_reasoning, "Még nincs ellenőrzési indoklás.");
+  setText("ownConfidence", check.own_confidence, "—");
 
-  setText("realisticOverall", check.realism_check);
-  setText("agreementPoints", check.agreement_points);
-  setText("mismatchPoints", check.mismatch_points);
-  setText("distortionDirection", check.distortion_direction);
-  setText("correctionDecision", check.correction_direction);
-  setText("correctionReason", check.correction_reason);
+  setText("realisticOverall", check.realism_check, "—");
+  setText("agreementPoints", check.agreement_points, "Még nincs adat.");
+  setText("mismatchPoints", check.mismatch_points, "Még nincs adat.");
+  setText("distortionDirection", check.distortion_direction, "—");
+  setText("correctionDecision", check.correction_direction, "—");
+  setText("correctionReason", check.correction_reason, "Még nincs indoklás.");
 }
 
-document.getElementById("reanalyzeBtn").addEventListener("click", () => {
+async function runCheckAnalysis(forceRefresh = false) {
+  const poem = sessionStorage.getItem("poem");
+
+  if (!poem) {
+    window.location.href = "index.html";
+    return;
+  }
+
+  const kindPack = readJSON("analysis_kind");
+  const structurePack = readJSON("analysis_structure");
+  const rhythmPack = readJSON("analysis_rhythm");
+  const imagesPack = readJSON("analysis_images");
+  const expressionPack = readJSON("analysis_expression");
+
+  const kind = unwrapPack(kindPack);
+  const structure = unwrapPack(structurePack);
+  const rhythm = unwrapPack(rhythmPack);
+  const images = unwrapPack(imagesPack);
+  const expression = unwrapPack(expressionPack);
+
+  if (!kind) {
+    window.location.href = "felismeres.html";
+    return;
+  }
+
+  if (!structure) {
+    window.location.href = "szerkezet.html";
+    return;
+  }
+
+  if (!rhythm) {
+    window.location.href = "ritmus.html";
+    return;
+  }
+
+  if (!images) {
+    window.location.href = "kepek.html";
+    return;
+  }
+
+  if (!expression) {
+    window.location.href = "kifejezesmod.html";
+    return;
+  }
+
+  if (!forceRefresh) {
+    const savedCheckPack = readJSON("analysis_check");
+    const savedCheck = unwrapPack(savedCheckPack);
+
+    if (savedCheckPack && savedCheckPack.poem === poem && savedCheck) {
+      fillView();
+      showNotice("A korábbi ellenőrzési eredmény betöltve.");
+      return;
+    }
+  }
+
+  fillView();
+  showNotice("Az ellenőrzés folyamatban...");
+  reanalyzeBtn.disabled = true;
+
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        poem,
+        step: "check",
+        previous: {
+          kind,
+          structure,
+          rhythm,
+          images,
+          expression
+        }
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || "A worker nem adott megfelelő választ.");
+    }
+
+    sessionStorage.setItem(
+      "analysis_check",
+      JSON.stringify({ poem, result: data.result })
+    );
+    sessionStorage.setItem("step_check_done", Date.now().toString());
+
+    fillView();
+    showNotice("Az ellenőrzés elkészült.");
+  } catch (err) {
+    showNotice("Hiba történt az ellenőrzés során: " + (err.message || "ismeretlen hiba"));
+  } finally {
+    reanalyzeBtn.disabled = false;
+  }
+}
+
+reanalyzeBtn.addEventListener("click", () => {
   sessionStorage.removeItem("analysis_check");
-  location.reload();
+  sessionStorage.removeItem("step_check_done");
+  runCheckAnalysis(true);
 });
 
-fillDemoData();
+runCheckAnalysis(false);
 </script>
 </body>
 </html>
