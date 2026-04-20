@@ -363,7 +363,6 @@ button.secondary,
 const params = new URLSearchParams(window.location.search);
 const autorun = params.get("autorun") === "1";
 const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
-const NEXT_PAGE = "osszegzes.html";
 
 const noticeEl = document.getElementById("notice");
 const reanalyzeBtn = document.getElementById("reanalyzeBtn");
@@ -410,7 +409,10 @@ function fillView() {
   const rhythm = unwrapPack(readJSON("analysis_rhythm")) || {};
   const images = unwrapPack(readJSON("analysis_images")) || {};
   const expression = unwrapPack(readJSON("analysis_expression")) || {};
-  const check = unwrapPack(readJSON("analysis_check")) || {};
+
+  const finalCheck = unwrapPack(readJSON("analysis_check")) || null;
+  const seedCheck = unwrapPack(readJSON("analysis_check_seed")) || null;
+  const check = finalCheck || seedCheck || {};
 
   setText("poemBox", poem, poemFallback);
 
@@ -435,12 +437,12 @@ function fillView() {
   setText("ownReason", check.own_reasoning, "Még nincs ellenőrzési indoklás.");
   setText("ownConfidence", check.own_confidence, "—");
 
-  setText("realisticOverall", check.realism_check, "—");
-  setText("agreementPoints", check.agreement_points, "Még nincs adat.");
-  setText("mismatchPoints", check.mismatch_points, "Még nincs adat.");
-  setText("distortionDirection", check.distortion_direction, "—");
-  setText("correctionDecision", check.correction_direction, "—");
-  setText("correctionReason", check.correction_reason, "Még nincs indoklás.");
+  setText("realisticOverall", finalCheck?.realism_check, seedCheck ? "Még nincs végső összevetés." : "—");
+  setText("agreementPoints", finalCheck?.agreement_points, seedCheck ? "A végső összevetés még nem készült el." : "Még nincs adat.");
+  setText("mismatchPoints", finalCheck?.mismatch_points, seedCheck ? "A végső összevetés még nem készült el." : "Még nincs adat.");
+  setText("distortionDirection", finalCheck?.distortion_direction, seedCheck ? "Még nincs végső döntés." : "—");
+  setText("correctionDecision", finalCheck?.correction_direction, seedCheck ? "Még nincs végső döntés." : "—");
+  setText("correctionReason", finalCheck?.correction_reason, seedCheck ? "A végső ellenőri indoklás még nem készült el." : "Még nincs indoklás.");
 }
 
 async function runCheckAnalysis(forceRefresh = false) {
@@ -497,6 +499,13 @@ async function runCheckAnalysis(forceRefresh = false) {
       showNotice("A korábbi ellenőrzési eredmény betöltve.");
       return;
     }
+
+    const savedSeed = safeParse(sessionStorage.getItem("analysis_check_seed") || "");
+    if (savedSeed) {
+      fillView();
+      showNotice("Az ellenőr első saját olvasata már elkészült, a végső összevetés még nem.");
+      return;
+    }
   }
 
   showNotice("Az ellenőrzés folyamatban...");
@@ -516,7 +525,8 @@ async function runCheckAnalysis(forceRefresh = false) {
           structure,
           rhythm,
           images,
-          expression
+          expression,
+          seed: unwrapPack(readJSON("analysis_check_seed")) || {}
         }
       })
     });
@@ -544,7 +554,6 @@ reanalyzeBtn.addEventListener("click", () => {
   sessionStorage.removeItem("step_check_done");
   runCheckAnalysis(true);
 });
-
 
 runCheckAnalysis(autorun);
 </script>
