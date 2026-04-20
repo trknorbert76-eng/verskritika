@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ellenőrzés</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Georgia, serif;
+  background: #111;
+  color: #eee;
+}
+
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 30px 20px 60px;
+}
+
+h1 {
+  font-size: 2.1rem;
+  margin-bottom: 10px;
+}
+
+.intro {
+  color: #bbb;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+button,
+.btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #d6b36a;
+  color: #111;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1rem;
+  text-decoration: none;
+  display: inline-block;
+}
+
+button.secondary,
+.btn.secondary {
+  background: #2b2b2b;
+  color: #eee;
+  border: 1px solid #444;
+}
+
+.notice {
+  background: #102d12;
+  border: 1px solid #2f8f44;
+  color: #cfeecf;
+  padding: 14px 16px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.grid-top {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.grid-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: #171717;
+  border: 1px solid #3a3a3a;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.card h2 {
+  margin: 0 0 12px;
+  font-size: 1.45rem;
+  color: #f0c66c;
+}
+
+.card h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  color: #f0c66c;
+}
+
+.field {
+  margin-bottom: 12px;
+}
+
+.label {
+  display: block;
+  font-size: 0.95rem;
+  color: #d8b25f;
+  margin-bottom: 6px;
+}
+
+.value {
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 10px 12px;
+  line-height: 1.55;
+  min-height: 22px;
+}
+
+.value.small {
+  min-height: auto;
+}
+
+.poem-box {
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 14px;
+  min-height: 360px;
+  max-height: 540px;
+  overflow: auto;
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.mini-card {
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.mini-card:last-child {
+  margin-bottom: 0;
+}
+
+.mini-title {
+  font-size: 1.05rem;
+  color: #f0c66c;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.two-col-mini {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.footerbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.status-text {
+  color: #9fd49f;
+  font-size: 0.98rem;
+}
+
+@media (max-width: 900px) {
+  .grid-top,
+  .grid-bottom,
+  .two-col-mini {
+    grid-template-columns: 1fr;
+  }
+
+  .poem-box {
+    min-height: 260px;
+    max-height: none;
+  }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Ellenőrzés</h1>
+  <div class="intro">
+    Ez a belső ellenőrző oldal először önálló benyomást alkot a versről, majd összeveti azt a korábbi elemző oldalak eredményeivel.
+  </div>
+
+  <div class="topbar">
+    <a href="kifejezesmod.html" class="btn secondary">← Vissza a kifejezésmódhoz</a>
+    <button id="reanalyzeBtn">Újraellenőrzés</button>
+  </div>
+
+  <div id="notice" class="notice">A demó ellenőrző oldal betöltve. A lánc nem szakad meg.</div>
+
+  <div class="grid-top">
+    <section class="card">
+      <h2>A vizsgált vers</h2>
+      <div id="poemBox" class="poem-box"></div>
+    </section>
+
+    <section class="card">
+      <h2>Saját vélemény</h2>
+
+      <div class="field">
+        <span class="label">Első benyomás</span>
+        <div id="ownImpression" class="value">Részben működő, hangulatos, de nem minden pontján egyformán erős vers.</div>
+      </div>
+
+      <div class="field">
+        <span class="label">Önálló szintérzet</span>
+        <div id="ownLevel" class="value small">vegyes / részben egyedi határ</div>
+      </div>
+
+      <div class="field">
+        <span class="label">Miért ezt látja</span>
+        <div id="ownReason" class="value">
+          A versnek van érzékelhető belső melege és több működő képe, de a megfogalmazás nem mindenütt elég sűrű vagy meglepő ahhoz, hogy egyértelműen magasabb szintre kerüljön.
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="label">Biztosság</span>
+        <div id="ownConfidence" class="value small">közepesen biztos</div>
+      </div>
+    </section>
+  </div>
+
+  <div class="grid-bottom">
+    <section class="card">
+      <h2>Az elemző oldalak eredményei</h2>
+
+      <div class="mini-card">
+        <div class="mini-title">Felismerés</div>
+        <div class="two-col-mini">
+          <div class="field">
+            <span class="label">Fő típus</span>
+            <div id="kindMainType" class="value small">szerelmes</div>
+          </div>
+          <div class="field">
+            <span class="label">Hangulat</span>
+            <div id="kindMood" class="value small">meleg, bensőséges</div>
+          </div>
+        </div>
+        <div class="field">
+          <span class="label">Stílusjelleg</span>
+          <div id="kindStyle" class="value small">képszerű</div>
+        </div>
+      </div>
+
+      <div class="mini-card">
+        <div class="mini-title">Szerkezet</div>
+        <div class="field">
+          <span class="label">Szerkezet típusa</span>
+          <div id="structureType" class="value small">statikus</div>
+        </div>
+        <div class="field">
+          <span class="label">Mozgás</span>
+          <div id="structureMovement" class="value">
+            A vers alaphelyzete nem változik meg, ugyanazt az állapotot bontja ki.
+          </div>
+        </div>
+      </div>
+
+      <div class="mini-card">
+        <div class="mini-title">Ritmus</div>
+        <div class="field">
+          <span class="label">Ritmus jellege</span>
+          <div id="rhythmType" class="value small">szabad versritmus, nem kötött verselés</div>
+        </div>
+        <div class="field">
+          <span class="label">Lendület</span>
+          <div id="rhythmMovement" class="value small">enyhén hullámzó, lágy</div>
+        </div>
+      </div>
+
+      <div class="mini-card">
+        <div class="mini-title">Képek</div>
+        <div class="two-col-mini">
+          <div class="field">
+            <span class="label">Képiség</span>
+            <div id="imagesPresence" class="value small">erősen képszerű</div>
+          </div>
+          <div class="field">
+            <span class="label">Eredetiség</span>
+            <div id="imagesOriginality" class="value small">részben egyedi</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mini-card">
+        <div class="mini-title">Kifejezésmód</div>
+        <div class="two-col-mini">
+          <div class="field">
+            <span class="label">Összkép</span>
+            <div id="expressionOverall" class="value small">vegyes</div>
+          </div>
+          <div class="field">
+            <span class="label">Hang egyedisége</span>
+            <div id="expressionVoice" class="value small">részben ismerős</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Az ellenőr megítélése</h2>
+
+      <div class="field">
+        <span class="label">Reális-e az eddigi összkép</span>
+        <div id="realisticOverall" class="value small">részben reális, de enyhén felülhúzott</div>
+      </div>
+
+      <div class="field">
+        <span class="label">Mi áll közel a saját olvasathoz</span>
+        <div id="agreementPoints" class="value">
+          A képiség és a bensőséges hangulat megállapítása reálisnak tűnik, és a statikus szerkezeti kép is összhangban van a vers működésével.
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="label">Mi csúszhatott félre</span>
+        <div id="mismatchPoints" class="value">
+          A részben egyedi szintérzet kissé magas lehet, mert a vers több helyen ismert szerelmi fordulatokra és hagyományos képekre támaszkodik.
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="label">Torzítás iránya</span>
+        <div id="distortionDirection" class="value small">enyhe túlértékelés</div>
+      </div>
+
+      <div class="field">
+        <span class="label">Korrekció</span>
+        <div id="correctionDecision" class="value small">lejjebb egy lépéssel</div>
+      </div>
+
+      <div class="field">
+        <span class="label">Indoklás</span>
+        <div id="correctionReason" class="value">
+          A vers nem gyenge, de a szerkezeti statikusság, a részben ismerős hang és a nem teljesen egyedi képi világ együtt inkább visszafogottabb végső szintet indokolnak.
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="footerbar">
+    <div class="status-text">Ellenőrzés kész. Továbbléphetsz az összegzésre.</div>
+    <a href="osszegzes.html" class="btn">Tovább az összegzésre →</a>
+  </div>
+</div>
+
+<script>
+const poemFallback = `Szerelem
+
+öröm pillanatát szeretetben megélni,
+mint a kenyeret, bőségesen elosztani.
+Nem üres szavak kellenek senkinek,
+csupán tettek, apró gesztusok elegendőek,
+újhegy érintése, ölelés, mosolyok melege,
+szemek csillogva beszélnek, pupilládban tükörképed.
+
+Szerelem, amikor nem félsz már szárnyalni,
+másik feled mellett önmagad adni, lenni,
+ha néha bukdácsolva is, de az úton menni,
+ezér év is kevés lenne, e csodát megélni.`;
+
+function readJSON(key) {
+  try {
+    const raw = sessionStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function setText(id, value, fallback = "—") {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const text = typeof value === "string" && value.trim() ? value.trim() : fallback;
+  el.textContent = text;
+}
+
+function fillDemoData() {
+  const poem =
+    sessionStorage.getItem("poemText") ||
+    sessionStorage.getItem("poem") ||
+    poemFallback;
+
+  const kind = readJSON("analysis_kind") || {};
+  const structure = readJSON("analysis_structure") || {};
+  const rhythm = readJSON("analysis_rhythm") || {};
+  const images = readJSON("analysis_images") || {};
+  const expression = readJSON("analysis_expression") || {};
+  const check = readJSON("analysis_check") || {};
+
+  setText("poemBox", poem, poemFallback);
+
+  setText("kindMainType", kind.main_type);
+  setText("kindMood", kind.mood);
+  setText("kindStyle", kind.style_label);
+
+  setText("structureType", structure.structure_type);
+  setText("structureMovement", structure.movement);
+
+  setText("rhythmType", rhythm.rhythm_type);
+  setText("rhythmMovement", rhythm.movement);
+
+  setText("imagesPresence", images.imagery_presence);
+  setText("imagesOriginality", images.originality);
+
+  setText("expressionOverall", expression.overall_expression);
+  setText("expressionVoice", expression.originality_of_voice);
+
+  setText("ownImpression", check.own_impression);
+  setText("ownLevel", check.own_level);
+  setText("ownReason", check.own_reasoning);
+  setText("ownConfidence", check.own_confidence);
+
+  setText("realisticOverall", check.realism_check);
+  setText("agreementPoints", check.agreement_points);
+  setText("mismatchPoints", check.mismatch_points);
+  setText("distortionDirection", check.distortion_direction);
+  setText("correctionDecision", check.correction_direction);
+  setText("correctionReason", check.correction_reason);
+}
+
+document.getElementById("reanalyzeBtn").addEventListener("click", () => {
+  sessionStorage.removeItem("analysis_check");
+  location.reload();
+});
+
+fillDemoData();
+</script>
+</body>
+</html>
