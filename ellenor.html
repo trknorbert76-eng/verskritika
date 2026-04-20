@@ -361,19 +361,7 @@ button.secondary,
 </div>
 
 <script>
-const poemFallback = `Szerelem
-
-öröm pillanatát szeretetben megélni,
-mint a kenyeret, bőségesen elosztani.
-Nem üres szavak kellenek senkinek,
-csupán tettek, apró gesztusok elegendőek,
-újhegy érintése, ölelés, mosolyok melege,
-szemek csillogva beszélnek, pupilládban tükörképed.
-
-Szerelem, amikor nem félsz már szárnyalni,
-másik feled mellett önmagad adni, lenni,
-ha néha bukdácsolva is, de az úton menni,
-ezér év is kevés lenne, e csodát megélni.`;
+const poemFallback = "Nincs betöltött vers.";
 
 function readJSON(key) {
   try {
@@ -397,13 +385,12 @@ function fillDemoData() {
     sessionStorage.getItem("poem") ||
     poemFallback;
 
-  const kind = readJSON("analysis_kind") || {};
-  const structure = readJSON("analysis_structure") || {};
-  const rhythm = readJSON("analysis_rhythm") || {};
-  const images = readJSON("analysis_images") || {};
-  const expression = readJSON("analysis_expression") || {};
-  const check = readJSON("analysis_check") || {};
-
+ const kind = (readJSON("analysis_kind") || {}).result || {};
+const structure = (readJSON("analysis_structure") || {}).result || {};
+const rhythm = (readJSON("analysis_rhythm") || {}).result || {};
+const images = (readJSON("analysis_images") || {}).result || {};
+const expression = (readJSON("analysis_expression") || {}).result || {};
+const check = (readJSON("analysis_check") || {}).result || {};
   setText("poemBox", poem, poemFallback);
 
   setText("kindMainType", kind.main_type);
