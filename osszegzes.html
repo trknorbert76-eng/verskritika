@@ -405,29 +405,44 @@
   function levelFromIndex(index) {
     const safeIndex = Math.max(0, Math.min(LEVELS.length - 1, index));
     return {
+      key: LEVELS[safeIndex].key,
       label: LEVELS[safeIndex].label,
       position: LEVELS[safeIndex].position
     };
   }
 
   function getFinalLevel(baseLevel, checkData) {
-    const baseIndex = getLevelIndexFromLabel(baseLevel.label);
+    const baseIndex = getLevelIndexFromLabel(baseLevel.key || baseLevel.label);
 
     if (baseIndex === -1) return baseLevel;
     if (!checkData) return baseLevel;
 
+    const checkIndex = getLevelIndexFromLabel(checkData.own_level || "");
     const direction = String(checkData.correction_direction || "").trim().toLowerCase();
-    const distortion = String(checkData.distortion_direction || "").trim().toLowerCase();
 
-    let shift = 0;
+    let finalIndex = baseIndex;
 
-    if (direction === "feljebb") shift = 1;
-    if (direction === "lejjebb") shift = -1;
+    // Az ellenőr erősen befolyásolja az alap szintet
+    if (checkIndex !== -1) {
+      const diff = checkIndex - baseIndex;
 
-    if (distortion === "erős alulértékelés") shift = 2;
-    if (distortion === "erős túlértékelés") shift = -2;
+      if (Math.abs(diff) >= 2) {
+        // nagy eltérésnél az ellenőr átveszi a főszerepet
+        finalIndex = checkIndex;
+      } else if (Math.abs(diff) === 1) {
+        // kis eltérésnél is az ellenőrhöz igazítunk
+        finalIndex = checkIndex;
+      }
+    }
 
-    return levelFromIndex(baseIndex + shift);
+    // A korrekció még egyet mozdíthat
+    if (direction === "feljebb") {
+      finalIndex = Math.min(LEVELS.length - 1, finalIndex + 1);
+    } else if (direction === "lejjebb") {
+      finalIndex = Math.max(0, finalIndex - 1);
+    }
+
+    return levelFromIndex(finalIndex);
   }
 
   function getSummaryText(kind, structure, rhythm, images, expression, level, checkData) {
@@ -514,12 +529,12 @@
       score += 1;
     }
 
-    if (score <= 3) return { label: "közhelyes működés", position: 8 };
-    if (score <= 6) return { label: "vegyes / közepes", position: 28 };
-    if (score <= 9) return { label: "részben egyedi", position: 46 };
-    if (score <= 12) return { label: "inkább egyedi", position: 60 };
-    if (score <= 15) return { label: "erős", position: 76 };
-    return { label: "kiemelkedő", position: 92 };
+    if (score <= 3) return { key: "közhelyes", label: "közhelyes működés", position: 8 };
+    if (score <= 6) return { key: "vegyes", label: "vegyes / közepes", position: 28 };
+    if (score <= 9) return { key: "részben egyedi", label: "részben egyedi", position: 46 };
+    if (score <= 12) return { key: "részben egyedi", label: "inkább egyedi", position: 60 };
+    if (score <= 15) return { key: "erős", label: "erős", position: 76 };
+    return { key: "kiemelkedő", label: "kiemelkedő", position: 92 };
   }
 
   function buildSummary(kind, structure, rhythm, images, expression, level, checkData) {
