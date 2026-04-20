@@ -360,6 +360,16 @@ button.secondary,
 </div>
 
 <script>
+const params = new URLSearchParams(window.location.search);
+const autorun = params.get("autorun") === "1";
+const autonext = params.get("autonext") === "1";
+const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
+const NEXT_PAGE = "osszegzes.html";
+const poemFallback = "Nincs betöltött vers.";
+
+const noticeEl = document.getElementById("notice");
+const reanalyzeBtn = document.getElementById("reanalyzeBtn");
+
 function safeParse(text) {
   try {
     return JSON.parse(text);
@@ -384,12 +394,6 @@ function setText(id, value, fallback = "—") {
   el.textContent = text;
 }
 
-const poemFallback = "Nincs betöltött vers.";
-const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
-
-const noticeEl = document.getElementById("notice");
-const reanalyzeBtn = document.getElementById("reanalyzeBtn");
-
 function showNotice(message) {
   noticeEl.textContent = message;
   noticeEl.style.display = "block";
@@ -401,19 +405,12 @@ function fillView() {
     sessionStorage.getItem("poem") ||
     poemFallback;
 
-  const kindPack = readJSON("analysis_kind");
-  const structurePack = readJSON("analysis_structure");
-  const rhythmPack = readJSON("analysis_rhythm");
-  const imagesPack = readJSON("analysis_images");
-  const expressionPack = readJSON("analysis_expression");
-  const checkPack = readJSON("analysis_check");
-
-  const kind = unwrapPack(kindPack) || {};
-  const structure = unwrapPack(structurePack) || {};
-  const rhythm = unwrapPack(rhythmPack) || {};
-  const images = unwrapPack(imagesPack) || {};
-  const expression = unwrapPack(expressionPack) || {};
-  const check = unwrapPack(checkPack) || {};
+  const kind = unwrapPack(readJSON("analysis_kind")) || {};
+  const structure = unwrapPack(readJSON("analysis_structure")) || {};
+  const rhythm = unwrapPack(readJSON("analysis_rhythm")) || {};
+  const images = unwrapPack(readJSON("analysis_images")) || {};
+  const expression = unwrapPack(readJSON("analysis_expression")) || {};
+  const check = unwrapPack(readJSON("analysis_check")) || {};
 
   setText("poemBox", poem, poemFallback);
 
@@ -491,18 +488,18 @@ async function runCheckAnalysis(forceRefresh = false) {
     return;
   }
 
-  if (!forceRefresh) {
+  fillView();
+
+  if (!forceRefresh && !autorun) {
     const savedCheckPack = readJSON("analysis_check");
     const savedCheck = unwrapPack(savedCheckPack);
 
     if (savedCheckPack && savedCheckPack.poem === poem && savedCheck) {
-      fillView();
       showNotice("A korábbi ellenőrzési eredmény betöltve.");
       return;
     }
   }
 
-  fillView();
   showNotice("Az ellenőrzés folyamatban...");
   reanalyzeBtn.disabled = true;
 
@@ -537,6 +534,13 @@ async function runCheckAnalysis(forceRefresh = false) {
 
     fillView();
     showNotice("Az ellenőrzés elkészült.");
+
+    if (autorun && autonext) {
+      setTimeout(() => {
+        window.location.href = NEXT_PAGE;
+      }, 500);
+      return;
+    }
   } catch (err) {
     showNotice("Hiba történt az ellenőrzés során: " + (err.message || "ismeretlen hiba"));
   } finally {
@@ -550,7 +554,7 @@ reanalyzeBtn.addEventListener("click", () => {
   runCheckAnalysis(true);
 });
 
-runCheckAnalysis(false);
+runCheckAnalysis(autorun);
 </script>
 </body>
 </html>
