@@ -68,6 +68,24 @@ button:disabled {
   cursor: default;
 }
 
+button.secondary {
+  background: #2b2b2b;
+  color: #eee;
+  border: 1px solid #444;
+}
+
+button.seed {
+  background: #d6b36a;
+  color: #111;
+  border: 1px solid #d6b36a;
+}
+
+button.done {
+  background: #2e7d32;
+  color: #fff;
+  border: 1px solid #4caf50;
+}  
+
 .statusBox {
   display: none;
   margin-top: 20px;
@@ -208,8 +226,9 @@ button:disabled {
   <textarea id="poemInput" placeholder="Illeszd be ide a versed..."></textarea>
 
   <div class="btnRow">
-    <button id="analyzeBtn">Elemzés</button>
-  </div>
+  <button id="analyzeBtn">Elemzés</button>
+  <button id="checkStatusBtn" class="secondary">Ellenőr: nincs</button>
+</div>
 
   <div class="statusBox errorBox" id="errorBox"></div>
   <div class="statusBox okBox" id="okBox"></div>
@@ -258,6 +277,14 @@ button:disabled {
     </div>
 
     <div class="stepRow">
+  <button class="stepBtn" id="btn-check" disabled>Ellenőr várakozik</button>
+  <div>
+    <div class="progressBox" id="box-check"><div class="progressFill"></div></div>
+    <div class="stepNote" id="note-check">Még nem indult el.</div>
+  </div>
+</div>
+
+    <div class="stepRow">
       <button class="stepBtn" id="btn-summary" disabled>Összegzés várakozik</button>
       <div>
         <div class="progressBox" id="box-summary"><div class="progressFill"></div></div>
@@ -275,6 +302,7 @@ button:disabled {
 const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
 
 const analyzeBtn = document.getElementById("analyzeBtn");
+const checkStatusBtn = document.getElementById("checkStatusBtn");
 const poemInput = document.getElementById("poemInput");
 const errorBox = document.getElementById("errorBox");
 const okBox = document.getElementById("okBox");
@@ -344,6 +372,18 @@ const pipeline = [
     doneText: "Kifejezés kész"
   },
   {
+    key: "check",
+    doneKey: "step_check_done",
+    page: "ellenor.html?autorun=1",
+    targetPage: "ellenor.html",
+    buttonId: "btn-check",
+    boxId: "box-check",
+    noteId: "note-check",
+    waitingText: "Ellenőr várakozik",
+    loadingText: "Ellenőr folyamatban",
+    doneText: "Ellenőr kész"
+  },
+  {
     key: "summary",
     doneKey: "step_summary_done",
     page: "osszegzes.html?autorun=1",
@@ -404,6 +444,8 @@ function resetStepUi(step) {
 
   box.classList.remove("loading", "done");
   note.textContent = "Még nem indult el.";
+
+  btn.onclick = null;
 }
 
 function setStepLoading(step) {
@@ -449,6 +491,8 @@ function clearStepStorage() {
   sessionStorage.removeItem("analysis_rhyme");
   sessionStorage.removeItem("analysis_images");
   sessionStorage.removeItem("analysis_expression");
+  sessionStorage.removeItem("analysis_check_seed");
+  sessionStorage.removeItem("analysis_check");
   sessionStorage.removeItem("analysis_summary");
 
   sessionStorage.removeItem("step_kind_done");
@@ -456,11 +500,29 @@ function clearStepStorage() {
   sessionStorage.removeItem("step_rhythm_done");
   sessionStorage.removeItem("step_imagery_done");
   sessionStorage.removeItem("step_expression_done");
+  sessionStorage.removeItem("step_check_done");
   sessionStorage.removeItem("step_summary_done");
 }
 
 function resetAllStepUi() {
   pipeline.forEach(resetStepUi);
+}
+
+function updateCheckStatus() {
+  const hasSeed = sessionStorage.getItem("analysis_check_seed");
+  const hasFinal = sessionStorage.getItem("analysis_check");
+
+  checkStatusBtn.classList.remove("seed", "done");
+
+  if (hasFinal) {
+    checkStatusBtn.classList.add("done");
+    checkStatusBtn.textContent = "Ellenőr: kész";
+  } else if (hasSeed) {
+    checkStatusBtn.classList.add("seed");
+    checkStatusBtn.textContent = "Ellenőr: saját vélemény kész";
+  } else {
+    checkStatusBtn.textContent = "Ellenőr: nincs";
+  }
 }
 
 function waitForStep(doneKey, timeoutMs = 120000) {
@@ -484,21 +546,34 @@ function waitForStep(doneKey, timeoutMs = 120000) {
   });
 }
 
-async function runPipeline() {
-  for (const step of pipeline) {
-    appendRunnerInfo(step.loadingText + "...");
-    setStepLoading(step);
+async function startCheckSeed(poem) {
+  try {
+    const response = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        poem,
+        step: "check_seed"
+      })
+    });
 
-    runnerFrame.src = step.page + "&t=" + Date.now();
+    const data = await response.json();
 
-    await waitForStep(step.doneKey);
-
-    setStepDone(step);
-    appendRunnerInfo(step.doneText + ".");
+    if (response.ok && data.ok) {
+      sessionStorage.setItem("analysis_check_seed", JSON.stringify(data.result));
+      updateCheckStatus();
+      appendRunnerInfo("Ellenőr első olvasata elkészült.");
+    }
+  } catch (err) {
+    appendRunnerInfo("Az ellenőr első olvasata most nem készült el.");
   }
-
-  showOk("A vers elfogadva. Az elemző oldalak elkészültek, bármelyikbe beléphetsz.");
 }
+
+checkStatusBtn.addEventListener("click", () => {
+  window.location.href = "ellenor.html";
+});
 
 analyzeBtn.addEventListener("click", async () => {
   const poem = poemInput.value.trim();
@@ -538,20 +613,21 @@ analyzeBtn.addEventListener("click", async () => {
       return;
     }
 
-    sessionStorage.setItem("poem", poem);
     clearStepStorage();
+    sessionStorage.setItem("poem", poem);
     resetAllStepUi();
+    updateCheckStatus();
 
-    // Az első eredményt rögtön eltesszük, hogy a felismerés oldal már kész adattal nyíljon meg.
     sessionStorage.setItem("analysis_kind", JSON.stringify(data.result));
     sessionStorage.setItem("step_kind_done", Date.now().toString());
+
+    startCheckSeed(poem);
 
     stepsWrap.style.display = "block";
     setStepDone(pipeline[0]);
     appendRunnerInfo("A vers felismerhető versként. Háttérelemzés indul...");
     showOk("A vers elfogadva. A háttérelemzés elindult.");
 
-    // A többi oldal sorban fusson.
     for (let i = 1; i < pipeline.length; i++) {
       const step = pipeline[i];
       appendRunnerInfo(step.loadingText + "...");
@@ -562,6 +638,10 @@ analyzeBtn.addEventListener("click", async () => {
 
       setStepDone(step);
       appendRunnerInfo(step.doneText + ".");
+
+      if (step.key === "check") {
+        updateCheckStatus();
+      }
     }
 
     showOk("Minden elemzés elkészült. Beléphetsz bármelyik oldalra.");
@@ -571,7 +651,8 @@ analyzeBtn.addEventListener("click", async () => {
     setLoading(false);
   }
 });
-</script>
 
+updateCheckStatus();
+</script>
 </body>
 </html>
