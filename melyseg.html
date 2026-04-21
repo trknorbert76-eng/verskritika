@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mélység</title>
+
+<style>
+body {
+  margin: 0;
+  background: #111;
+  color: #eee;
+  font-family: Georgia, serif;
+}
+
+.wrap {
+  max-width: 980px;
+  margin: auto;
+  padding: 30px 20px 60px;
+}
+
+h1 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.intro {
+  color: #bbb;
+  line-height: 1.6;
+  margin-bottom: 22px;
+}
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #d6b36a;
+  color: #111;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+button.secondary {
+  background: #2b2b2b;
+  color: #eee;
+  border: 1px solid #444;
+}
+
+.notice {
+  display: none;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.notice.ok {
+  background: #162417;
+  border: 1px solid #2f6a35;
+  color: #cdeccf;
+}
+
+.notice.error {
+  background: #2a1616;
+  border: 1px solid #6a2c2c;
+  color: #f0c7c7;
+}
+
+.card {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+.card h2 {
+  margin: 0 0 12px;
+  font-size: 1.25rem;
+  color: #d6b36a;
+}
+
+.card h3 {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+  color: #d6b36a;
+}
+
+.poemBox {
+  background: #121212;
+  border: 1px solid #2f2f2f;
+  border-radius: 12px;
+  padding: 16px;
+  white-space: pre-wrap;
+  line-height: 1.7;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.answer {
+  background: #101010;
+  border: 1px solid #2d2d2d;
+  border-radius: 12px;
+  padding: 14px;
+  line-height: 1.65;
+  color: #f1f1f1;
+}
+
+.highlight {
+  border-color: #6f5a2e;
+  box-shadow: 0 0 0 1px rgba(214,179,106,0.08) inset;
+}
+
+.depthLevel {
+  font-size: 1.3rem;
+  color: #fff;
+  font-weight: bold;
+}
+
+.summaryText {
+  line-height: 1.7;
+  color: #eee;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+.metaBox {
+  background: #101010;
+  border: 1px solid #2d2d2d;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.metaLabel {
+  color: #c9b27a;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+.metaValue {
+  color: #f0f0f0;
+  line-height: 1.5;
+}
+
+.muted {
+  color: #aaa;
+}
+
+.hiddenData {
+  margin-top: 12px;
+  color: #999;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 760px) {
+  .metaGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    flex-direction: column;
+  }
+
+  button {
+    width: 100%;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <h1>Mélység</h1>
+  <p class="intro">
+    Ez az oldal azt nézi, hogy a vers mennyire hordoz belső többletet, kimondatlan réteget,
+    és mennyire nyílik meg az első olvasáson túl.
+  </p>
+
+  <div class="topbar">
+    <button class="secondary" id="backBtn">← Vissza az indexhez</button>
+    <button class="secondary" id="checkBtn">Tovább az ellenőrhöz</button>
+  </div>
+
+  <div class="notice ok" id="okBox"></div>
+  <div class="notice error" id="errorBox"></div>
+
+  <div class="card">
+    <h2>A vizsgált vers</h2>
+    <div class="poemBox" id="poemBox">Nincs betöltött vers.</div>
+  </div>
+
+  <div class="card">
+    <h2>1. Kimondott jelentés határa</h2>
+    <div class="answer" id="q1Box">Még nincs mélységi eredmény.</div>
+  </div>
+
+  <div class="card">
+    <h2>2. Kimondatlan réteg</h2>
+    <div class="answer" id="q2Box">Még nincs mélységi eredmény.</div>
+  </div>
+
+  <div class="card">
+    <h2>3. Prózai összefoglalás vesztesége</h2>
+    <div class="answer" id="q3Box">Még nincs mélységi eredmény.</div>
+  </div>
+
+  <div class="card">
+    <h2>4. A képek szerepe</h2>
+    <div class="answer" id="q4Box">Még nincs mélységi eredmény.</div>
+  </div>
+
+  <div class="card">
+    <h2>5. Újraolvasás hatása</h2>
+    <div class="answer" id="q5Box">Még nincs mélységi eredmény.</div>
+  </div>
+
+  <div class="card">
+    <h2>6. Belső feszültség</h2>
+    <div class="answer" id="q6Box">Még nincs mélységi eredmény.</div>
+  </div>
+
+  <div class="card highlight">
+    <h2>Megállapított mélység</h2>
+    <div class="depthLevel" id="depthLevel">—</div>
+  </div>
+
+  <div class="card">
+    <h2>Rövid összegzés</h2>
+    <div class="summaryText" id="reasoningBox">Még nincs összegzés.</div>
+  </div>
+
+  <div class="card">
+    <h2>Az ellenőr számára</h2>
+    <div class="metaGrid">
+      <div class="metaBox">
+        <div class="metaLabel">Minimum szint</div>
+        <div class="metaValue" id="floorBox">—</div>
+      </div>
+      <div class="metaBox">
+        <div class="metaLabel">Maximum szint</div>
+        <div class="metaValue" id="ceilingBox">—</div>
+      </div>
+      <div class="metaBox">
+        <div class="metaLabel">Szigorúság</div>
+        <div class="metaValue" id="strictnessBox">—</div>
+      </div>
+    </div>
+    <div class="hiddenData">
+      Ez a blokk nem végső ítéletet mond, hanem azt jelzi, milyen tartományban mozoghat az ellenőr.
+    </div>
+  </div>
+</div>
+
+<script>
+function safeParse(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+function unwrapPack(pack) {
+  if (!pack) return null;
+  return pack.result || pack;
+}
+
+function setText(id, value, fallback = "—") {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const text = typeof value === "string" && value.trim() ? value.trim() : fallback;
+  el.textContent = text;
+}
+
+function showOk(message) {
+  const okBox = document.getElementById("okBox");
+  const errorBox = document.getElementById("errorBox");
+  errorBox.style.display = "none";
+  errorBox.textContent = "";
+  okBox.textContent = message;
+  okBox.style.display = "block";
+}
+
+function showError(message) {
+  const okBox = document.getElementById("okBox");
+  const errorBox = document.getElementById("errorBox");
+  okBox.style.display = "none";
+  okBox.textContent = "";
+  errorBox.textContent = message;
+  errorBox.style.display = "block";
+}
+
+function fillView() {
+  const poem =
+    sessionStorage.getItem("poemText") ||
+    sessionStorage.getItem("poem") ||
+    "Nincs betöltött vers.";
+
+  const savedDepth = safeParse(sessionStorage.getItem("analysis_depth") || "");
+  const depth = unwrapPack(savedDepth) || savedDepth || null;
+
+  setText("poemBox", poem, "Nincs betöltött vers.");
+
+  if (!depth) {
+    showError("Még nincs elkészült mélységi eredmény.");
+    return;
+  }
+
+  setText("q1Box", depth.q1_literal_limit, "Nincs válasz.");
+  setText("q2Box", depth.q2_hidden_layer, "Nincs válasz.");
+  setText("q3Box", depth.q3_prose_loss, "Nincs válasz.");
+  setText("q4Box", depth.q4_images_role, "Nincs válasz.");
+  setText("q5Box", depth.q5_reread_growth, "Nincs válasz.");
+  setText("q6Box", depth.q6_inner_tension, "Nincs válasz.");
+
+  setText("depthLevel", depth.depth_level, "—");
+  setText("reasoningBox", depth.reasoning, "Nincs összegzés.");
+  setText("floorBox", depth.checker_floor, "nincs megadva");
+  setText("ceilingBox", depth.checker_ceiling, "nincs megadva");
+  setText("strictnessBox", depth.strictness, "nincs megadva");
+
+  showOk("A mélységi eredmény betöltve.");
+}
+
+document.getElementById("backBtn").addEventListener("click", () => {
+  window.location.href = "index.html";
+});
+
+document.getElementById("checkBtn").addEventListener("click", () => {
+  window.location.href = "ellenor.html";
+});
+
+fillView();
+</script>
+</body>
+</html>
