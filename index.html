@@ -301,12 +301,11 @@ button.done {
 
 <script>
 const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
-  const DEPTH_WORKER_URL = "https://melyseg-depth.trknorbert76.workers.dev";
-  
+const DEPTH_WORKER_URL = "https://melyseg-depth.trknorbert76.workers.dev";
 
 const analyzeBtn = document.getElementById("analyzeBtn");
 const checkStatusBtn = document.getElementById("checkStatusBtn");
- const depthStatusBtn = document.getElementById("depthStatusBtn"); 
+const depthStatusBtn = document.getElementById("depthStatusBtn");
 const poemInput = document.getElementById("poemInput");
 const errorBox = document.getElementById("errorBox");
 const okBox = document.getElementById("okBox");
@@ -507,6 +506,7 @@ function clearStepStorage() {
   sessionStorage.removeItem("step_expression_done");
   sessionStorage.removeItem("step_check_done");
   sessionStorage.removeItem("step_depth_done");
+  sessionStorage.removeItem("step_depth_loading");
   sessionStorage.removeItem("step_summary_done");
 }
 
@@ -531,44 +531,21 @@ function updateCheckStatus() {
   }
 }
 
-  async function startDepthAnalysis(poem) {
-  try {
-    sessionStorage.setItem("step_depth_loading", "1");
-    updateDepthStatus();
+function updateDepthStatus() {
+  const hasDepth = sessionStorage.getItem("analysis_depth");
+  const hasDepthDone = sessionStorage.getItem("step_depth_done");
+  const isLoading = sessionStorage.getItem("step_depth_loading");
 
-    const kindPack = JSON.parse(sessionStorage.getItem("analysis_kind") || "null");
-    const kind = kindPack?.result || kindPack || {};
+  depthStatusBtn.classList.remove("seed", "done");
 
-    const response = await fetch(DEPTH_WORKER_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        poem,
-        previous: {
-          kind: {
-            main_type: kind.main_type || "",
-            style_label: kind.style_label || ""
-          }
-        }
-      })
-    });
-
-    const data = await response.json();
-
-    if (response.ok && data.ok) {
-      sessionStorage.setItem("analysis_depth", JSON.stringify(data.result));
-      sessionStorage.setItem("step_depth_done", Date.now().toString());
-      appendRunnerInfo("Mélység elemzés elkészült.");
-    } else {
-      appendRunnerInfo("A mélység elemzés hibával leállt.");
-    }
-  } catch (err) {
-    appendRunnerInfo("A mélység elemzés most nem készült el.");
-  } finally {
-    sessionStorage.removeItem("step_depth_loading");
-    updateDepthStatus();
+  if (hasDepth && hasDepthDone) {
+    depthStatusBtn.classList.add("done");
+    depthStatusBtn.textContent = "Mélység: kész";
+  } else if (isLoading) {
+    depthStatusBtn.classList.add("seed");
+    depthStatusBtn.textContent = "Mélység: folyamatban";
+  } else {
+    depthStatusBtn.textContent = "Mélység: nincs";
   }
 }
 
@@ -618,8 +595,6 @@ async function startCheckSeed(poem) {
   }
 }
 
-  }
-
 async function startDepthAnalysis(poem) {
   try {
     sessionStorage.setItem("step_depth_loading", "1");
@@ -653,7 +628,6 @@ async function startDepthAnalysis(poem) {
     } else {
       appendRunnerInfo("A mélység elemzés hibával leállt.");
     }
-
   } catch (err) {
     appendRunnerInfo("A mélység elemzés most nem készült el.");
   } finally {
@@ -666,7 +640,7 @@ checkStatusBtn.addEventListener("click", () => {
   window.location.href = "ellenor.html";
 });
 
-  depthStatusBtn.addEventListener("click", () => {
+depthStatusBtn.addEventListener("click", () => {
   window.location.href = "melyseg.html";
 });
 
@@ -708,23 +682,23 @@ analyzeBtn.addEventListener("click", async () => {
       return;
     }
 
-  clearStepStorage();
-sessionStorage.setItem("poem", poem);
-resetAllStepUi();
-updateCheckStatus();
-updateDepthStatus();
+    clearStepStorage();
+    sessionStorage.setItem("poem", poem);
+    resetAllStepUi();
+    updateCheckStatus();
+    updateDepthStatus();
 
-sessionStorage.setItem("analysis_kind", JSON.stringify(data.result));
-sessionStorage.setItem("step_kind_done", Date.now().toString());
+    sessionStorage.setItem("analysis_kind", JSON.stringify(data.result));
+    sessionStorage.setItem("step_kind_done", Date.now().toString());
 
-startCheckSeed(poem);
-startDepthAnalysis(poem);
-updateDepthStatus();
+    startCheckSeed(poem);
+    startDepthAnalysis(poem);
+    updateDepthStatus();
 
-stepsWrap.style.display = "block";
-setStepDone(pipeline[0]);
-appendRunnerInfo("A vers felismerhető versként. Háttérelemzés indul...");
-showOk("A vers elfogadva. A háttérelemzés elindult.");
+    stepsWrap.style.display = "block";
+    setStepDone(pipeline[0]);
+    appendRunnerInfo("A vers felismerhető versként. Háttérelemzés indul...");
+    showOk("A vers elfogadva. A háttérelemzés elindult.");
 
     for (let i = 1; i < pipeline.length; i++) {
       const step = pipeline[i];
@@ -751,6 +725,7 @@ showOk("A vers elfogadva. A háttérelemzés elindult.");
 });
 
 updateCheckStatus();
+updateDepthStatus();
 </script>
 </body>
 </html>
