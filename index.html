@@ -228,6 +228,7 @@ button.done {
   <div class="btnRow">
   <button id="analyzeBtn">Elemzés</button>
   <button id="checkStatusBtn" class="secondary">Ellenőr: nincs</button>
+  <button id="depthStatusBtn" class="secondary">Mélység: nincs</button>
 </div>
 
   <div class="statusBox errorBox" id="errorBox"></div>
@@ -300,9 +301,12 @@ button.done {
 
 <script>
 const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
+  const DEPTH_WORKER_URL = "https://melyseg-depth.trknorbert76.workers.dev";
+  
 
 const analyzeBtn = document.getElementById("analyzeBtn");
 const checkStatusBtn = document.getElementById("checkStatusBtn");
+ const depthStatusBtn = document.getElementById("depthStatusBtn"); 
 const poemInput = document.getElementById("poemInput");
 const errorBox = document.getElementById("errorBox");
 const okBox = document.getElementById("okBox");
@@ -493,6 +497,7 @@ function clearStepStorage() {
   sessionStorage.removeItem("analysis_expression");
   sessionStorage.removeItem("analysis_check_seed");
   sessionStorage.removeItem("analysis_check");
+  sessionStorage.removeItem("analysis_depth");
   sessionStorage.removeItem("analysis_summary");
 
   sessionStorage.removeItem("step_kind_done");
@@ -501,6 +506,7 @@ function clearStepStorage() {
   sessionStorage.removeItem("step_imagery_done");
   sessionStorage.removeItem("step_expression_done");
   sessionStorage.removeItem("step_check_done");
+  sessionStorage.removeItem("step_depth_done");
   sessionStorage.removeItem("step_summary_done");
 }
 
@@ -522,6 +528,47 @@ function updateCheckStatus() {
     checkStatusBtn.textContent = "Ellenőr: saját vélemény kész";
   } else {
     checkStatusBtn.textContent = "Ellenőr: nincs";
+  }
+}
+
+  async function startDepthAnalysis(poem) {
+  try {
+    sessionStorage.setItem("step_depth_loading", "1");
+    updateDepthStatus();
+
+    const kindPack = JSON.parse(sessionStorage.getItem("analysis_kind") || "null");
+    const kind = kindPack?.result || kindPack || {};
+
+    const response = await fetch(DEPTH_WORKER_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        poem,
+        previous: {
+          kind: {
+            main_type: kind.main_type || "",
+            style_label: kind.style_label || ""
+          }
+        }
+      })
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.ok) {
+      sessionStorage.setItem("analysis_depth", JSON.stringify(data.result));
+      sessionStorage.setItem("step_depth_done", Date.now().toString());
+      appendRunnerInfo("Mélység elemzés elkészült.");
+    } else {
+      appendRunnerInfo("A mélység elemzés hibával leállt.");
+    }
+  } catch (err) {
+    appendRunnerInfo("A mélység elemzés most nem készült el.");
+  } finally {
+    sessionStorage.removeItem("step_depth_loading");
+    updateDepthStatus();
   }
 }
 
@@ -571,8 +618,56 @@ async function startCheckSeed(poem) {
   }
 }
 
+  }
+
+async function startDepthAnalysis(poem) {
+  try {
+    sessionStorage.setItem("step_depth_loading", "1");
+    updateDepthStatus();
+
+    const kindPack = JSON.parse(sessionStorage.getItem("analysis_kind") || "null");
+    const kind = kindPack?.result || kindPack || {};
+
+    const response = await fetch(DEPTH_WORKER_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        poem,
+        previous: {
+          kind: {
+            main_type: kind.main_type || "",
+            style_label: kind.style_label || ""
+          }
+        }
+      })
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.ok) {
+      sessionStorage.setItem("analysis_depth", JSON.stringify(data.result));
+      sessionStorage.setItem("step_depth_done", Date.now().toString());
+      appendRunnerInfo("Mélység elemzés elkészült.");
+    } else {
+      appendRunnerInfo("A mélység elemzés hibával leállt.");
+    }
+
+  } catch (err) {
+    appendRunnerInfo("A mélység elemzés most nem készült el.");
+  } finally {
+    sessionStorage.removeItem("step_depth_loading");
+    updateDepthStatus();
+  }
+}
+
 checkStatusBtn.addEventListener("click", () => {
   window.location.href = "ellenor.html";
+});
+
+  depthStatusBtn.addEventListener("click", () => {
+  window.location.href = "melyseg.html";
 });
 
 analyzeBtn.addEventListener("click", async () => {
@@ -613,20 +708,23 @@ analyzeBtn.addEventListener("click", async () => {
       return;
     }
 
-    clearStepStorage();
-    sessionStorage.setItem("poem", poem);
-    resetAllStepUi();
-    updateCheckStatus();
+  clearStepStorage();
+sessionStorage.setItem("poem", poem);
+resetAllStepUi();
+updateCheckStatus();
+updateDepthStatus();
 
-    sessionStorage.setItem("analysis_kind", JSON.stringify(data.result));
-    sessionStorage.setItem("step_kind_done", Date.now().toString());
+sessionStorage.setItem("analysis_kind", JSON.stringify(data.result));
+sessionStorage.setItem("step_kind_done", Date.now().toString());
 
-    startCheckSeed(poem);
+startCheckSeed(poem);
+startDepthAnalysis(poem);
+updateDepthStatus();
 
-    stepsWrap.style.display = "block";
-    setStepDone(pipeline[0]);
-    appendRunnerInfo("A vers felismerhető versként. Háttérelemzés indul...");
-    showOk("A vers elfogadva. A háttérelemzés elindult.");
+stepsWrap.style.display = "block";
+setStepDone(pipeline[0]);
+appendRunnerInfo("A vers felismerhető versként. Háttérelemzés indul...");
+showOk("A vers elfogadva. A háttérelemzés elindult.");
 
     for (let i = 1; i < pipeline.length; i++) {
       const step = pipeline[i];
