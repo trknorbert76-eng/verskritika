@@ -260,7 +260,7 @@
     </div>
   </div>
 
- <script>
+<script>
   function safeParse(text) {
     try {
       return JSON.parse(text);
@@ -314,9 +314,10 @@
   const rhythm = getStoredResult("analysis_rhythm");
   const images = getStoredResult("analysis_images");
   const expression = getStoredResult("analysis_expression");
+  const depth = getStoredResult("analysis_depth");
   const check = getStoredResult("analysis_check");
 
-  if (!poem || !kind || !structure || !rhythm || !images || !expression) {
+  if (!poem || !kind || !structure || !rhythm || !images || !expression || !depth) {
     showError("Hiányoznak az elemzés adatai.");
   } else {
     renderSummary();
@@ -333,7 +334,7 @@
     styleReasoningEl.textContent = kind.style_reasoning || "Nincs külön indoklás.";
 
     const baseLevel = determineLevel(kind, structure, rhythm, images, expression);
-    const finalLevel = getFinalLevel(baseLevel, check);
+    const finalLevel = getFinalLevel(baseLevel, check, depth);
 
     const summaryText = getSummaryText(kind, structure, rhythm, images, expression, finalLevel, check);
     const strengths = getStrengths(kind, structure, rhythm, images, expression, check);
@@ -411,35 +412,56 @@
     };
   }
 
-  function getFinalLevel(baseLevel, checkData) {
+  function scoreToIndex(score) {
+    if (score <= 19) return 0; // közhelyes
+    if (score <= 39) return 1; // vegyes
+    if (score <= 59) return 2; // részben egyedi
+    if (score <= 79) return 3; // erős
+    return 4; // kiemelkedő
+  }
+
+  function getFinalLevel(baseLevel, checkData, depthData) {
     const baseIndex = getLevelIndexFromLabel(baseLevel.key || baseLevel.label);
 
     if (baseIndex === -1) return baseLevel;
-    if (!checkData) return baseLevel;
+    if (!checkData) {
+      // ha nincs ellenőr, akkor is igazodjon a depth-hez
+      let finalIndex = baseIndex;
+
+      const minScore = Number(depthData?.checker_min_score);
+      const maxScore = Number(depthData?.checker_max_score);
+
+      if (!Number.isNaN(minScore)) {
+        const minIndex = scoreToIndex(minScore);
+        if (finalIndex < minIndex) finalIndex = minIndex;
+      }
+
+      if (!Number.isNaN(maxScore)) {
+        const maxIndex = scoreToIndex(maxScore);
+        if (finalIndex > maxIndex) finalIndex = maxIndex;
+      }
+
+      return levelFromIndex(finalIndex);
+    }
 
     const checkIndex = getLevelIndexFromLabel(checkData.own_level || "");
-    const direction = String(checkData.correction_direction || "").trim().toLowerCase();
+    let finalIndex = checkIndex !== -1 ? checkIndex : baseIndex;
 
-    let finalIndex = baseIndex;
+    const minScore = Number(depthData?.checker_min_score);
+    const maxScore = Number(depthData?.checker_max_score);
 
-    // Az ellenőr erősen befolyásolja az alap szintet
-    if (checkIndex !== -1) {
-      const diff = checkIndex - baseIndex;
-
-      if (Math.abs(diff) >= 2) {
-        // nagy eltérésnél az ellenőr átveszi a főszerepet
-        finalIndex = checkIndex;
-      } else if (Math.abs(diff) === 1) {
-        // kis eltérésnél is az ellenőrhöz igazítunk
-        finalIndex = checkIndex;
+    if (!Number.isNaN(minScore)) {
+      const minIndex = scoreToIndex(minScore);
+      if (finalIndex < minIndex) {
+        finalIndex = minIndex;
       }
     }
 
-    // A korrekció még egyet mozdíthat
-    if (direction === "feljebb") {
-      finalIndex = Math.min(LEVELS.length - 1, finalIndex + 1);
-    } else if (direction === "lejjebb") {
-      finalIndex = Math.max(0, finalIndex - 1);
+    if (!Number.isNaN(maxScore)) {
+      const maxIndex = scoreToIndex(maxScore);
+      if (finalIndex > maxIndex) {
+        finalIndex = maxIndex;
+      }
     }
 
     return levelFromIndex(finalIndex);
@@ -682,6 +704,6 @@
     sessionStorage.clear();
     window.location.href = "index.html";
   }
-</script>
+</script>   
 </body>
 </html>
