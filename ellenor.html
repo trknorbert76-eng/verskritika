@@ -201,7 +201,8 @@ button.secondary,
     <button id="reanalyzeBtn">Újraellenőrzés</button>
   </div>
 
- <div id="notice" class="notice" style="display:none;"></div>
+  <div id="notice" class="notice" style="display:none;"></div>
+
   <div class="grid-top">
     <section class="card">
       <h2>A vizsgált vers</h2>
@@ -218,19 +219,17 @@ button.secondary,
 
       <div class="field">
         <span class="label">Önálló szintérzet</span>
-        <div id="ownLevel" class="value small">vegyes / részben egyedi határ</div>
+        <div id="ownLevel" class="value small">—</div>
       </div>
 
       <div class="field">
         <span class="label">Miért ezt látja</span>
-        <div id="ownReason" class="value">
-          A versnek van érzékelhető belső melege és több működő képe, de a megfogalmazás nem mindenütt elég sűrű vagy meglepő ahhoz, hogy egyértelműen magasabb szintre kerüljön.
-        </div>
+        <div id="ownReason" class="value">Még nincs ellenőrzési indoklás.</div>
       </div>
 
       <div class="field">
         <span class="label">Biztosság</span>
-        <div id="ownConfidence" class="value small">közepesen biztos</div>
+        <div id="ownConfidence" class="value small">—</div>
       </div>
     </section>
   </div>
@@ -244,16 +243,16 @@ button.secondary,
         <div class="two-col-mini">
           <div class="field">
             <span class="label">Fő típus</span>
-            <div id="kindMainType" class="value small">szerelmes</div>
+            <div id="kindMainType" class="value small">—</div>
           </div>
           <div class="field">
             <span class="label">Hangulat</span>
-            <div id="kindMood" class="value small">meleg, bensőséges</div>
+            <div id="kindMood" class="value small">—</div>
           </div>
         </div>
         <div class="field">
           <span class="label">Stílusjelleg</span>
-          <div id="kindStyle" class="value small">képszerű</div>
+          <div id="kindStyle" class="value small">—</div>
         </div>
       </div>
 
@@ -261,13 +260,11 @@ button.secondary,
         <div class="mini-title">Szerkezet</div>
         <div class="field">
           <span class="label">Szerkezet típusa</span>
-          <div id="structureType" class="value small">statikus</div>
+          <div id="structureType" class="value small">—</div>
         </div>
         <div class="field">
           <span class="label">Mozgás</span>
-          <div id="structureMovement" class="value">
-            A vers alaphelyzete nem változik meg, ugyanazt az állapotot bontja ki.
-          </div>
+          <div id="structureMovement" class="value">—</div>
         </div>
       </div>
 
@@ -275,11 +272,11 @@ button.secondary,
         <div class="mini-title">Ritmus</div>
         <div class="field">
           <span class="label">Ritmus jellege</span>
-          <div id="rhythmType" class="value small">szabad versritmus, nem kötött verselés</div>
+          <div id="rhythmType" class="value small">—</div>
         </div>
         <div class="field">
           <span class="label">Lendület</span>
-          <div id="rhythmMovement" class="value small">enyhén hullámzó, lágy</div>
+          <div id="rhythmMovement" class="value small">—</div>
         </div>
       </div>
 
@@ -288,11 +285,11 @@ button.secondary,
         <div class="two-col-mini">
           <div class="field">
             <span class="label">Képiség</span>
-            <div id="imagesPresence" class="value small">erősen képszerű</div>
+            <div id="imagesPresence" class="value small">—</div>
           </div>
           <div class="field">
             <span class="label">Eredetiség</span>
-            <div id="imagesOriginality" class="value small">részben egyedi</div>
+            <div id="imagesOriginality" class="value small">—</div>
           </div>
         </div>
       </div>
@@ -302,11 +299,11 @@ button.secondary,
         <div class="two-col-mini">
           <div class="field">
             <span class="label">Összkép</span>
-            <div id="expressionOverall" class="value small">vegyes</div>
+            <div id="expressionOverall" class="value small">—</div>
           </div>
           <div class="field">
             <span class="label">Hang egyedisége</span>
-            <div id="expressionVoice" class="value small">részben ismerős</div>
+            <div id="expressionVoice" class="value small">—</div>
           </div>
         </div>
       </div>
@@ -317,38 +314,32 @@ button.secondary,
 
       <div class="field">
         <span class="label">Reális-e az eddigi összkép</span>
-        <div id="realisticOverall" class="value small">részben reális, de enyhén felülhúzott</div>
+        <div id="realisticOverall" class="value small">—</div>
       </div>
 
       <div class="field">
         <span class="label">Mi áll közel a saját olvasathoz</span>
-        <div id="agreementPoints" class="value">
-          A képiség és a bensőséges hangulat megállapítása reálisnak tűnik, és a statikus szerkezeti kép is összhangban van a vers működésével.
-        </div>
+        <div id="agreementPoints" class="value">Még nincs adat.</div>
       </div>
 
       <div class="field">
         <span class="label">Mi csúszhatott félre</span>
-        <div id="mismatchPoints" class="value">
-          A részben egyedi szintérzet kissé magas lehet, mert a vers több helyen ismert szerelmi fordulatokra és hagyományos képekre támaszkodik.
-        </div>
+        <div id="mismatchPoints" class="value">Még nincs adat.</div>
       </div>
 
       <div class="field">
         <span class="label">Torzítás iránya</span>
-        <div id="distortionDirection" class="value small">enyhe túlértékelés</div>
+        <div id="distortionDirection" class="value small">—</div>
       </div>
 
       <div class="field">
         <span class="label">Korrekció</span>
-        <div id="correctionDecision" class="value small">lejjebb egy lépéssel</div>
+        <div id="correctionDecision" class="value small">—</div>
       </div>
 
       <div class="field">
         <span class="label">Indoklás</span>
-        <div id="correctionReason" class="value">
-          A vers nem gyenge, de a szerkezeti statikusság, a részben ismerős hang és a nem teljesen egyedi képi világ együtt inkább visszafogottabb végső szintet indokolnak.
-        </div>
+        <div id="correctionReason" class="value">Még nincs indoklás.</div>
       </div>
     </section>
   </div>
@@ -453,12 +444,14 @@ async function runCheckAnalysis(forceRefresh = false) {
   const savedRhythm = readJSON("analysis_rhythm");
   const savedImages = readJSON("analysis_images");
   const savedExpression = readJSON("analysis_expression");
+  const savedDepth = readJSON("analysis_depth");
 
   const kind = unwrapPack(savedKind);
   const structure = unwrapPack(savedStructure);
   const rhythm = unwrapPack(savedRhythm);
   const images = unwrapPack(savedImages);
   const expression = unwrapPack(savedExpression);
+  const depth = unwrapPack(savedDepth);
 
   if (!poem) {
     window.location.href = "index.html";
@@ -487,6 +480,11 @@ async function runCheckAnalysis(forceRefresh = false) {
 
   if (!expression) {
     window.location.href = "kifejezesmod.html";
+    return;
+  }
+
+  if (!depth) {
+    window.location.href = "melyseg.html";
     return;
   }
 
@@ -526,6 +524,7 @@ async function runCheckAnalysis(forceRefresh = false) {
           rhythm,
           images,
           expression,
+          depth,
           seed: unwrapPack(readJSON("analysis_check_seed")) || {}
         }
       })
