@@ -282,6 +282,11 @@
     return unwrapPack(getStoredPack(key));
   }
 
+  function hasAny(text, phrases) {
+    const t = String(text || "").toLowerCase();
+    return phrases.some(p => t.includes(p));
+  }
+
   const errorBox = document.getElementById("errorBox");
   const summaryEl = document.getElementById("summary");
   const levelTextEl = document.getElementById("levelText");
@@ -294,19 +299,6 @@
   const styleReasoningEl = document.getElementById("styleReasoning");
   const reviewTextEl = document.getElementById("reviewText");
   const reviewAdjustmentEl = document.getElementById("reviewAdjustment");
-
-  const LEVELS = [
-    { key: "közhelyes", label: "közhelyes működés" },
-    { key: "vegyes", label: "vegyes / közepes" },
-    { key: "részben egyedi", label: "részben egyedi" },
-    { key: "erős", label: "erős" },
-    { key: "kiemelkedő", label: "kiemelkedő" }
-  ];
-
-  function showError(message) {
-    errorBox.textContent = message;
-    errorBox.style.display = "block";
-  }
 
   const poem = sessionStorage.getItem("poem");
   const kind = getStoredResult("analysis_kind");
@@ -323,6 +315,11 @@
     renderSummary();
   }
 
+  function showError(message) {
+    errorBox.textContent = message;
+    errorBox.style.display = "block";
+  }
+
   function renderSummary() {
     poemTextEl.textContent = poem;
 
@@ -333,16 +330,24 @@
         : "Nincs megadva";
     styleReasoningEl.textContent = kind.style_reasoning || "Nincs külön indoklás.";
 
-    const finalScore = getFinalScore(check, depth, kind, structure, rhythm, images, expression);
+    const finalScore = getFinalScore({
+      checkData: check,
+      depthData: depth,
+      kind,
+      structure,
+      rhythm,
+      images,
+      expression
+    });
+
     const finalLevel = getLevelFromScore(finalScore);
 
-    const summaryText = getSummaryText(kind, structure, rhythm, images, expression, finalLevel, check);
-    const strengths = getStrengths(kind, structure, rhythm, images, expression, check);
-    const weaknesses = getWeaknesses(kind, structure, rhythm, images, expression, check);
-
-    summaryEl.textContent = summaryText;
+    summaryEl.textContent = buildSummary(kind, structure, rhythm, images, expression, finalLevel, check);
     levelTextEl.textContent = "Szint: " + finalLevel.label;
     pointerEl.style.left = finalScore + "%";
+
+    const strengths = buildStrengths(kind, structure, rhythm, images, expression, check);
+    const weaknesses = buildWeaknesses(kind, structure, rhythm, images, expression, check);
 
     strengthsEl.textContent = strengths.length
       ? strengths.join("\n• ").replace(/^/, "• ")
@@ -352,50 +357,42 @@
       ? weaknesses.join("\n• ").replace(/^/, "• ")
       : "—";
 
-    if (check) {
-      reviewTextEl.textContent = [
-        check.own_impression || "",
-        check.own_reasoning || "",
-        check.agreement_points || "",
-        check.mismatch_points || ""
-      ]
-        .filter(Boolean)
-        .join("\n\n") || "Nincs részletes ellenőrzés.";
-
-      const direction = String(check.correction_direction || "").trim().toLowerCase();
-      const distortion = String(check.distortion_direction || "").trim();
-
-      if (direction === "feljebb") {
-        reviewAdjustmentEl.textContent =
-          `A végső ellenőrzés felfelé módosította a besorolást. (${distortion}) ${check.correction_reason || ""}`.trim();
-      } else if (direction === "lejjebb") {
-        reviewAdjustmentEl.textContent =
-          `A végső ellenőrzés lefelé módosította a besorolást. (${distortion}) ${check.correction_reason || ""}`.trim();
-      } else {
-        reviewAdjustmentEl.textContent =
-          check.correction_reason
-            ? `Nem történt szintkorrekció. ${check.correction_reason}`
-            : "Nem történt szintkorrekció.";
-      }
-    } else {
-      reviewTextEl.textContent = "Nincs végső ellenőrzés.";
-      reviewAdjustmentEl.textContent = "Nincs korrekció.";
-    }
+    renderReview(check);
 
     sessionStorage.setItem("step_summary_done", Date.now().toString());
   }
 
-  function normalizeLevelKey(text) {
-    const t = String(text || "").trim().toLowerCase();
+  function renderReview(checkData) {
+    if (!checkData) {
+      reviewTextEl.textContent = "Nincs végső ellenőrzés.";
+      reviewAdjustmentEl.textContent = "Nincs korrekció.";
+      return;
+    }
 
-    if (t.includes("kiemelkedő")) return "kiemelkedő";
-    if (t === "erős" || t.includes("erős")) return "erős";
-    if (t.includes("részben egyedi")) return "részben egyedi";
-    if (t.includes("egyedi")) return "részben egyedi";
-    if (t.includes("vegyes")) return "vegyes";
-    if (t.includes("közhelyes")) return "közhelyes";
+    reviewTextEl.textContent = [
+      checkData.own_impression || "",
+      checkData.own_reasoning || "",
+      checkData.agreement_points || "",
+      checkData.mismatch_points || ""
+    ]
+      .filter(Boolean)
+      .join("\n\n") || "Nincs részletes ellenőrzés.";
 
-    return "";
+    const direction = String(checkData.correction_direction || "").trim().toLowerCase();
+    const distortion = String(checkData.distortion_direction || "").trim();
+
+    if (direction === "feljebb") {
+      reviewAdjustmentEl.textContent =
+        `A végső ellenőrzés felfelé módosította a besorolást. (${distortion}) ${checkData.correction_reason || ""}`.trim();
+    } else if (direction === "lejjebb") {
+      reviewAdjustmentEl.textContent =
+        `A végső ellenőrzés lefelé módosította a besorolást. (${distortion}) ${checkData.correction_reason || ""}`.trim();
+    } else {
+      reviewAdjustmentEl.textContent =
+        checkData.correction_reason
+          ? `Nem történt szintkorrekció. ${checkData.correction_reason}`
+          : "Nem történt szintkorrekció.";
+    }
   }
 
   function getLevelFromScore(score) {
@@ -416,16 +413,22 @@
     return { key: "kiemelkedő", label: "kiemelkedő", position: safeScore };
   }
 
-  function getFinalScore(checkData, depthData, kind, structure, rhythm, images, expression) {
+  function getFinalScore({ checkData, depthData, kind, structure, rhythm, images, expression }) {
+    let score = NaN;
+
     if (checkData && typeof checkData.final_score !== "undefined") {
-      const score = Number(checkData.final_score);
-      if (!Number.isNaN(score)) {
-        return Math.max(0, Math.min(100, score));
+      const raw = Number(checkData.final_score);
+      if (!Number.isNaN(raw)) {
+        score = raw;
       }
     }
 
-    const fallback = determineLevel(kind, structure, rhythm, images, expression);
-    let score = Number(fallback.position) || 46;
+    if (Number.isNaN(score)) {
+      const fallback = determineFallbackScore(kind, structure, rhythm, images, expression);
+      score = fallback;
+    }
+
+    score = applyImpactBoost(score, checkData, expression, structure, depthData);
 
     const minScore = Number(depthData?.checker_min_score);
     const maxScore = Number(depthData?.checker_max_score);
@@ -436,96 +439,102 @@
     return Math.max(0, Math.min(100, score));
   }
 
-  function getSummaryText(kind, structure, rhythm, images, expression, level, checkData) {
-    return buildSummary(kind, structure, rhythm, images, expression, level, checkData);
+  function applyImpactBoost(score, checkData, expression, structure, depthData) {
+    if (!detectImpactBoost(checkData, expression, structure, depthData)) {
+      return score;
+    }
+
+    return Math.min(100, score + 8);
   }
 
-  function getStrengths(kind, structure, rhythm, images, expression, checkData) {
-    return buildStrengths(kind, structure, rhythm, images, expression, checkData);
+  function detectImpactBoost(checkData, expression, structure, depthData) {
+    if (!checkData) return false;
+
+    const text = [
+      checkData.own_impression || "",
+      checkData.own_reasoning || "",
+      checkData.agreement_points || ""
+    ].join(" ").toLowerCase();
+
+    const expressionOverall = String(expression?.overall_expression || "").toLowerCase().trim();
+    const voice = String(expression?.originality_of_voice || "").toLowerCase().trim();
+    const structureType = String(structure?.structure_type || "").toLowerCase().trim();
+    const depthLevel = String(depthData?.depth_level || "").toLowerCase().trim();
+
+    const hasPublicWeight = hasAny(text, [
+      "haza", "hazám", "ország", "nép", "nemzet", "történelem", "háború",
+      "erkölcsi", "igazság", "közösség", "sors", "felelősség"
+    ]);
+
+    const hasStrengthLanguage = hasAny(text, [
+      "egységes",
+      "következetes",
+      "belső tartás",
+      "saját erejű",
+      "nem felcserélhető",
+      "morális",
+      "súlyos",
+      "történelmi távlat",
+      "nagyobb távlat",
+      "erős kijelentés",
+      "kimond"
+    ]);
+
+    const notWeak =
+      expressionOverall !== "inkább közhelyes" &&
+      voice !== "többnyire közhelyes";
+
+    const notFlat =
+      structureType !== "statikus" || depthLevel === "mély";
+
+    return hasPublicWeight && hasStrengthLanguage && notWeak && notFlat;
   }
 
-  function getWeaknesses(kind, structure, rhythm, images, expression, checkData) {
-    return buildWeaknesses(kind, structure, rhythm, images, expression, checkData);
-  }
+  function determineFallbackScore(kind, structure, rhythm, images, expression) {
+    let score = 46;
 
-  function determineLevel(kind, structure, rhythm, images, expression) {
-    let score = 0;
-
-    const mainType = (kind.main_type || "").toLowerCase();
-    const speechMode = (kind.speech_mode || "").toLowerCase();
-    const expressionMode = (expression.expression_mode || "").toLowerCase();
     const rhythmText = (
       (rhythm.flow || "") + " " +
       (rhythm.movement || "") + " " +
       (rhythm.breaks || "")
     ).toLowerCase();
 
-    if (expression.overall_expression === "inkább közhelyes") score += 0;
-    else if (expression.overall_expression === "inkább hagyományos") score += 0.5;
-    else if (expression.overall_expression === "vegyes") score += 1;
-    else if (expression.overall_expression === "inkább egyedi") score += 2.5;
+    if (expression.overall_expression === "inkább közhelyes") score -= 18;
+    else if (expression.overall_expression === "inkább hagyományos") score -= 8;
+    else if (expression.overall_expression === "vegyes") score += 0;
+    else if (expression.overall_expression === "inkább egyedi") score += 12;
 
-    if (expression.originality_of_voice === "többnyire közhelyes") score -= 1;
-    else if (expression.originality_of_voice === "részben ismerős") score += 0;
-    else if (expression.originality_of_voice === "saját hangú") score += 1.5;
+    if (expression.originality_of_voice === "többnyire közhelyes") score -= 10;
+    else if (expression.originality_of_voice === "saját hangú") score += 10;
 
-    if (expression.precision === "pontos") score += 2;
-    else if (expression.precision === "részben pontos") score += 1;
+    if (expression.precision === "pontos") score += 8;
+    else if (expression.precision === "részben pontos") score += 3;
+    else if (expression.precision === "elmosódó") score -= 6;
 
-    if (expression.tone_naturalness === "természetes") score += 1;
+    if (expression.tone_naturalness === "természetes") score += 5;
+    else if (expression.tone_naturalness === "modoros") score -= 6;
 
-    if (expression.expression_mode === "felszólító / retorikai") score += 2;
+    if (images.originality === "erősen eredeti") score += 10;
+    else if (images.originality === "részben egyedi") score += 4;
+    else if (images.originality === "többnyire közismert") score -= 6;
 
-    if (
-      expression.expression_mode === "felszólító / retorikai" &&
-      expression.tone_naturalness === "természetes" &&
-      expression.precision === "pontos"
-    ) {
-      score += 1;
-    }
+    if (images.imagery_role === "erősen jelentéshordozó") score += 8;
+    else if (images.imagery_role === "részben jelentéshordozó") score += 3;
+    else if (images.imagery_role === "főként díszítő") score -= 4;
 
-    if (
-      (
-        mainType === "hazafias" ||
-        speechMode.includes("buzdító") ||
-        speechMode.includes("felszólító") ||
-        expressionMode.includes("retorikai")
-      ) &&
-      (
-        structure.structure_type === "finoman kibontakozó" ||
-        structure.structure_type === "markánsan fejlődő"
-      )
-    ) {
-      score += 2;
-    }
+    if (images.imagery_cohesion === "összefüggő") score += 6;
+    else if (images.imagery_cohesion === "lazán kapcsolódó") score += 2;
+    else if (images.imagery_cohesion === "szétszórt") score -= 5;
 
-    if (images.originality === "erősen eredeti") score += 2;
-    else if (images.originality === "részben egyedi") score += 0.5;
+    if (structure.structure_type === "finoman kibontakozó") score += 6;
+    else if (structure.structure_type === "markánsan fejlődő") score += 12;
+    else if (structure.structure_type === "statikus") score -= 3;
 
-    if (images.imagery_role === "erősen jelentéshordozó") score += 1;
-    else if (images.imagery_role === "részben jelentéshordozó") score += 0.25;
+    if (rhythmText.includes("lüktet") || rhythmText.includes("lendület")) score += 4;
+    if (rhythmText.includes("folyamatos") || rhythmText.includes("egyenletes")) score += 2;
+    if (rhythmText.includes("akad") || rhythmText.includes("megtorpan")) score -= 3;
 
-    if (images.imagery_cohesion === "összefüggő") score += 1;
-    else if (images.imagery_cohesion === "lazán kapcsolódó") score += 0.5;
-
-    if (structure.structure_type === "finoman kibontakozó") score += 1;
-    else if (structure.structure_type === "markánsan fejlődő") score += 2;
-
-    if (
-      rhythmText.includes("folyamatos") ||
-      rhythmText.includes("egyenletes") ||
-      rhythmText.includes("lüktet") ||
-      rhythmText.includes("lendület")
-    ) {
-      score += 1;
-    }
-
-    if (score <= 3) return { key: "közhelyes", label: "közhelyes működés", position: 8 };
-    if (score <= 6) return { key: "vegyes", label: "vegyes / közepes", position: 28 };
-    if (score <= 9) return { key: "részben egyedi", label: "részben egyedi", position: 46 };
-    if (score <= 12) return { key: "részben egyedi", label: "inkább egyedi", position: 60 };
-    if (score <= 15) return { key: "erős", label: "erős", position: 76 };
-    return { key: "kiemelkedő", label: "kiemelkedő", position: 92 };
+    return Math.max(0, Math.min(100, score));
   }
 
   function buildSummary(kind, structure, rhythm, images, expression, level, checkData) {
@@ -635,10 +644,7 @@
       items.push("A hang nem tud eléggé elszakadni a megszokott költői formuláktól.");
     }
 
-    if (
-      expression.precision === "elmosódó" ||
-      expression.precision === "részben pontos"
-    ) {
+    if (expression.precision === "elmosódó" || expression.precision === "részben pontos") {
       items.push("A megfogalmazás nem minden ponton elég pontos vagy határozott.");
     }
 
