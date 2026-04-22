@@ -181,7 +181,7 @@ button.secondary {
 }
 </style>
 </head>
-<body>
+  <body>
 
 <div class="wrap">
   <h1>Mélység</h1>
@@ -204,32 +204,32 @@ button.secondary {
   </div>
 
   <div class="card">
-    <h2>1. Kimondott jelentés határa</h2>
+    <h2 id="q1Title">1. —</h2>
     <div class="answer" id="q1Box">Még nincs mélységi eredmény.</div>
   </div>
 
   <div class="card">
-    <h2>2. Kimondatlan réteg</h2>
+    <h2 id="q2Title">2. —</h2>
     <div class="answer" id="q2Box">Még nincs mélységi eredmény.</div>
   </div>
 
   <div class="card">
-    <h2>3. Prózai összefoglalás vesztesége</h2>
+    <h2 id="q3Title">3. —</h2>
     <div class="answer" id="q3Box">Még nincs mélységi eredmény.</div>
   </div>
 
   <div class="card">
-    <h2>4. A képek szerepe</h2>
+    <h2 id="q4Title">4. —</h2>
     <div class="answer" id="q4Box">Még nincs mélységi eredmény.</div>
   </div>
 
   <div class="card">
-    <h2>5. Újraolvasás hatása</h2>
+    <h2 id="q5Title">5. —</h2>
     <div class="answer" id="q5Box">Még nincs mélységi eredmény.</div>
   </div>
 
   <div class="card">
-    <h2>6. Belső feszültség</h2>
+    <h2 id="q6Title">6. —</h2>
     <div class="answer" id="q6Box">Még nincs mélységi eredmény.</div>
   </div>
 
@@ -244,26 +244,26 @@ button.secondary {
   </div>
 
   <div class="card">
-    <h2>Az ellenőr számára</h2>
+    <h2>Mélységi tartomány</h2>
+
     <div class="metaGrid">
       <div class="metaBox">
-        <div class="metaLabel">Minimum szint</div>
+        <div class="metaLabel">Alsó szint</div>
         <div class="metaValue" id="floorBox">—</div>
       </div>
+
       <div class="metaBox">
-        <div class="metaLabel">Maximum szint</div>
+        <div class="metaLabel">Felső szint</div>
         <div class="metaValue" id="ceilingBox">—</div>
       </div>
-      <div class="metaBox">
-        <div class="metaLabel">Szigorúság</div>
-        <div class="metaValue" id="strictnessBox">—</div>
-      </div>
     </div>
+
     <div class="hiddenData">
-      Ez a blokk nem végső ítéletet mond, hanem azt jelzi, milyen tartományban mozoghat az ellenőr.
+      Ez a vers mélységének érzékelhető alsó és felső határát mutatja.
     </div>
   </div>
 </div>
+
 <script>
 function safeParse(text) {
   try {
@@ -281,7 +281,10 @@ function unwrapPack(pack) {
 function setText(id, value, fallback = "—") {
   const el = document.getElementById(id);
   if (!el) return;
-  const text = typeof value === "string" && value.trim() ? value.trim() : fallback;
+  const text =
+    typeof value === "string" && value.trim()
+      ? value.trim()
+      : fallback;
   el.textContent = text;
 }
 
@@ -303,7 +306,6 @@ function showError(message) {
   errorBox.style.display = "block";
 }
 
-// 👉 SZÁM → CÍMKE
 function scoreToLabel(score) {
   const n = Number(score);
   if (Number.isNaN(n)) return "nincs megadva";
@@ -314,7 +316,6 @@ function scoreToLabel(score) {
   return "kiemelkedő";
 }
 
-// 👉 TELJES RESET (csak indexre vissza)
 function clearAllAnalysis() {
   sessionStorage.removeItem("analysis_kind");
   sessionStorage.removeItem("analysis_structure");
@@ -343,18 +344,23 @@ function fillView() {
     return;
   }
 
-  // 👉 6 kérdés marad
-  setText("q1Box", depth.q1_literal_limit, "Nincs válasz.");
-  setText("q2Box", depth.q2_hidden_layer, "Nincs válasz.");
-  setText("q3Box", depth.q3_prose_loss, "Nincs válasz.");
-  setText("q4Box", depth.q4_images_role, "Nincs válasz.");
-  setText("q5Box", depth.q5_reread_growth, "Nincs válasz.");
-  setText("q6Box", depth.q6_inner_tension, "Nincs válasz.");
+  setText("q1Title", "1. " + (depth.q1_question || "—"));
+  setText("q2Title", "2. " + (depth.q2_question || "—"));
+  setText("q3Title", "3. " + (depth.q3_question || "—"));
+  setText("q4Title", "4. " + (depth.q4_question || "—"));
+  setText("q5Title", "5. " + (depth.q5_question || "—"));
+  setText("q6Title", "6. " + (depth.q6_question || "—"));
+
+  setText("q1Box", depth.q1_answer || depth.q1_literal_limit, "Nincs válasz.");
+  setText("q2Box", depth.q2_answer || depth.q2_hidden_layer, "Nincs válasz.");
+  setText("q3Box", depth.q3_answer || depth.q3_prose_loss, "Nincs válasz.");
+  setText("q4Box", depth.q4_answer || depth.q4_images_role, "Nincs válasz.");
+  setText("q5Box", depth.q5_answer || depth.q5_reread_growth, "Nincs válasz.");
+  setText("q6Box", depth.q6_answer || depth.q6_inner_tension, "Nincs válasz.");
 
   setText("depthLevel", depth.depth_level, "—");
   setText("reasoningBox", depth.reasoning, "Nincs összegzés.");
 
-  // 👉 ÚJ: score alapú
   const minScore = depth.checker_min_score;
   const maxScore = depth.checker_max_score;
 
@@ -364,7 +370,6 @@ function fillView() {
   showOk("A mélységi eredmény betöltve.");
 }
 
-// 👉 VISSZA GOMB = TELJES NULLÁZÁS
 document.getElementById("backBtn").addEventListener("click", () => {
   clearAllAnalysis();
   window.location.href = "index.html";
@@ -375,6 +380,7 @@ document.getElementById("checkBtn").addEventListener("click", () => {
 });
 
 fillView();
+
 </script>
 
 </body>
