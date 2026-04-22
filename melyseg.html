@@ -264,7 +264,6 @@ button.secondary {
     </div>
   </div>
 </div>
-
 <script>
 function safeParse(text) {
   try {
@@ -304,6 +303,30 @@ function showError(message) {
   errorBox.style.display = "block";
 }
 
+// 👉 SZÁM → CÍMKE
+function scoreToLabel(score) {
+  const n = Number(score);
+  if (Number.isNaN(n)) return "nincs megadva";
+  if (n <= 19) return "közhelyes";
+  if (n <= 39) return "vegyes";
+  if (n <= 59) return "részben egyedi";
+  if (n <= 79) return "erős";
+  return "kiemelkedő";
+}
+
+// 👉 TELJES RESET (csak indexre vissza)
+function clearAllAnalysis() {
+  sessionStorage.removeItem("analysis_kind");
+  sessionStorage.removeItem("analysis_structure");
+  sessionStorage.removeItem("analysis_rhythm");
+  sessionStorage.removeItem("analysis_images");
+  sessionStorage.removeItem("analysis_expression");
+  sessionStorage.removeItem("analysis_depth");
+  sessionStorage.removeItem("analysis_check_seed");
+  sessionStorage.removeItem("analysis_check");
+  sessionStorage.removeItem("analysis_summary");
+}
+
 function fillView() {
   const poem =
     sessionStorage.getItem("poemText") ||
@@ -320,6 +343,7 @@ function fillView() {
     return;
   }
 
+  // 👉 6 kérdés marad
   setText("q1Box", depth.q1_literal_limit, "Nincs válasz.");
   setText("q2Box", depth.q2_hidden_layer, "Nincs válasz.");
   setText("q3Box", depth.q3_prose_loss, "Nincs válasz.");
@@ -329,14 +353,20 @@ function fillView() {
 
   setText("depthLevel", depth.depth_level, "—");
   setText("reasoningBox", depth.reasoning, "Nincs összegzés.");
-  setText("floorBox", depth.checker_floor, "nincs megadva");
-  setText("ceilingBox", depth.checker_ceiling, "nincs megadva");
-  setText("strictnessBox", depth.strictness, "nincs megadva");
+
+  // 👉 ÚJ: score alapú
+  const minScore = depth.checker_min_score;
+  const maxScore = depth.checker_max_score;
+
+  setText("floorBox", scoreToLabel(minScore), "nincs megadva");
+  setText("ceilingBox", scoreToLabel(maxScore), "nincs megadva");
 
   showOk("A mélységi eredmény betöltve.");
 }
 
+// 👉 VISSZA GOMB = TELJES NULLÁZÁS
 document.getElementById("backBtn").addEventListener("click", () => {
+  clearAllAnalysis();
   window.location.href = "index.html";
 });
 
@@ -346,5 +376,6 @@ document.getElementById("checkBtn").addEventListener("click", () => {
 
 fillView();
 </script>
+
 </body>
 </html>
