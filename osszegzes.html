@@ -259,7 +259,7 @@
       <div class="poemText" id="poemText">—</div>
     </div>
   </div>
-
+  
 <script>
   function safeParse(text) {
     try {
@@ -296,11 +296,11 @@
   const reviewAdjustmentEl = document.getElementById("reviewAdjustment");
 
   const LEVELS = [
-    { key: "közhelyes", label: "közhelyes működés", position: 8 },
-    { key: "vegyes", label: "vegyes / közepes", position: 28 },
-    { key: "részben egyedi", label: "részben egyedi", position: 46 },
-    { key: "erős", label: "erős", position: 76 },
-    { key: "kiemelkedő", label: "kiemelkedő", position: 92 }
+    { key: "közhelyes", label: "közhelyes működés" },
+    { key: "vegyes", label: "vegyes / közepes" },
+    { key: "részben egyedi", label: "részben egyedi" },
+    { key: "erős", label: "erős" },
+    { key: "kiemelkedő", label: "kiemelkedő" }
   ];
 
   function showError(message) {
@@ -333,8 +333,8 @@
         : "Nincs megadva";
     styleReasoningEl.textContent = kind.style_reasoning || "Nincs külön indoklás.";
 
-    const baseLevel = determineLevel(kind, structure, rhythm, images, expression);
-    const finalLevel = getFinalLevel(baseLevel, check, depth);
+    const finalScore = getFinalScore(check, depth, kind, structure, rhythm, images, expression);
+    const finalLevel = getLevelFromScore(finalScore);
 
     const summaryText = getSummaryText(kind, structure, rhythm, images, expression, finalLevel, check);
     const strengths = getStrengths(kind, structure, rhythm, images, expression, check);
@@ -342,7 +342,7 @@
 
     summaryEl.textContent = summaryText;
     levelTextEl.textContent = "Szint: " + finalLevel.label;
-    pointerEl.style.left = finalLevel.position + "%";
+    pointerEl.style.left = finalScore + "%";
 
     strengthsEl.textContent = strengths.length
       ? strengths.join("\n• ").replace(/^/, "• ")
@@ -398,73 +398,42 @@
     return "";
   }
 
-  function getLevelIndexFromLabel(label) {
-    const key = normalizeLevelKey(label);
-    return LEVELS.findIndex(x => x.key === key);
+  function getLevelFromScore(score) {
+    const safeScore = Math.max(0, Math.min(100, Number(score) || 0));
+
+    if (safeScore <= 19) {
+      return { key: "közhelyes", label: "közhelyes működés", position: safeScore };
+    }
+    if (safeScore <= 39) {
+      return { key: "vegyes", label: "vegyes / közepes", position: safeScore };
+    }
+    if (safeScore <= 59) {
+      return { key: "részben egyedi", label: "részben egyedi", position: safeScore };
+    }
+    if (safeScore <= 79) {
+      return { key: "erős", label: "erős", position: safeScore };
+    }
+    return { key: "kiemelkedő", label: "kiemelkedő", position: safeScore };
   }
 
-  function levelFromIndex(index) {
-    const safeIndex = Math.max(0, Math.min(LEVELS.length - 1, index));
-    return {
-      key: LEVELS[safeIndex].key,
-      label: LEVELS[safeIndex].label,
-      position: LEVELS[safeIndex].position
-    };
-  }
-
-  function scoreToIndex(score) {
-    if (score <= 19) return 0; // közhelyes
-    if (score <= 39) return 1; // vegyes
-    if (score <= 59) return 2; // részben egyedi
-    if (score <= 79) return 3; // erős
-    return 4; // kiemelkedő
-  }
-
-  function getFinalLevel(baseLevel, checkData, depthData) {
-    const baseIndex = getLevelIndexFromLabel(baseLevel.key || baseLevel.label);
-
-    if (baseIndex === -1) return baseLevel;
-    if (!checkData) {
-      // ha nincs ellenőr, akkor is igazodjon a depth-hez
-      let finalIndex = baseIndex;
-
-      const minScore = Number(depthData?.checker_min_score);
-      const maxScore = Number(depthData?.checker_max_score);
-
-      if (!Number.isNaN(minScore)) {
-        const minIndex = scoreToIndex(minScore);
-        if (finalIndex < minIndex) finalIndex = minIndex;
+  function getFinalScore(checkData, depthData, kind, structure, rhythm, images, expression) {
+    if (checkData && typeof checkData.final_score !== "undefined") {
+      const score = Number(checkData.final_score);
+      if (!Number.isNaN(score)) {
+        return Math.max(0, Math.min(100, score));
       }
-
-      if (!Number.isNaN(maxScore)) {
-        const maxIndex = scoreToIndex(maxScore);
-        if (finalIndex > maxIndex) finalIndex = maxIndex;
-      }
-
-      return levelFromIndex(finalIndex);
     }
 
-    const checkIndex = getLevelIndexFromLabel(checkData.own_level || "");
-    let finalIndex = checkIndex !== -1 ? checkIndex : baseIndex;
+    const fallback = determineLevel(kind, structure, rhythm, images, expression);
+    let score = Number(fallback.position) || 46;
 
     const minScore = Number(depthData?.checker_min_score);
     const maxScore = Number(depthData?.checker_max_score);
 
-    if (!Number.isNaN(minScore)) {
-      const minIndex = scoreToIndex(minScore);
-      if (finalIndex < minIndex) {
-        finalIndex = minIndex;
-      }
-    }
+    if (!Number.isNaN(minScore) && score < minScore) score = minScore;
+    if (!Number.isNaN(maxScore) && score > maxScore) score = maxScore;
 
-    if (!Number.isNaN(maxScore)) {
-      const maxIndex = scoreToIndex(maxScore);
-      if (finalIndex > maxIndex) {
-        finalIndex = maxIndex;
-      }
-    }
-
-    return levelFromIndex(finalIndex);
+    return Math.max(0, Math.min(100, score));
   }
 
   function getSummaryText(kind, structure, rhythm, images, expression, level, checkData) {
@@ -704,6 +673,7 @@
     sessionStorage.clear();
     window.location.href = "index.html";
   }
-</script>   
+</script>
+
 </body>
 </html>
