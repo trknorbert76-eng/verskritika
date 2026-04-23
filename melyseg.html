@@ -95,6 +95,62 @@ button.secondary {
   color: #d6b36a;
 }
 
+.questionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.questionTitle {
+  font-size: 1.25rem;
+  color: #d6b36a;
+  font-weight: bold;
+  line-height: 1.35;
+  flex: 1;
+  min-width: 0;
+}
+
+.signalBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 88px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  border: 1px solid #444;
+}
+
+.signal-igen {
+  background: #17301d;
+  border-color: #2f6a35;
+  color: #cdeccf;
+}
+
+.signal-nem {
+  background: #311818;
+  border-color: #7a2c2c;
+  color: #f3c9c9;
+}
+
+.signal-reszben {
+  background: #342b14;
+  border-color: #8a6e2a;
+  color: #f1dfaa;
+}
+
+.signal-unknown {
+  background: #222;
+  border-color: #444;
+  color: #bbb;
+}
+
 .poemBox {
   background: #121212;
   border: 1px solid #2f2f2f;
@@ -155,15 +211,27 @@ button.secondary {
   line-height: 1.5;
 }
 
-.muted {
-  color: #aaa;
-}
-
 .hiddenData {
   margin-top: 12px;
   color: #999;
   font-size: 0.92rem;
   line-height: 1.6;
+}
+
+.hitSummary {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.hitChip {
+  background: #101010;
+  border: 1px solid #2d2d2d;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 0.92rem;
+  color: #eee;
 }
 
 @media (max-width: 760px) {
@@ -178,10 +246,19 @@ button.secondary {
   button {
     width: 100%;
   }
+
+  .questionHead {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .signalBadge {
+    min-width: unset;
+  }
 }
 </style>
 </head>
-  <body>
+<body>
 
 <div class="wrap">
   <h1>Mélység</h1>
@@ -191,7 +268,7 @@ button.secondary {
   </p>
 
   <div class="topbar">
-    <button class="secondary" id="backBtn">← Ùj vers </button>
+    <button class="secondary" id="backBtn">Új vers</button>
     <button class="secondary" id="checkBtn">Tovább az ellenőrhöz</button>
   </div>
 
@@ -204,38 +281,61 @@ button.secondary {
   </div>
 
   <div class="card">
-    <h2 id="q1Title">1. —</h2>
+    <div class="questionHead">
+      <div class="questionTitle" id="q1Title">1. —</div>
+      <div class="signalBadge signal-unknown" id="q1Signal">—</div>
+    </div>
     <div class="answer" id="q1Box">Még nincs mélységi eredmény.</div>
   </div>
 
   <div class="card">
-    <h2 id="q2Title">2. —</h2>
+    <div class="questionHead">
+      <div class="questionTitle" id="q2Title">2. —</div>
+      <div class="signalBadge signal-unknown" id="q2Signal">—</div>
+    </div>
     <div class="answer" id="q2Box">Még nincs mélységi eredmény.</div>
   </div>
 
   <div class="card">
-    <h2 id="q3Title">3. —</h2>
+    <div class="questionHead">
+      <div class="questionTitle" id="q3Title">3. —</div>
+      <div class="signalBadge signal-unknown" id="q3Signal">—</div>
+    </div>
     <div class="answer" id="q3Box">Még nincs mélységi eredmény.</div>
   </div>
 
   <div class="card">
-    <h2 id="q4Title">4. —</h2>
+    <div class="questionHead">
+      <div class="questionTitle" id="q4Title">4. —</div>
+      <div class="signalBadge signal-unknown" id="q4Signal">—</div>
+    </div>
     <div class="answer" id="q4Box">Még nincs mélységi eredmény.</div>
   </div>
 
   <div class="card">
-    <h2 id="q5Title">5. —</h2>
+    <div class="questionHead">
+      <div class="questionTitle" id="q5Title">5. —</div>
+      <div class="signalBadge signal-unknown" id="q5Signal">—</div>
+    </div>
     <div class="answer" id="q5Box">Még nincs mélységi eredmény.</div>
   </div>
 
   <div class="card">
-    <h2 id="q6Title">6. —</h2>
+    <div class="questionHead">
+      <div class="questionTitle" id="q6Title">6. —</div>
+      <div class="signalBadge signal-unknown" id="q6Signal">—</div>
+    </div>
     <div class="answer" id="q6Box">Még nincs mélységi eredmény.</div>
   </div>
 
   <div class="card highlight">
     <h2>Megállapított mélység</h2>
     <div class="depthLevel" id="depthLevel">—</div>
+    <div class="hitSummary">
+      <div class="hitChip" id="positiveHitBox">Igen: —</div>
+      <div class="hitChip" id="mixedHitBox">Részben: —</div>
+      <div class="hitChip" id="negativeHitBox">Nem: —</div>
+    </div>
   </div>
 
   <div class="card">
@@ -328,6 +428,30 @@ function clearAllAnalysis() {
   sessionStorage.removeItem("analysis_summary");
 }
 
+function normalizeSignalLabel(value) {
+  const v = String(value || "").toLowerCase().trim();
+  if (v === "igen") return "igen";
+  if (v === "nem") return "nem";
+  if (v === "részben") return "részben";
+  return "—";
+}
+
+function signalClass(value) {
+  const v = normalizeSignalLabel(value);
+  if (v === "igen") return "signal-igen";
+  if (v === "nem") return "signal-nem";
+  if (v === "részben") return "signal-reszben";
+  return "signal-unknown";
+}
+
+function setSignal(id, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const normalized = normalizeSignalLabel(value);
+  el.textContent = normalized;
+  el.className = "signalBadge " + signalClass(normalized);
+}
+
 function fillView() {
   const poem =
     sessionStorage.getItem("poemText") ||
@@ -358,6 +482,13 @@ function fillView() {
   setText("q5Box", depth.q5_answer || depth.q5_reread_growth, "Nincs válasz.");
   setText("q6Box", depth.q6_answer || depth.q6_inner_tension, "Nincs válasz.");
 
+  setSignal("q1Signal", depth.q1_signal);
+  setSignal("q2Signal", depth.q2_signal);
+  setSignal("q3Signal", depth.q3_signal);
+  setSignal("q4Signal", depth.q4_signal);
+  setSignal("q5Signal", depth.q5_signal);
+  setSignal("q6Signal", depth.q6_signal);
+
   setText("depthLevel", depth.depth_level, "—");
   setText("reasoningBox", depth.reasoning, "Nincs összegzés.");
 
@@ -366,6 +497,14 @@ function fillView() {
 
   setText("floorBox", scoreToLabel(minScore), "nincs megadva");
   setText("ceilingBox", scoreToLabel(maxScore), "nincs megadva");
+
+  const pos = typeof depth.positive_hit === "number" ? String(depth.positive_hit) : "—";
+  const mix = typeof depth.mixed_hit === "number" ? String(depth.mixed_hit) : "—";
+  const neg = typeof depth.negative_hit === "number" ? String(depth.negative_hit) : "—";
+
+  setText("positiveHitBox", "Igen: " + pos);
+  setText("mixedHitBox", "Részben: " + mix);
+  setText("negativeHitBox", "Nem: " + neg);
 
   showOk("A mélységi eredmény betöltve.");
 }
@@ -380,7 +519,6 @@ document.getElementById("checkBtn").addEventListener("click", () => {
 });
 
 fillView();
-
 </script>
 
 </body>
