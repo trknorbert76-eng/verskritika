@@ -459,20 +459,16 @@ function fillView() {
     seedCheck ? "Még nincs végső döntés." : "—"
   );
 
-  let correctionText = "Még nincs indoklás.";
-  if (finalCheck) {
-    const finalLevel = finalCheck.final_level || "—";
-    const finalScore =
-      typeof finalCheck.final_score === "number"
-        ? String(finalCheck.final_score)
-        : (finalCheck.final_score ?? "—");
+let correctionText = "Még nincs indoklás.";
+if (finalCheck) {
+  const finalLevel = finalCheck.final_level || "—";
 
-    correctionText =
-      `Végső szint: ${finalLevel}. Végső pont: ${finalScore}. ` +
-      (finalCheck.correction_reason || "Nincs külön indoklás.");
-  } else if (seedCheck) {
-    correctionText = "A végső ellenőri indoklás még nem készült el.";
-  }
+  correctionText =
+    `Végső szint: ${finalLevel}. ` +
+    (finalCheck.correction_reason || "Nincs külön indoklás.");
+} else if (seedCheck) {
+  correctionText = "A végső ellenőri indoklás még nem készült el.";
+}
 
   setText("correctionReason", correctionText, "Még nincs indoklás.");
 }
