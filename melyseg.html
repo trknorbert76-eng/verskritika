@@ -162,6 +162,60 @@ button.secondary {
   overflow-y: auto;
 }
 
+  .poemLine {
+  display: block;
+  padding: 2px 6px;
+  border-radius: 6px;
+  margin: 2px 0;
+}
+
+.impact-yellow {
+  background: rgba(214, 179, 106, 0.22);
+  border-left: 3px solid #d6b36a;
+}
+
+.impact-orange {
+  background: rgba(255, 145, 0, 0.24);
+  border-left: 3px solid #ff9800;
+}
+
+.impact-red {
+  background: rgba(255, 55, 55, 0.26);
+  border-left: 3px solid #ff4444;
+}
+
+.impactScore {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.impactList {
+  display: grid;
+  gap: 10px;
+}
+
+.impactItem {
+  background: #101010;
+  border: 1px solid #2d2d2d;
+  border-radius: 12px;
+  padding: 12px;
+  line-height: 1.6;
+}
+
+.impactLineText {
+  font-weight: bold;
+  color: #f4d38a;
+}
+
+.impactReason {
+  color: #ddd;
+  margin-top: 6px;
+}
+
+  
+
 .answer {
   background: #101010;
   border: 1px solid #2d2d2d;
@@ -279,6 +333,17 @@ button.secondary {
     <h2>A vizsgált vers</h2>
     <div class="poemBox" id="poemBox">Nincs betöltött vers.</div>
   </div>
+
+  <div class="card highlight">
+  <h2>Hatás</h2>
+  <div class="impactScore" id="impactScoreBox">—</div>
+  <div class="summaryText" id="impactReasoningBox">Még nincs hatáselemzés.</div>
+</div>
+
+<div class="card">
+  <h2>Kiemelt hatásos sorok</h2>
+  <div class="impactList" id="impactListBox">Még nincs kiemelt sor.</div>
+</div>
 
   <div class="card">
     <div class="questionHead">
@@ -452,6 +517,79 @@ function setSignal(id, value) {
   el.className = "signalBadge " + signalClass(normalized);
 }
 
+  function escapeHtml(text) {
+  return String(text || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function renderPoemWithImpact(poem, highlightedLines) {
+  const poemBox = document.getElementById("poemBox");
+  if (!poemBox) return;
+
+  const lines = String(poem || "").split("\n");
+  const map = new Map();
+
+  (highlightedLines || []).forEach(item => {
+    if (!item || !item.line_number) return;
+    map.set(Number(item.line_number), item);
+  });
+
+  poemBox.innerHTML = lines.map((line, index) => {
+    const lineNumber = index + 1;
+    const hit = map.get(lineNumber);
+
+    let cls = "poemLine";
+    if (hit?.color === "yellow") cls += " impact-yellow";
+    if (hit?.color === "orange") cls += " impact-orange";
+    if (hit?.color === "red") cls += " impact-red";
+
+    return `<span class="${cls}">${escapeHtml(line || " ")}</span>`;
+  }).join("");
+}
+
+function renderImpactDetails(depth) {
+  const scoreBox = document.getElementById("impactScoreBox");
+  const reasoningBox = document.getElementById("impactReasoningBox");
+  const listBox = document.getElementById("impactListBox");
+
+  const score = depth?.impact_score;
+  const level = depth?.impact_level || "—";
+  const lines = Array.isArray(depth?.highlighted_lines) ? depth.highlighted_lines : [];
+
+  if (scoreBox) {
+    scoreBox.textContent = typeof score === "number"
+      ? `Hatás: ${score} / 100 — ${level}`
+      : `Hatás: — / 100 — ${level}`;
+  }
+
+  if (reasoningBox) {
+    reasoningBox.textContent = depth?.impact_reasoning || "Nincs külön hatásindoklás.";
+  }
+
+  if (!listBox) return;
+
+  if (!lines.length) {
+    listBox.textContent = "Nincs valóban kiemelt hatásos sor.";
+    return;
+  }
+
+  listBox.innerHTML = lines.map(item => {
+    return `
+      <div class="impactItem">
+        <div class="impactLineText">
+          ${item.line_number}. sor — ${escapeHtml(item.impact_type || "")}: 
+          „${escapeHtml(item.line_text || "")}”
+        </div>
+        <div class="impactReason">${escapeHtml(item.reason || "")}</div>
+      </div>
+    `;
+  }).join("");
+}
+
 function fillView() {
   const poem =
     sessionStorage.getItem("poemText") ||
@@ -461,12 +599,12 @@ function fillView() {
   const savedDepth = safeParse(sessionStorage.getItem("analysis_depth") || "");
   const depth = unwrapPack(savedDepth) || savedDepth || null;
 
-  setText("poemBox", poem, "Nincs betöltött vers.");
-
   if (!depth) {
     showError("Még nincs elkészült mélységi eredmény.");
     return;
   }
+ renderPoemWithImpact(poem, depth.highlighted_lines || []);
+  renderImpactDetails(depth);
 
   setText("q1Title", "1. " + (depth.q1_question || "—"));
   setText("q2Title", "2. " + (depth.q2_question || "—"));
