@@ -699,9 +699,9 @@ analyzeBtn.addEventListener("click", async () => {
     sessionStorage.setItem("analysis_kind", JSON.stringify(data.result));
     sessionStorage.setItem("step_kind_done", Date.now().toString());
 
-    startCheckSeed(poem);
-    startDepthAnalysis(poem);
-    updateDepthStatus();
+   startCheckSeed(poem);
+const depthPromise = startDepthAnalysis(poem);
+updateDepthStatus();
 
     stepsWrap.style.display = "block";
     setStepDone(pipeline[0]);
@@ -712,6 +712,16 @@ analyzeBtn.addEventListener("click", async () => {
       const step = pipeline[i];
       appendRunnerInfo(step.loadingText + "...");
       setStepLoading(step);
+
+      if (step.key === "check") {
+  appendRunnerInfo("Várakozás a mélység elemzésre...");
+  await depthPromise;
+  updateDepthStatus();
+
+  if (!sessionStorage.getItem("analysis_depth")) {
+    throw new Error("A mélység elemzés nem készült el, ezért az ellenőr nem indulhat.");
+  }
+}
 
       runnerFrame.src = step.page + "&t=" + Date.now();
      if (step.key === "check") {
