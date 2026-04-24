@@ -532,7 +532,7 @@ async function runCheckAnalysis(forceRefresh = false) {
   const images = unwrapPack(savedImages);
   const expression = unwrapPack(savedExpression);
   const depth = unwrapPack(savedDepth);
-  const impact = unwrapPack(savedImpact);
+ const impact = unwrapPack(savedImpact) || depth;
 
   const depthForCheck = depth ? {
   secondary_layer: depth.secondary_layer,
@@ -662,8 +662,9 @@ async function runCheckAnalysis(forceRefresh = false) {
 
     const finalCheckResult = checkData.result;
 
-const rangeMin = Number(depth?.checker_min_score ?? 0);
+    const rangeMin = Number(depth?.checker_min_score ?? 0);
 const rangeMax = Number(depth?.checker_max_score ?? 100);
+
 
 const finalScore = calculateFinalScore(
   rangeMin,
