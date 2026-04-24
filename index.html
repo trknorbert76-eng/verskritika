@@ -496,6 +496,7 @@ function clearStepStorage() {
   sessionStorage.removeItem("analysis_expression");
   sessionStorage.removeItem("analysis_check_seed");
   sessionStorage.removeItem("analysis_check");
+  sessionStorage.removeItem("analysis_impact");
   sessionStorage.removeItem("analysis_depth");
   sessionStorage.removeItem("analysis_summary");
 
@@ -505,6 +506,8 @@ function clearStepStorage() {
   sessionStorage.removeItem("step_imagery_done");
   sessionStorage.removeItem("step_expression_done");
   sessionStorage.removeItem("step_check_done");
+  sessionStorage.removeItem("step_impact_done");
+  sessionStorage.removeItem("step_impact_loading");
   sessionStorage.removeItem("step_depth_done");
   sessionStorage.removeItem("step_depth_loading");
   sessionStorage.removeItem("step_summary_done");
@@ -518,7 +521,7 @@ function updateCheckStatus() {
   const hasSeed = sessionStorage.getItem("analysis_check_seed");
   const hasFinal = sessionStorage.getItem("analysis_check");
 
-  checkStatusBtn.classList.remove("seed", "done");
+  checkStatusBtn.classList.remove("secondary", "seed", "done");
 
   if (hasFinal) {
     checkStatusBtn.classList.add("done");
@@ -527,6 +530,7 @@ function updateCheckStatus() {
     checkStatusBtn.classList.add("seed");
     checkStatusBtn.textContent = "Ellenőr: saját vélemény kész";
   } else {
+    checkStatusBtn.classList.add("secondary");
     checkStatusBtn.textContent = "Ellenőr: nincs";
   }
 }
@@ -534,6 +538,7 @@ function updateCheckStatus() {
 function updateDepthStatus() {
   const hasImpact = sessionStorage.getItem("analysis_impact");
   const impactDone = sessionStorage.getItem("step_impact_done");
+  const impactLoading = sessionStorage.getItem("step_impact_loading");
 
   const hasDepth = sessionStorage.getItem("analysis_depth");
   const depthDone = sessionStorage.getItem("step_depth_done");
@@ -541,35 +546,30 @@ function updateDepthStatus() {
 
   depthStatusBtn.classList.remove("secondary", "seed", "done");
 
-  // 1. minden kész
   if (hasDepth && depthDone) {
     depthStatusBtn.classList.add("done");
     depthStatusBtn.textContent = "Mélység: kész";
     return;
   }
 
-  // 2. mélység fut (de hatás már kész)
-  if (depthLoading && impactDone) {
+  if (depthLoading) {
     depthStatusBtn.classList.add("seed");
     depthStatusBtn.textContent = "Mélység: folyamatban";
     return;
   }
 
-  // 3. hatás kész
   if (hasImpact && impactDone) {
     depthStatusBtn.classList.add("done");
     depthStatusBtn.textContent = "Hatás: kész";
     return;
   }
 
-  // 4. hatás fut
-  if (depthLoading) {
+  if (impactLoading) {
     depthStatusBtn.classList.add("seed");
     depthStatusBtn.textContent = "Hatás: folyamatban";
     return;
   }
 
-  // 5. semmi
   depthStatusBtn.classList.add("secondary");
   depthStatusBtn.textContent = "Elemzés: nincs";
 }
@@ -627,10 +627,12 @@ async function startCheckSeed(poem) {
     appendRunnerInfo("Az ellenőr első olvasata most nem készült el.");
   }
 }
+
 async function startImpactAnalysis(poem) {
   try {
-       sessionStorage.setItem("step_impact_loading", "1");
-updateDepthStatus();
+    sessionStorage.setItem("step_impact_loading", "1");
+    updateDepthStatus();
+
     const kindPack = JSON.parse(sessionStorage.getItem("analysis_kind") || "null");
     const kind = kindPack?.result || kindPack || {};
 
@@ -662,15 +664,16 @@ updateDepthStatus();
 
       sessionStorage.setItem("step_impact_done", Date.now().toString());
       appendRunnerInfo("Hatás elemzés elkészült.");
-       updateDepthStatus();
     } else {
       appendRunnerInfo("A hatás elemzés hibával leállt.");
     }
   } catch (err) {
     appendRunnerInfo("A hatás elemzés most nem készült el.");
+  } finally {
+    sessionStorage.removeItem("step_impact_loading");
+    updateDepthStatus();
   }
 }
-  
 
 async function startDepthAnalysis(poem) {
   try {
@@ -690,7 +693,9 @@ async function startDepthAnalysis(poem) {
         previous: {
           kind: {
             main_type: kind.main_type || "",
-            style_label: kind.style_label || ""
+            style_label: kind.style_label || "",
+            speech_mode: kind.speech_mode || "",
+            style_traits: kind.style_traits || []
           }
         }
       })
@@ -705,10 +710,10 @@ async function startDepthAnalysis(poem) {
     } else {
       appendRunnerInfo("A mélység elemzés hibával leállt.");
     }
-   } catch (err) {
-    appendRunnerInfo("A hatás elemzés most nem készült el.");
+  } catch (err) {
+    appendRunnerInfo("A mélység elemzés most nem készült el.");
   } finally {
-    sessionStorage.removeItem("step_impact_loading");
+    sessionStorage.removeItem("step_depth_loading");
     updateDepthStatus();
   }
 }
@@ -768,49 +773,50 @@ analyzeBtn.addEventListener("click", async () => {
     sessionStorage.setItem("analysis_kind", JSON.stringify(data.result));
     sessionStorage.setItem("step_kind_done", Date.now().toString());
 
- startCheckSeed(poem);
-
-const impactPromise = startImpactAnalysis(poem);
-
-const depthPromise = impactPromise.then(() => {
-  return startDepthAnalysis(poem);
-});
-
-updateDepthStatus();
-
     stepsWrap.style.display = "block";
     setStepDone(pipeline[0]);
     appendRunnerInfo("A vers felismerhető versként. Háttérelemzés indul...");
     showOk("A vers elfogadva. A háttérelemzés elindult.");
 
+    startCheckSeed(poem);
+
+    const impactPromise = startImpactAnalysis(poem);
+
+    const depthPromise = impactPromise.then(() => {
+      return startDepthAnalysis(poem);
+    });
+
+    updateDepthStatus();
+
     for (let i = 1; i < pipeline.length; i++) {
       const step = pipeline[i];
+
       appendRunnerInfo(step.loadingText + "...");
       setStepLoading(step);
 
       if (step.key === "check") {
-  appendRunnerInfo("Várakozás a mélység elemzésre...");
-  await depthPromise;
-  updateDepthStatus();
+        appendRunnerInfo("Várakozás a mélység elemzésre...");
+        await depthPromise;
+        updateDepthStatus();
 
-  if (!sessionStorage.getItem("analysis_depth")) {
-    throw new Error("A mélység elemzés nem készült el, ezért az ellenőr nem indulhat.");
-  }
-}
+        if (!sessionStorage.getItem("analysis_depth")) {
+          throw new Error("A mélység elemzés nem készült el, ezért az ellenőr nem indulhat.");
+        }
+      }
 
       runnerFrame.src = step.page + "&t=" + Date.now();
-     if (step.key === "check") {
-  await waitForStep("step_check_done")
-    .catch(() => {
-      if (sessionStorage.getItem("analysis_check")) {
-        sessionStorage.setItem("step_check_done", Date.now().toString());
+
+      if (step.key === "check") {
+        await waitForStep("step_check_done").catch(() => {
+          if (sessionStorage.getItem("analysis_check")) {
+            sessionStorage.setItem("step_check_done", Date.now().toString());
+          } else {
+            throw new Error("Ellenőr nem készült el");
+          }
+        });
       } else {
-        throw new Error("Ellenőr nem készült el");
+        await waitForStep(step.doneKey);
       }
-    });
-} else {
-  await waitForStep(step.doneKey);
-}
 
       setStepDone(step);
       appendRunnerInfo(step.doneText + ".");
