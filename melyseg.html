@@ -481,6 +481,31 @@ function scoreToLabel(score) {
   return "kiemelkedő";
 }
 
+function applyImpactToDepthRange(depth) {
+  let min = Number(depth?.checker_min_score ?? 0);
+  let max = Number(depth?.checker_max_score ?? 100);
+
+  const impactScore = Number(depth?.impact_score);
+  const impactLevel = String(depth?.impact_level || "").toLowerCase();
+
+  if (
+    (!Number.isNaN(impactScore) && impactScore >= 70) ||
+    impactLevel.includes("erős") ||
+    impactLevel.includes("kiemelkedő")
+  ) {
+    min = Math.max(min, 60);
+    max = Math.max(max, 75);
+  } else if (!Number.isNaN(impactScore) && impactScore <= 39) {
+    min = Math.min(min, 45);
+    max = Math.min(max, 65);
+  }
+
+  min = Math.max(0, Math.min(100, min));
+  max = Math.max(min, Math.min(100, max));
+
+  return { min, max };
+}
+
 function clearAllAnalysis() {
   sessionStorage.removeItem("analysis_kind");
   sessionStorage.removeItem("analysis_structure");
@@ -631,8 +656,15 @@ function fillView() {
   setText("depthLevel", depth.depth_level, "—");
   setText("reasoningBox", depth.reasoning, "Nincs összegzés.");
 
-  const minScore = depth.checker_min_score;
-  const maxScore = depth.checker_max_score;
+  const adjustedRange = applyImpactToDepthRange(depth);
+
+depth.checker_min_score = adjustedRange.min;
+depth.checker_max_score = adjustedRange.max;
+
+sessionStorage.setItem("analysis_depth", JSON.stringify(depth));
+
+const minScore = depth.checker_min_score;
+const maxScore = depth.checker_max_score;
 
   setText("floorBox", scoreToLabel(minScore), "nincs megadva");
   setText("ceilingBox", scoreToLabel(maxScore), "nincs megadva");
