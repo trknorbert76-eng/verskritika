@@ -602,6 +602,47 @@ async function startCheckSeed(poem) {
     appendRunnerInfo("Az ellenőr első olvasata most nem készült el.");
   }
 }
+async function startImpactAnalysis(poem) {
+  try {
+    const kindPack = JSON.parse(sessionStorage.getItem("analysis_kind") || "null");
+    const kind = kindPack?.result || kindPack || {};
+
+    const response = await fetch(DEPTH_WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        poem,
+        previous: {
+          kind: {
+            main_type: kind.main_type || "",
+            style_label: kind.style_label || "",
+            speech_mode: kind.speech_mode || "",
+            style_traits: kind.style_traits || []
+          }
+        }
+      })
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.ok) {
+      sessionStorage.setItem("analysis_impact", JSON.stringify({
+        impact_score: data.result.impact_score,
+        impact_level: data.result.impact_level,
+        highlighted_lines: data.result.highlighted_lines,
+        impact_reasoning: data.result.impact_reasoning
+      }));
+
+      sessionStorage.setItem("step_impact_done", Date.now().toString());
+      appendRunnerInfo("Hatás elemzés elkészült.");
+    } else {
+      appendRunnerInfo("A hatás elemzés hibával leállt.");
+    }
+  } catch (err) {
+    appendRunnerInfo("A hatás elemzés most nem készült el.");
+  }
+}
+  
 
 async function startDepthAnalysis(poem) {
   try {
@@ -699,7 +740,8 @@ analyzeBtn.addEventListener("click", async () => {
     sessionStorage.setItem("analysis_kind", JSON.stringify(data.result));
     sessionStorage.setItem("step_kind_done", Date.now().toString());
 
-   startCheckSeed(poem);
+  startCheckSeed(poem);
+startImpactAnalysis(poem);
 const depthPromise = startDepthAnalysis(poem);
 updateDepthStatus();
 
