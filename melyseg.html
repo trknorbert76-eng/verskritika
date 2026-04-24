@@ -530,17 +530,18 @@ function renderPoemWithImpact(poem, highlightedLines) {
   const poemBox = document.getElementById("poemBox");
   if (!poemBox) return;
 
-  const lines = String(poem || "").split("\n");
-  const map = new Map();
+  const poemLines = String(poem || "").split("\n");
 
-  (highlightedLines || []).forEach(item => {
-    if (!item || !item.line_number) return;
-    map.set(Number(item.line_number), item);
-  });
+  const normalize = txt => String(txt || "")
+    .toLowerCase()
+    .replace(/[.,!?„”"]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 
-  poemBox.innerHTML = lines.map((line, index) => {
-    const lineNumber = index + 1;
-    const hit = map.get(lineNumber);
+  poemBox.innerHTML = poemLines.map(line => {
+    const hit = (highlightedLines || []).find(item =>
+      normalize(item.line_text) === normalize(line)
+    );
 
     let cls = "poemLine";
     if (hit?.color === "yellow") cls += " impact-yellow";
