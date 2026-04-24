@@ -382,6 +382,48 @@ function setText(id, value, fallback = "—") {
   el.textContent = text;
 }
 
+function clampScore(score, min, max) {
+  return Math.max(min, Math.min(max, score));
+}
+
+function getLevelPosition(level) {
+  const map = {
+    "közhelyes": 0.12,
+    "gyenge": 0.20,
+    "vegyes": 0.38,
+    "részben egyedi": 0.58,
+    "erős": 0.78,
+    "kiemelkedő": 0.92
+  };
+
+  return map[level] ?? 0.5;
+}
+
+function getCorrectionOffset(correction) {
+  const map = {
+    "erősen lejjebb": -0.18,
+    "lejjebb": -0.10,
+    "kissé lejjebb": -0.05,
+    "nincs korrekció": 0,
+    "kissé feljebb": 0.05,
+    "feljebb": 0.10,
+    "erősen feljebb": 0.18
+  };
+
+  return map[correction] ?? 0;
+}
+
+function calculateFinalScore(rangeMin, rangeMax, ownLevel, correctionDirection) {
+  const span = rangeMax - rangeMin;
+
+  const position = getLevelPosition(ownLevel);
+  const correction = getCorrectionOffset(correctionDirection);
+
+  const raw = rangeMin + span * (position + correction);
+
+  return Math.round(clampScore(raw, rangeMin, rangeMax));
+}
+  
 function showNotice(message) {
   noticeEl.textContent = message;
   noticeEl.style.display = "block";
@@ -482,6 +524,7 @@ async function runCheckAnalysis(forceRefresh = false) {
   const savedImages = readJSON("analysis_images");
   const savedExpression = readJSON("analysis_expression");
   const savedDepth = readJSON("analysis_depth");
+  const savedImpact = readJSON("analysis_impact");
 
   const kind = unwrapPack(savedKind);
   const structure = unwrapPack(savedStructure);
@@ -489,6 +532,7 @@ async function runCheckAnalysis(forceRefresh = false) {
   const images = unwrapPack(savedImages);
   const expression = unwrapPack(savedExpression);
   const depth = unwrapPack(savedDepth);
+  const impact = unwrapPack(savedImpact);
 
   const depthForCheck = depth ? {
   secondary_layer: depth.secondary_layer,
@@ -597,15 +641,16 @@ async function runCheckAnalysis(forceRefresh = false) {
       body: JSON.stringify({
         poem,
         step: "check",
-        previous: {
-          kind,
-          structure,
-          rhythm,
-          images,
-          expression,
-         depth: depthForCheck,
-          seed: seedData.result
-        }
+       previous: {
+  kind,
+  structure,
+  rhythm,
+  images,
+  expression,
+  depth: depthForCheck,
+  impact,
+  seed: seedData.result
+}
       })
     });
 
@@ -615,7 +660,23 @@ async function runCheckAnalysis(forceRefresh = false) {
       throw new Error(checkData.error || "A végső ellenőrzés nem sikerült.");
     }
 
-    sessionStorage.setItem("analysis_check", JSON.stringify(checkData.result));
+    const finalCheckResult = checkData.result;
+
+const rangeMin = Number(depth?.checker_min_score ?? 0);
+const rangeMax = Number(depth?.checker_max_score ?? 100);
+
+const finalScore = calculateFinalScore(
+  rangeMin,
+  rangeMax,
+  seedData.result?.own_level,
+  finalCheckResult?.correction_direction
+);
+
+finalCheckResult.final_score = finalScore;
+finalCheckResult.score_range_min = rangeMin;
+finalCheckResult.score_range_max = rangeMax;
+
+    sessionStorage.setItem("analysis_check", JSON.stringify(finalCheckResult));
     sessionStorage.setItem("step_check_done", Date.now().toString());
 
     fillView();
