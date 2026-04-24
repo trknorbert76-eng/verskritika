@@ -778,15 +778,12 @@ analyzeBtn.addEventListener("click", async () => {
     appendRunnerInfo("A vers felismerhető versként. Háttérelemzés indul...");
     showOk("A vers elfogadva. A háttérelemzés elindult.");
 
-    startCheckSeed(poem);
+ startCheckSeed(poem);
 
-    const impactPromise = startImpactAnalysis(poem);
+const impactPromise = startImpactAnalysis(poem);
+const depthPromise = startDepthAnalysis(poem);
 
-    const depthPromise = impactPromise.then(() => {
-      return startDepthAnalysis(poem);
-    });
-
-    updateDepthStatus();
+updateDepthStatus();
 
     for (let i = 1; i < pipeline.length; i++) {
       const step = pipeline[i];
