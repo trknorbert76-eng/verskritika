@@ -490,6 +490,17 @@ async function runCheckAnalysis(forceRefresh = false) {
   const expression = unwrapPack(savedExpression);
   const depth = unwrapPack(savedDepth);
 
+  const depthForCheck = depth ? {
+  secondary_layer: depth.secondary_layer,
+  positive_hit: depth.positive_hit,
+  negative_hit: depth.negative_hit,
+  mixed_hit: depth.mixed_hit,
+  depth_level: depth.depth_level,
+  reasoning: depth.reasoning,
+  checker_min_score: depth.checker_min_score,
+  checker_max_score: depth.checker_max_score
+} : null;
+
   if (!poem) {
     window.location.href = "index.html";
     return;
@@ -592,7 +603,7 @@ async function runCheckAnalysis(forceRefresh = false) {
           rhythm,
           images,
           expression,
-          depth,
+         depth: depthForCheck,
           seed: seedData.result
         }
       })
