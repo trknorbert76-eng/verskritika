@@ -714,7 +714,18 @@ analyzeBtn.addEventListener("click", async () => {
       setStepLoading(step);
 
       runnerFrame.src = step.page + "&t=" + Date.now();
-      await waitForStep(step.doneKey);
+     if (step.key === "check") {
+  await waitForStep("step_check_done")
+    .catch(() => {
+      if (sessionStorage.getItem("analysis_check")) {
+        sessionStorage.setItem("step_check_done", Date.now().toString());
+      } else {
+        throw new Error("Ellenőr nem készült el");
+      }
+    });
+} else {
+  await waitForStep(step.doneKey);
+}
 
       setStepDone(step);
       appendRunnerInfo(step.doneText + ".");
