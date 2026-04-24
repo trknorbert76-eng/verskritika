@@ -532,21 +532,46 @@ function updateCheckStatus() {
 }
 
 function updateDepthStatus() {
+  const hasImpact = sessionStorage.getItem("analysis_impact");
+  const impactDone = sessionStorage.getItem("step_impact_done");
+
   const hasDepth = sessionStorage.getItem("analysis_depth");
-  const hasDepthDone = sessionStorage.getItem("step_depth_done");
-  const isLoading = sessionStorage.getItem("step_depth_loading");
+  const depthDone = sessionStorage.getItem("step_depth_done");
+  const depthLoading = sessionStorage.getItem("step_depth_loading");
 
-  depthStatusBtn.classList.remove("seed", "done");
+  depthStatusBtn.classList.remove("secondary", "seed", "done");
 
-  if (hasDepth && hasDepthDone) {
+  // 1. minden kész
+  if (hasDepth && depthDone) {
     depthStatusBtn.classList.add("done");
     depthStatusBtn.textContent = "Mélység: kész";
-  } else if (isLoading) {
+    return;
+  }
+
+  // 2. mélység fut (de hatás már kész)
+  if (depthLoading && impactDone) {
     depthStatusBtn.classList.add("seed");
     depthStatusBtn.textContent = "Mélység: folyamatban";
-  } else {
-    depthStatusBtn.textContent = "Mélység: nincs";
+    return;
   }
+
+  // 3. hatás kész
+  if (hasImpact && impactDone) {
+    depthStatusBtn.classList.add("done");
+    depthStatusBtn.textContent = "Hatás: kész";
+    return;
+  }
+
+  // 4. hatás fut
+  if (depthLoading) {
+    depthStatusBtn.classList.add("seed");
+    depthStatusBtn.textContent = "Hatás: folyamatban";
+    return;
+  }
+
+  // 5. semmi
+  depthStatusBtn.classList.add("secondary");
+  depthStatusBtn.textContent = "Elemzés: nincs";
 }
 
 function waitForStep(doneKey, timeoutMs = 180000) {
@@ -604,6 +629,8 @@ async function startCheckSeed(poem) {
 }
 async function startImpactAnalysis(poem) {
   try {
+        sessionStorage.setItem("step_depth_loading", "1");
+    updateDepthStatus();
     const kindPack = JSON.parse(sessionStorage.getItem("analysis_kind") || "null");
     const kind = kindPack?.result || kindPack || {};
 
@@ -635,6 +662,7 @@ async function startImpactAnalysis(poem) {
 
       sessionStorage.setItem("step_impact_done", Date.now().toString());
       appendRunnerInfo("Hatás elemzés elkészült.");
+       updateDepthStatus();
     } else {
       appendRunnerInfo("A hatás elemzés hibával leállt.");
     }
@@ -740,9 +768,14 @@ analyzeBtn.addEventListener("click", async () => {
     sessionStorage.setItem("analysis_kind", JSON.stringify(data.result));
     sessionStorage.setItem("step_kind_done", Date.now().toString());
 
-  startCheckSeed(poem);
-startImpactAnalysis(poem);
-const depthPromise = startDepthAnalysis(poem);
+ startCheckSeed(poem);
+
+const impactPromise = startImpactAnalysis(poem);
+
+const depthPromise = impactPromise.then(() => {
+  return startDepthAnalysis(poem);
+});
+
 updateDepthStatus();
 
     stepsWrap.style.display = "block";
