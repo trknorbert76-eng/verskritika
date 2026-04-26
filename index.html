@@ -546,27 +546,33 @@ function updateDepthStatus() {
 
   depthStatusBtn.classList.remove("secondary", "seed", "done");
 
-  if (hasDepth && depthDone) {
+  if (hasImpact && impactDone && hasDepth && depthDone) {
     depthStatusBtn.classList.add("done");
-    depthStatusBtn.textContent = "Mélység: kész";
+    depthStatusBtn.textContent = "Hatás + mélység: kész";
     return;
   }
 
-  if (depthLoading) {
+  if (impactLoading && depthLoading) {
     depthStatusBtn.classList.add("seed");
-    depthStatusBtn.textContent = "Mélység: folyamatban";
+    depthStatusBtn.textContent = "Hatás + mélység: folyamatban";
+    return;
+  }
+
+  if (hasImpact && impactDone && depthLoading) {
+    depthStatusBtn.classList.add("seed");
+    depthStatusBtn.textContent = "Hatás kész, mélység folyamatban";
     return;
   }
 
   if (hasImpact && impactDone) {
-    depthStatusBtn.classList.add("done");
+    depthStatusBtn.classList.add("seed");
     depthStatusBtn.textContent = "Hatás: kész";
     return;
   }
 
-  if (impactLoading) {
-    depthStatusBtn.classList.add("seed");
-    depthStatusBtn.textContent = "Hatás: folyamatban";
+  if (hasDepth && depthDone) {
+    depthStatusBtn.classList.add("done");
+    depthStatusBtn.textContent = "Mélység: kész";
     return;
   }
 
@@ -628,9 +634,10 @@ async function startCheckSeed(poem) {
   }
 }
 
-async function startImpactAnalysis(poem) {
+async function startDepthAndImpactAnalysis(poem) {
   try {
     sessionStorage.setItem("step_impact_loading", "1");
+    sessionStorage.setItem("step_depth_loading", "1");
     updateDepthStatus();
 
     const kindPack = JSON.parse(sessionStorage.getItem("analysis_kind") || "null");
@@ -638,7 +645,9 @@ async function startImpactAnalysis(poem) {
 
     const response = await fetch(DEPTH_WORKER_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
         poem,
         previous: {
@@ -655,6 +664,8 @@ async function startImpactAnalysis(poem) {
     const data = await response.json();
 
     if (response.ok && data.ok) {
+
+      // 🔹 HATÁS külön mentve
       sessionStorage.setItem("analysis_impact", JSON.stringify({
         impact_score: data.result.impact_score,
         impact_level: data.result.impact_level,
@@ -662,19 +673,25 @@ async function startImpactAnalysis(poem) {
         impact_reasoning: data.result.impact_reasoning
       }));
 
+      // 🔹 MÉLYSÉG külön mentve
+      sessionStorage.setItem("analysis_depth", JSON.stringify(data.result));
+
       sessionStorage.setItem("step_impact_done", Date.now().toString());
-      appendRunnerInfo("Hatás elemzés elkészült.");
+      sessionStorage.setItem("step_depth_done", Date.now().toString());
+
+      appendRunnerInfo("Hatás és mélység elemzés elkészült.");
     } else {
-      appendRunnerInfo("A hatás elemzés hibával leállt.");
+      throw new Error(data.error || "A hatás/mélység elemzés hibával leállt.");
     }
   } catch (err) {
-    appendRunnerInfo("A hatás elemzés most nem készült el.");
+    appendRunnerInfo("A hatás/mélység elemzés most nem készült el.");
+    throw err;
   } finally {
     sessionStorage.removeItem("step_impact_loading");
+    sessionStorage.removeItem("step_depth_loading");
     updateDepthStatus();
   }
 }
-
 async function startDepthAnalysis(poem) {
   try {
     sessionStorage.setItem("step_depth_loading", "1");
@@ -780,8 +797,7 @@ analyzeBtn.addEventListener("click", async () => {
 
  startCheckSeed(poem);
 
-const impactPromise = startImpactAnalysis(poem);
-const depthPromise = startDepthAnalysis(poem);
+const depthPromise = startDepthAndImpactAnalysis(poem);
 
 updateDepthStatus();
 
