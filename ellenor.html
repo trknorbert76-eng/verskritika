@@ -388,12 +388,12 @@ function clampScore(score, min, max) {
 
 function getLevelPosition(level) {
   const map = {
-    "közhelyes": 0.12,
-    "gyenge": 0.20,
-    "vegyes": 0.38,
-    "részben egyedi": 0.58,
-    "erős": 0.78,
-    "kiemelkedő": 0.92
+    "közhelyes": 0.20,
+    "gyenge": 0.30,
+    "vegyes": 0.45,
+    "részben egyedi": 0.55,
+    "erős": 0.65,
+    "kiemelkedő": 0.80
   };
 
   return map[level] ?? 0.5;
@@ -401,13 +401,13 @@ function getLevelPosition(level) {
 
 function getCorrectionOffset(correction) {
   const map = {
-    "erősen lejjebb": -0.18,
-    "lejjebb": -0.10,
-    "kissé lejjebb": -0.05,
+    "erősen lejjebb": -0.10,
+    "lejjebb": -0.06,
+    "kissé lejjebb": -0.03,
     "nincs korrekció": 0,
-    "kissé feljebb": 0.05,
-    "feljebb": 0.10,
-    "erősen feljebb": 0.18
+    "kissé feljebb": 0.03,
+    "feljebb": 0.06,
+    "erősen feljebb": 0.10
   };
 
   return map[correction] ?? 0;
