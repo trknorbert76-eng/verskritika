@@ -594,14 +594,7 @@ function renderPoemWithImpact(poem, highlightedLines, clicheLines) {
   }).join("");
 }
 
-    let cls = "poemLine";
-    if (hit?.color === "yellow") cls += " impact-yellow";
-    if (hit?.color === "orange") cls += " impact-orange";
-    if (hit?.color === "red") cls += " impact-red";
 
-    return `<span class="${cls}">${escapeHtml(line || " ")}</span>`;
-  }).join("");
-}
 
 function renderImpactDetails(depth) {
   const scoreBox = document.getElementById("impactScoreBox");
