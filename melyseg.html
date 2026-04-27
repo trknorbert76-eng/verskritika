@@ -557,7 +557,7 @@ function setSignal(id, value) {
     .replaceAll("'", "&#039;");
 }
 
-function renderPoemWithImpact(poem, highlightedLines) {
+function renderPoemWithImpact(poem, highlightedLines, clicheLines) {
   const poemBox = document.getElementById("poemBox");
   if (!poemBox) return;
 
@@ -573,6 +573,26 @@ function renderPoemWithImpact(poem, highlightedLines) {
     const hit = (highlightedLines || []).find(item =>
       normalize(item.line_text) === normalize(line)
     );
+
+    const cliche = (clicheLines || []).find(item =>
+      normalize(item.line_text) === normalize(line)
+    );
+
+    let cls = "poemLine";
+    let title = "";
+
+    if (hit?.color === "yellow") cls += " impact-yellow";
+    if (hit?.color === "orange") cls += " impact-orange";
+    if (hit?.color === "red") cls += " impact-red";
+
+    if (!hit && cliche) {
+      cls += " impact-gray";
+      title = cliche.reason || "Közhelyes / klisés sor.";
+    }
+
+    return `<span class="${cls}" title="${escapeHtml(title)}">${escapeHtml(line || " ")}</span>`;
+  }).join("");
+}
 
     let cls = "poemLine";
     if (hit?.color === "yellow") cls += " impact-yellow";
@@ -635,7 +655,7 @@ function fillView() {
     showError("Még nincs elkészült mélységi eredmény.");
     return;
   }
- renderPoemWithImpact(poem, depth.highlighted_lines || []);
+ renderPoemWithImpact(poem, depth.highlighted_lines || [], depth.cliche_lines || []);
   renderImpactDetails(depth);
 
   setText("q1Title", "1. " + (depth.q1_question || "—"));
