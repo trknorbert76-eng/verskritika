@@ -225,10 +225,11 @@ button.done {
 
   <textarea id="poemInput" placeholder="Illeszd be ide a versed..."></textarea>
 
-  <div class="btnRow">
+<div class="btnRow">
   <button id="analyzeBtn">Elemzés</button>
   <button id="checkStatusBtn" class="secondary">Ellenőr: nincs</button>
-  <button id="depthStatusBtn" class="secondary">Mélység: nincs</button>
+  <button id="depthStatusBtn" class="secondary">Hatás + mélység: nincs</button>
+  <button id="summaryStatusBtn" class="secondary">Összegzés: nincs</button>
 </div>
 
   <div class="statusBox errorBox" id="errorBox"></div>
@@ -306,6 +307,7 @@ const DEPTH_WORKER_URL = "https://melyseg-depth.trknorbert76.workers.dev";
 const analyzeBtn = document.getElementById("analyzeBtn");
 const checkStatusBtn = document.getElementById("checkStatusBtn");
 const depthStatusBtn = document.getElementById("depthStatusBtn");
+const summaryStatusBtn = document.getElementById("summaryStatusBtn");
 const poemInput = document.getElementById("poemInput");
 const errorBox = document.getElementById("errorBox");
 const okBox = document.getElementById("okBox");
@@ -552,6 +554,20 @@ function updateDepthStatus() {
     return;
   }
 
+  function updateSummaryStatus() {
+  const hasSummary = sessionStorage.getItem("step_summary_done");
+
+  summaryStatusBtn.classList.remove("secondary", "seed", "done");
+
+  if (hasSummary) {
+    summaryStatusBtn.classList.add("done");
+    summaryStatusBtn.textContent = "Összegzés: kész";
+  } else {
+    summaryStatusBtn.classList.add("secondary");
+    summaryStatusBtn.textContent = "Összegzés: nincs";
+  }
+}
+
   if (impactLoading && depthLoading) {
     depthStatusBtn.classList.add("seed");
     depthStatusBtn.textContent = "Hatás + mélység: folyamatban";
@@ -700,6 +716,10 @@ window.location.href = "ellenor.html";
 depthStatusBtn.addEventListener("click", () => {
   window.location.href = "melyseg.html";
 });
+
+ summaryStatusBtn.addEventListener("click", () => {
+  window.location.href = "osszegzes.html";
+}); 
 
 function readJSON(key) {
   try {
@@ -906,8 +926,9 @@ analyzeBtn.addEventListener("click", async () => {
     runnerFrame.src = summaryStep.page + "&t=" + Date.now();
     await waitForStep("step_summary_done");
 
-    setStepDone(summaryStep);
-    appendRunnerInfo("Összegzés kész.");
+  setStepDone(summaryStep);
+appendRunnerInfo("Összegzés kész.");
+updateSummaryStatus();
 
     showOk("Minden elemzés elkészült. Beléphetsz bármelyik oldalra.");
   } catch (err) {
@@ -916,11 +937,13 @@ analyzeBtn.addEventListener("click", async () => {
     setLoading(false);
     updateCheckStatus();
     updateDepthStatus();
+    updateSummaryStatus();
   }
 });
  
 updateCheckStatus();
 updateDepthStatus();
+updateSummaryStatus();
 </script>
 </body>
 </html>
