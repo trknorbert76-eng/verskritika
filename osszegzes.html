@@ -310,11 +310,12 @@
   const depth = getStoredResult("analysis_depth");
   const check = getStoredResult("analysis_check");
 
-  if (!poem || !kind || !structure || !rhythm || !images || !expression || !depth) {
-    showError("Hiányoznak az elemzés adatai.");
-  } else {
-    renderSummary();
-  }
+ if (!poem || !kind || !structure || !rhythm || !images || !expression || !depth) {
+  showError("Hiányoznak az elemzés adatai.");
+  sessionStorage.setItem("step_summary_done", Date.now().toString());
+} else {
+  renderSummary();
+}
 
   function showError(message) {
     errorBox.textContent = message;
