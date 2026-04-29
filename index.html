@@ -692,56 +692,65 @@ async function startDepthAndImpactAnalysis(poem) {
     updateDepthStatus();
   }
 }
-async function startDepthAnalysis(poem) {
-  try {
-    sessionStorage.setItem("step_depth_loading", "1");
-    updateDepthStatus();
 
-    const kindPack = JSON.parse(sessionStorage.getItem("analysis_kind") || "null");
-    const kind = kindPack?.result || kindPack || {};
-
-    const response = await fetch(DEPTH_WORKER_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        poem,
-        previous: {
-          kind: {
-            main_type: kind.main_type || "",
-            style_label: kind.style_label || "",
-            speech_mode: kind.speech_mode || "",
-            style_traits: kind.style_traits || []
-          }
-        }
-      })
-    });
-
-    const data = await response.json();
-
-    if (response.ok && data.ok) {
-      sessionStorage.setItem("analysis_depth", JSON.stringify(data.result));
-      sessionStorage.setItem("step_depth_done", Date.now().toString());
-      appendRunnerInfo("Mélység elemzés elkészült.");
-    } else {
-      appendRunnerInfo("A mélység elemzés hibával leállt.");
-    }
-  } catch (err) {
-    appendRunnerInfo("A mélység elemzés most nem készült el.");
-  } finally {
-    sessionStorage.removeItem("step_depth_loading");
-    updateDepthStatus();
-  }
-}
-
-checkStatusBtn.addEventListener("click", () => {
-  window.location.href = "ellenor.html";
+ checkStatusBtn.addEventListener("click", () => {
+window.location.href = "ellenor.html";
 });
 
 depthStatusBtn.addEventListener("click", () => {
   window.location.href = "melyseg.html";
 });
+
+function readJSON(key) {
+  try {
+    return JSON.parse(sessionStorage.getItem(key) || "null");
+  } catch {
+    return null;
+  }
+}
+
+function unwrap(pack) {
+  return pack?.result || pack || {};
+}
+
+async function runWorkerStep(stepName, storageKey, doneKey, poem, previous = {}) {
+  const response = await fetch(WORKER_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      poem,
+      step: stepName,
+      previous
+    })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok || !data.ok) {
+    throw new Error(data.error || `${stepName} elemzés hibával leállt.`);
+  }
+
+  sessionStorage.setItem(storageKey, JSON.stringify(data.result));
+  sessionStorage.setItem(doneKey, Date.now().toString());
+
+  return data.result;
+}
+
+async function runStepWithUi(step, task) {
+  setStepLoading(step);
+
+  try {
+    const result = await task();
+    setStepDone(step);
+    appendRunnerInfo(step.doneText + ".");
+    return result;
+  } catch (err) {
+    appendRunnerInfo(step.waitingText.replace(" várakozik", "") + " hibával leállt.");
+    throw err;
+  }
+}
 
 analyzeBtn.addEventListener("click", async () => {
   const poem = poemInput.value.trim();
@@ -758,96 +767,158 @@ analyzeBtn.addEventListener("click", async () => {
   setLoading(true);
 
   try {
-    const response = await fetch(WORKER_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        poem,
-        step: "kind"
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || !data.ok) {
-      showError(data.error || "Hiba történt az ellenőrzés közben.");
-      return;
-    }
-
-    if (data.is_poem === false) {
-      showError(data.result?.message || "Ez nem tekinthető versnek.");
-      return;
-    }
-
     clearStepStorage();
     sessionStorage.setItem("poem", poem);
     sessionStorage.setItem("poemText", poem);
+
     resetAllStepUi();
     updateCheckStatus();
     updateDepthStatus();
 
-    sessionStorage.setItem("analysis_kind", JSON.stringify(data.result));
-    sessionStorage.setItem("step_kind_done", Date.now().toString());
-
     stepsWrap.style.display = "block";
-    setStepDone(pipeline[0]);
-    appendRunnerInfo("A vers felismerhető versként. Háttérelemzés indul...");
     showOk("A vers elfogadva. A háttérelemzés elindult.");
+    appendRunnerInfo("Felismerés indul...");
 
- startCheckSeed(poem);
+    // 1. FELISMERÉS — ez marad első, mert erre épül a többi
+    setStepLoading(pipeline[0]);
 
-const depthPromise = startDepthAndImpactAnalysis(poem);
+    const kind = await runWorkerStep(
+      "kind",
+      "analysis_kind",
+      "step_kind_done",
+      poem
+    );
 
-updateDepthStatus();
-
-    for (let i = 1; i < pipeline.length; i++) {
-      const step = pipeline[i];
-
-      appendRunnerInfo(step.loadingText + "...");
-      setStepLoading(step);
-
-      if (step.key === "check") {
-        appendRunnerInfo("Várakozás a mélység elemzésre...");
-        await depthPromise;
-        updateDepthStatus();
-
-        if (!sessionStorage.getItem("analysis_depth")) {
-          throw new Error("A mélység elemzés nem készült el, ezért az ellenőr nem indulhat.");
-        }
-      }
-
-      runnerFrame.src = step.page + "&t=" + Date.now();
-
-      if (step.key === "check") {
-        await waitForStep("step_check_done").catch(() => {
-          if (sessionStorage.getItem("analysis_check")) {
-            sessionStorage.setItem("step_check_done", Date.now().toString());
-          } else {
-            throw new Error("Ellenőr nem készült el");
-          }
-        });
-      } else {
-        await waitForStep(step.doneKey);
-      }
-
-      setStepDone(step);
-      appendRunnerInfo(step.doneText + ".");
-
-      if (step.key === "check") {
-        updateCheckStatus();
-      }
+    if (kind?.is_poem === false) {
+      showError(kind?.message || "Ez nem tekinthető versnek.");
+      return;
     }
+
+    setStepDone(pipeline[0]);
+    appendRunnerInfo("Felismerés kész.");
+
+    const basePrevious = {
+      kind
+    };
+
+    // 2. ELLENŐR SAJÁT ELSŐ OLVASATA — külön indul
+    startCheckSeed(poem);
+
+    // 3. HATÁS + MÉLYSÉG — külön worker, párhuzamosan indul
+    const depthPromise = startDepthAndImpactAnalysis(poem);
+
+    // 4. RÉSZ-ELEMZŐK — PÁRHUZAMOSAN FUTNAK
+    const structureStep = pipeline.find(s => s.key === "structure");
+    const rhythmStep = pipeline.find(s => s.key === "rhythm");
+    const imageryStep = pipeline.find(s => s.key === "imagery");
+    const expressionStep = pipeline.find(s => s.key === "expression");
+
+    const structurePromise = runStepWithUi(structureStep, () =>
+      runWorkerStep(
+        "structure",
+        "analysis_structure",
+        "step_structure_done",
+        poem,
+        basePrevious
+      )
+    );
+
+    const rhythmPromise = runStepWithUi(rhythmStep, () =>
+      runWorkerStep(
+        "rhythm",
+        "analysis_rhythm",
+        "step_rhythm_done",
+        poem,
+        basePrevious
+      )
+    );
+
+    const imageryPromise = runStepWithUi(imageryStep, () =>
+      runWorkerStep(
+        "images",
+        "analysis_images",
+        "step_imagery_done",
+        poem,
+        basePrevious
+      )
+    );
+
+    const expressionPromise = runStepWithUi(expressionStep, () =>
+      runWorkerStep(
+        "expression",
+        "analysis_expression",
+        "step_expression_done",
+        poem,
+        basePrevious
+      )
+    );
+
+    appendRunnerInfo("Szerkezet, ritmus, képek, kifejezésmód és hatás/mélység párhuzamosan fut...");
+
+    const [
+      structure,
+      rhythm,
+      images,
+      expression,
+      depth
+    ] = await Promise.all([
+      structurePromise,
+      rhythmPromise,
+      imageryPromise,
+      expressionPromise,
+      depthPromise
+    ]);
+
+    updateDepthStatus();
+
+    // 5. ELLENŐR — CSAK MOST INDUL, HA MINDEN KÉSZ
+    const checkStep = pipeline.find(s => s.key === "check");
+
+    appendRunnerInfo("Minden szükséges rész elkészült. Ellenőr indul...");
+
+    const check = await runStepWithUi(checkStep, () =>
+      runWorkerStep(
+        "check",
+        "analysis_check",
+        "step_check_done",
+        poem,
+        {
+          kind,
+          structure,
+          rhythm,
+          images,
+          expression,
+          depth: unwrap(readJSON("analysis_depth")),
+          impact: unwrap(readJSON("analysis_impact")),
+          check_seed: unwrap(readJSON("analysis_check_seed"))
+        }
+      )
+    );
+
+    updateCheckStatus();
+
+    // 6. ÖSSZEGZÉS — ezt meghagyhatjuk iframe-ben, mert az oldalad valószínűleg sessionStorage-ból dolgozik
+    const summaryStep = pipeline.find(s => s.key === "summary");
+
+    appendRunnerInfo("Összegzés indul...");
+    setStepLoading(summaryStep);
+
+    runnerFrame.src = summaryStep.page + "&t=" + Date.now();
+    await waitForStep("step_summary_done");
+
+    setStepDone(summaryStep);
+    appendRunnerInfo("Összegzés kész.");
 
     showOk("Minden elemzés elkészült. Beléphetsz bármelyik oldalra.");
   } catch (err) {
     showError(err.message || "Nem sikerült kapcsolódni az elemzőhöz.");
   } finally {
     setLoading(false);
+    updateCheckStatus();
+    updateDepthStatus();
   }
 });
-
+ 
 updateCheckStatus();
 updateDepthStatus();
 </script>
