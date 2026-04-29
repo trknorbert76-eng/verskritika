@@ -953,6 +953,10 @@ updateSummaryStatus();
   }
 });
  
+if (!poemInput.value.trim()) {
+  clearStepStorage();
+}
+
 updateCheckStatus();
 updateDepthStatus();
 updateSummaryStatus();
