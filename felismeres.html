@@ -197,9 +197,10 @@ button.next {
   </p>
 
   <div class="topbar">
-    <button class="secondary" id="backBtn">← Vissza</button>
-    <button id="reloadBtn">Újraelemzés</button>
-  </div>
+  <button class="secondary" id="backBtn">← Vissza</button>
+  <button id="reloadBtn">Újraelemzés</button>
+  <button class="next" id="nextBtn">Tovább a szerkezethez →</button>
+</div>
 
   <div class="loadingBox" id="loadingBox">A vers típusának felismerése folyamatban...</div>
   <div class="errorBox" id="errorBox"></div>
@@ -256,10 +257,7 @@ button.next {
     <div class="poemText" id="poemText"></div>
   </div>
 
-  <div class="footerRow" id="footerRow">
-    <button class="next" id="nextBtn">Tovább a szerkezethez →</button>
-  </div>
-</div>
+ 
 
 <script>
 const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
@@ -271,7 +269,7 @@ const infoBox = document.getElementById("infoBox");
 const resultLayout = document.getElementById("resultLayout");
 const poemPreview = document.getElementById("poemPreview");
 const poemText = document.getElementById("poemText");
-const footerRow = document.getElementById("footerRow");
+
 
 const mainTypeEl = document.getElementById("mainType");
 const secondaryTraitsEl = document.getElementById("secondaryTraits");
@@ -346,7 +344,7 @@ function renderResult(result) {
   fillList(result.secondary_traits);
 
   resultLayout.style.display = "grid";
-  footerRow.style.display = "flex";
+ 
 }
 
 async function runKindAnalysis(forceRefresh = false) {
@@ -379,7 +377,6 @@ async function runKindAnalysis(forceRefresh = false) {
 
   showLoading("A vers típusának felismerése folyamatban...");
   resultLayout.style.display = "none";
-  footerRow.style.display = "none";
 
   try {
     const res = await fetch(WORKER_URL, {
