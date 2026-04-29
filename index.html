@@ -935,8 +935,24 @@ analyzeBtn.addEventListener("click", async () => {
     appendRunnerInfo("Összegzés indul...");
     setStepLoading(summaryStep);
 
-    runnerFrame.src = summaryStep.page + "&t=" + Date.now();
-    await waitForStep("step_summary_done");
+   await runStepWithUi(summaryStep, () =>
+  runWorkerStep(
+    "summary",
+    "analysis_summary",
+    "step_summary_done",
+    poem,
+    {
+      kind,
+      structure,
+      rhythm,
+      images,
+      expression,
+      depth: unwrap(readJSON("analysis_depth")),
+      impact: unwrap(readJSON("analysis_impact")),
+      check
+    }
+  )
+);
 
   setStepDone(summaryStep);
 appendRunnerInfo("Összegzés kész.");
