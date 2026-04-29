@@ -553,20 +553,10 @@ function updateDepthStatus() {
     depthStatusBtn.textContent = "Hatás + mélység: kész";
     return;
   }
+  
 
-  function updateSummaryStatus() {
-  const hasSummary = sessionStorage.getItem("step_summary_done");
 
-  summaryStatusBtn.classList.remove("secondary", "seed", "done");
 
-  if (hasSummary) {
-    summaryStatusBtn.classList.add("done");
-    summaryStatusBtn.textContent = "Összegzés: kész";
-  } else {
-    summaryStatusBtn.classList.add("secondary");
-    summaryStatusBtn.textContent = "Összegzés: nincs";
-  }
-}
 
   if (impactLoading && depthLoading) {
     depthStatusBtn.classList.add("seed");
@@ -594,6 +584,20 @@ function updateDepthStatus() {
 
   depthStatusBtn.classList.add("secondary");
   depthStatusBtn.textContent = "Elemzés: nincs";
+}
+
+  function updateSummaryStatus() {
+  const hasSummary = sessionStorage.getItem("step_summary_done");
+
+  summaryStatusBtn.classList.remove("secondary", "seed", "done");
+
+  if (hasSummary) {
+    summaryStatusBtn.classList.add("done");
+    summaryStatusBtn.textContent = "Összegzés: kész";
+  } else {
+    summaryStatusBtn.classList.add("secondary");
+    summaryStatusBtn.textContent = "Összegzés: nincs";
+  }
 }
 
 function waitForStep(doneKey, timeoutMs = 180000) {
