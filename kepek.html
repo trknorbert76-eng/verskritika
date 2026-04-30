@@ -494,14 +494,16 @@ async function runImagesAnalysis(forceRefresh = false) {
 hideInfo();
 
 if (!forceRefresh) {
-  const savedImages = safeParse(sessionStorage.getItem("analysis_images") || "");
+  const savedImagesPack = safeParse(sessionStorage.getItem("analysis_images") || "");
+  const savedImages = savedImagesPack?.result || savedImagesPack;
 
-if (savedImages && savedImages.poem === poem && savedImages.result) {
+  if (savedImages) {
     hideLoading();
     hideError();
     hideInfo();
 
-   renderResult(savedImages.result);
+    renderResult(savedImages);
+    sessionStorage.setItem("step_imagery_done", Date.now().toString());
     showInfo("A korábbi képi eredmény betöltve.");
 
     if (autorun) {
