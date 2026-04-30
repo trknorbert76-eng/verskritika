@@ -544,16 +544,21 @@
       hideError();
       hideInfo();
 
-      if (!forceRefresh && !autorun) {
-        const savedExpressionPack = getStoredPack("analysis_expression");
-        const savedExpression = unwrapPack(savedExpressionPack);
+     if (!forceRefresh) {
+  const savedExpressionPack = getStoredPack("analysis_expression");
+  const savedExpression = unwrapPack(savedExpressionPack);
 
-        if (savedExpressionPack && savedExpressionPack.poem === poem && savedExpression) {
-          renderResult(savedExpression);
-          showInfo("A korábbi kifejezésmód-eredmény betöltve.");
-          return;
-        }
-      }
+  if (savedExpressionPack && savedExpressionPack.poem === poem && savedExpression) {
+    renderResult(savedExpression);
+    showInfo("A korábbi kifejezésmód-eredmény betöltve.");
+
+    if (autorun) {
+      window.location.href = NEXT_PAGE;
+    }
+
+    return;
+  }
+}
 
       showLoading("A kifejezésmód elemzése folyamatban...");
       resultLayout.style.display = "none";
