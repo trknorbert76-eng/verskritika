@@ -354,6 +354,7 @@ button.secondary,
 const params = new URLSearchParams(window.location.search);
 const autorun = params.get("autorun") === "1";
 const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
+const NEXT_PAGE = "osszegzes.html"; 
 
 const noticeEl = document.getElementById("notice");
 const reanalyzeBtn = document.getElementById("reanalyzeBtn");
@@ -582,28 +583,16 @@ async function runCheckAnalysis(forceRefresh = false) {
 
   fillView();
 
- if (!forceRefresh) {
+if (!forceRefresh) {
   const savedSeed = safeParse(sessionStorage.getItem("analysis_check_seed") || "");
   const savedCheck = safeParse(sessionStorage.getItem("analysis_check") || "");
 
   if (savedSeed && savedCheck) {
     fillView();
     showNotice("A korábbi ellenőrzési eredmény betöltve.");
-
-    if (autorun) {
-      window.location.href = NEXT_PAGE;
-    }
-
-    return;
-  }
-
-  if (savedSeed && !savedCheck) {
-    fillView();
-    showNotice("Az első önálló olvasat betöltve, a végső összevetés még nem készült el.");
     return;
   }
 }
-
   reanalyzeBtn.disabled = true;
 
   try {
@@ -685,8 +674,12 @@ finalCheckResult.score_range_max = rangeMax;
     sessionStorage.setItem("analysis_check", JSON.stringify(finalCheckResult));
     sessionStorage.setItem("step_check_done", Date.now().toString());
 
-    fillView();
-    showNotice("Az ellenőrzés elkészült.");
+  fillView();
+showNotice("Az ellenőrzés elkészült.");
+
+if (autorun) {
+  window.location.href = NEXT_PAGE;
+}
   } catch (err) {
     showNotice("Hiba történt az ellenőrzés során: " + (err.message || "ismeretlen hiba"));
   } finally {
