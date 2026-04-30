@@ -361,19 +361,25 @@ async function runKindAnalysis(forceRefresh = false) {
   hideError();
   hideInfo();
 
-  if (!forceRefresh) {
-    const saved = sessionStorage.getItem("analysis_kind");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        renderResult(parsed);
-        showInfo("A korábbi felismerési eredmény betöltve.");
-        return;
-      } catch (err) {
-        sessionStorage.removeItem("analysis_kind");
+if (!forceRefresh) {
+  const saved = sessionStorage.getItem("analysis_kind");
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      renderResult(parsed);
+      showInfo("A korábbi felismerési eredmény betöltve.");
+
+      // 👉 EZ A LÉNYEG
+      if (autorun) {
+        window.location.href = "szerkezet.html?autorun=1";
       }
+
+      return;
+    } catch (err) {
+      sessionStorage.removeItem("analysis_kind");
     }
   }
+}
 
   showLoading("A vers típusának felismerése folyamatban...");
   resultLayout.style.display = "none";
