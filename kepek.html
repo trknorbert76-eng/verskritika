@@ -490,6 +490,13 @@ async function runImagesAnalysis(forceRefresh = false) {
   poemText.textContent = poem;
   poemPreview.style.display = "block";
   renderPrevious(savedKind, savedStructure, savedRhythm);
+  const isDone = sessionStorage.getItem("step_imagery_done");
+const isLoading = sessionStorage.getItem("step_imagery_loading");
+
+if (!isDone && isLoading) {
+  showLoading("A képi elemzés még folyamatban...");
+  return;
+}
 
 hideLoading();
 hideError();
