@@ -433,18 +433,19 @@ async function runRhythmAnalysis(forceRefresh = false) {
   hideError();
   hideInfo();
 
-  if (!forceRefresh && !autorun) {
+if (!forceRefresh) {
   const savedRhythm = safeParse(sessionStorage.getItem("analysis_rhythm") || "");
   if (savedRhythm) {
     renderResult(savedRhythm);
     showInfo("A korábbi ritmikai eredmény betöltve.");
+
+    if (autorun) {
+      window.location.href = NEXT_PAGE;
+    }
+
     return;
   }
 }
-  showLoading("A ritmikai elemzés folyamatban...");
-  resultLayout.style.display = "none";
-  footerRow.style.display = "none";
-
   try {
     const res = await fetch(WORKER_URL, {
       method: "POST",
