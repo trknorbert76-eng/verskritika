@@ -490,23 +490,28 @@ async function runImagesAnalysis(forceRefresh = false) {
   poemText.textContent = poem;
   poemPreview.style.display = "block";
   renderPrevious(savedKind, savedStructure, savedRhythm);
-
-
-if (savedImages && savedImages.poem === poem && savedImages.result) {
-  hideLoading();
   hideError();
-   hideInfo();
+hideInfo();
 
-  renderResult(savedImages.result);
-  showInfo("A korábbi képi eredmény betöltve.");
+if (!forceRefresh) {
+  const savedImages = safeParse(sessionStorage.getItem("analysis_images") || "");
 
-  if (autorun) {
-    window.location.href = NEXT_PAGE;
+  if (savedImages && savedImages.poem === poem && savedImages.result) {
+    hideLoading();
+    hideError();
+    hideInfo();
+
+    renderResult(savedImages.result);
+    showInfo("A korábbi képi eredmény betöltve.");
+
+    if (autorun) {
+      window.location.href = NEXT_PAGE;
+    }
+
+    return;
   }
+}
 
-  return;
-}
-}
   showLoading("A képi elemzés folyamatban...");
   resultLayout.style.display = "none";
   footerRow.style.display = "none";
