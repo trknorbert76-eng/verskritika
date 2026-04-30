@@ -382,7 +382,7 @@
     }
 
     const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
- const NEXT_PAGE = "ellenor.html?autorun=1&autonext=1";
+    const NEXT_PAGE = "ellenor.html";
 
     const params = new URLSearchParams(window.location.search);
     const autorun = params.get("autorun") === "1";
@@ -508,9 +508,7 @@
       const savedKind = unwrapPack(kindPack);
       const savedStructure = unwrapPack(structurePack);
       const savedRhythm = unwrapPack(rhythmPack);
-      const savedImages =
-        imagesPack && imagesPack.poem === poem ? unwrapPack(imagesPack) : null;
-
+     const savedImages = unwrapPack(imagesPack);
       if (!poem) {
         window.location.href = "index.html";
         return;
@@ -544,12 +542,17 @@
       hideError();
       hideInfo();
 
-     if (!forceRefresh) {
+ if (!forceRefresh) {
   const savedExpressionPack = getStoredPack("analysis_expression");
   const savedExpression = unwrapPack(savedExpressionPack);
 
-  if (savedExpressionPack && savedExpressionPack.poem === poem && savedExpression) {
+  if (savedExpression) {
+    hideLoading();
+    hideError();
+    hideInfo();
+
     renderResult(savedExpression);
+    sessionStorage.setItem("step_expression_done", Date.now().toString());
     showInfo("A korábbi kifejezésmód-eredmény betöltve.");
 
     if (autorun) {
