@@ -582,22 +582,27 @@ async function runCheckAnalysis(forceRefresh = false) {
 
   fillView();
 
-  if (!forceRefresh && !autorun) {
-    const savedSeed = safeParse(sessionStorage.getItem("analysis_check_seed") || "");
-    const savedCheck = safeParse(sessionStorage.getItem("analysis_check") || "");
+ if (!forceRefresh) {
+  const savedSeed = safeParse(sessionStorage.getItem("analysis_check_seed") || "");
+  const savedCheck = safeParse(sessionStorage.getItem("analysis_check") || "");
 
-    if (savedSeed && savedCheck) {
-      fillView();
-      showNotice("A korábbi ellenőrzési eredmény betöltve.");
-      return;
+  if (savedSeed && savedCheck) {
+    fillView();
+    showNotice("A korábbi ellenőrzési eredmény betöltve.");
+
+    if (autorun) {
+      window.location.href = NEXT_PAGE;
     }
 
-    if (savedSeed && !savedCheck) {
-      fillView();
-      showNotice("Az első önálló olvasat betöltve, a végső összevetés még nem készült el.");
-      return;
-    }
+    return;
   }
+
+  if (savedSeed && !savedCheck) {
+    fillView();
+    showNotice("Az első önálló olvasat betöltve, a végső összevetés még nem készült el.");
+    return;
+  }
+}
 
   reanalyzeBtn.disabled = true;
 
