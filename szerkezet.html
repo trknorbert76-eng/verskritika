@@ -153,6 +153,24 @@ button.next {
   white-space: pre-wrap;
 }
 
+.scoreBox {
+  margin-top: 10px;
+  background: #101010;
+  border: 1px solid #3a3324;
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: #d6b36a;
+  font-weight: bold;
+  line-height: 1.5;
+}
+
+.scoreBox small {
+  display: block;
+  color: #aaa;
+  font-weight: normal;
+  margin-top: 4px;
+}
+
 .poemPreview {
   margin-top: 24px;
   background: #151515;
@@ -255,13 +273,19 @@ button.next {
       <div class="miniTitle">Szervezőelv</div>
 <div class="valueBox" id="organizingPrinciple">—</div>
 
-      <div class="miniTitle">Kohézió</div>
-      <div class="valueBox" id="cohesion">—</div>
-    </div>
+     <div class="miniTitle">Kohézió</div>
+<div class="valueBox" id="cohesion">—</div>
 
-   <div class="card">
+<div class="scoreBox" id="cohesionScoreBox">
+  <div id="cohesionLevel">Kohéziós nívó: —</div>
+  <small id="cohesionScoreNote">Pontérték: —</small>
+</div>
+
+</div>
+
+<div class="card">
   <h2>Indoklás</h2>
-
+  
   <div class="infoRow">
     <div class="miniTitle">Kezdeti állapot</div>
     <div class="valueBox" id="startState">—</div>
@@ -340,6 +364,9 @@ const previousBox = document.getElementById("previousBox");
 const structureTypeEl = document.getElementById("structureType");
 const organizingPrincipleEl = document.getElementById("organizingPrinciple");
 const cohesionEl = document.getElementById("cohesion");
+const cohesionScoreBoxEl = document.getElementById("cohesionScoreBox");
+const cohesionScoreNoteEl = document.getElementById("cohesionScoreNote");
+const cohesionLevelEl = document.getElementById("cohesionLevel");
 const startStateEl = document.getElementById("startState");
 const endStateEl = document.getElementById("endState");
 const movementEl = document.getElementById("movement");
@@ -412,6 +439,21 @@ function renderResult(result) {
   structureTypeEl.textContent = result.structure_type || "Nincs megadva";
   organizingPrincipleEl.textContent = result.organizing_principle || "Nincs megadva";
   cohesionEl.textContent = result.cohesion || "Nincs megadva";
+  const cohesionStrength = (result.cohesion_strength || "közepes").toLowerCase().trim();
+
+let cohesionPoint = "+1";
+let cohesionLabel = "közepes";
+
+if (cohesionStrength === "erős") {
+  cohesionPoint = "+5";
+  cohesionLabel = "erős";
+} else if (cohesionStrength === "gyenge") {
+  cohesionPoint = "-6";
+  cohesionLabel = "gyenge";
+}
+
+cohesionLevelEl.textContent = `Kohéziós nívó: ${cohesionLabel}`;
+cohesionScoreNoteEl.textContent = `Pontérték az ellenőrben: ${cohesionPoint}`;
   startStateEl.textContent = result.start_state || "Nincs megadva";
   endStateEl.textContent = result.end_state || "Nincs megadva";
   movementEl.textContent = result.movement || "Nincs megadva";
