@@ -504,21 +504,19 @@ hideInfo();
 resultLayout.style.display = "none";
 footerRow.style.display = "none";
 
- if (!forceRefresh) {
+if (!forceRefresh) {
   const savedImages = safeParse(sessionStorage.getItem("analysis_images") || "");
-if (savedImages && savedImages.poem === poem && savedImages.result) {
-  hideLoading();
-  hideError();
+  
+  if (savedImages && savedImages.poem === poem && savedImages.result) {
+    renderResult(savedImages.result);
+    showInfo("A korábbi képi eredmény betöltve.");
 
-  renderResult(savedImages.result);
-  showInfo("A korábbi képi eredmény betöltve.");
+    if (autorun) {
+      window.location.href = NEXT_PAGE;
+    }
 
-  if (autorun) {
-    window.location.href = NEXT_PAGE + "?autorun=1";
+    return;
   }
-
-  return;
-}
 }
   showLoading("A képi elemzés folyamatban...");
   resultLayout.style.display = "none";
