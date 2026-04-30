@@ -443,11 +443,16 @@ async function runStructureAnalysis(forceRefresh = false) {
   hideError();
   hideInfo();
 
- if (!forceRefresh && !autorun) {
+if (!forceRefresh) {
   const savedStructure = safeParse(sessionStorage.getItem("analysis_structure") || "");
   if (savedStructure) {
     renderResult(savedStructure);
     showInfo("A korábbi szerkezeti eredmény betöltve.");
+
+    if (autorun) {
+      window.location.href = NEXT_PAGE;
+    }
+
     return;
   }
 }
