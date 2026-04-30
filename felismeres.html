@@ -356,20 +356,25 @@ async function runKindAnalysis(forceRefresh = false) {
     return;
   }
 
-  poemText.textContent = poem;
-  poemPreview.style.display = "block";
+poemText.textContent = poem;
+poemPreview.style.display = "block";
 
-  hideError();
-  hideInfo();
+hideLoading();
+hideError();
+hideInfo();
+resultLayout.style.display = "none";
 
 if (!forceRefresh) {
   const saved = sessionStorage.getItem("analysis_kind");
   if (saved) {
     try {
-      const parsed = JSON.parse(saved);
-      renderResult(parsed);
-      showInfo("A korábbi felismerési eredmény betöltve.");
+     const parsed = JSON.parse(saved);
 
+hideLoading();
+hideError();
+
+renderResult(parsed);
+showInfo("A korábbi felismerési eredmény betöltve.");
       // 👉 EZ A LÉNYEG
       if (autorun) {
         window.location.href = "szerkezet.html?autorun=1";
