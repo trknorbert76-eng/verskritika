@@ -584,12 +584,19 @@ async function runCheckAnalysis(forceRefresh = false) {
   fillView();
 
 if (!forceRefresh) {
-  const savedSeed = safeParse(sessionStorage.getItem("analysis_check_seed") || "");
-  const savedCheck = safeParse(sessionStorage.getItem("analysis_check") || "");
+  const savedSeed = unwrapPack(readJSON("analysis_check_seed"));
+  const savedCheck = unwrapPack(readJSON("analysis_check"));
 
   if (savedSeed && savedCheck) {
+    sessionStorage.setItem("step_check_done", Date.now().toString());
     fillView();
     showNotice("A korábbi ellenőrzési eredmény betöltve.");
+    return;
+  }
+
+  if (savedSeed && !savedCheck) {
+    fillView();
+    showNotice("Az első önálló olvasat betöltve, a végső összevetés még nem készült el.");
     return;
   }
 }
@@ -677,8 +684,8 @@ finalCheckResult.score_range_max = rangeMax;
   fillView();
 showNotice("Az ellenőrzés elkészült.");
 
-if (autorun) {
-  window.location.href = NEXT_PAGE;
+if (autorun && forceRefresh) {
+  window.location.href = NEXT_PAGE + "?autorun=1";
 }
   } catch (err) {
     showNotice("Hiba történt az ellenőrzés során: " + (err.message || "ismeretlen hiba"));
@@ -694,7 +701,7 @@ reanalyzeBtn.addEventListener("click", () => {
   runCheckAnalysis(true);
 });
 
-runCheckAnalysis(autorun);
+runCheckAnalysis(false);
 </script>
 </body>
 </html>
