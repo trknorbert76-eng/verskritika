@@ -496,12 +496,12 @@ hideInfo();
 if (!forceRefresh) {
   const savedImages = safeParse(sessionStorage.getItem("analysis_images") || "");
 
-  if (savedImages) {
+if (savedImages && savedImages.poem === poem && savedImages.result) {
     hideLoading();
     hideError();
     hideInfo();
 
-    renderResult(savedImages);
+   renderResult(savedImages.result);
     showInfo("A korábbi képi eredmény betöltve.");
 
     if (autorun) {
@@ -541,7 +541,10 @@ if (!forceRefresh) {
       );
     }
 
-sessionStorage.setItem("analysis_images", JSON.stringify(data.result));
+sessionStorage.setItem("analysis_images", JSON.stringify({
+  poem,
+  result: data.result
+}));
 sessionStorage.setItem("step_imagery_done", Date.now().toString());
 renderResult(data.result);
 showInfo("A képi elemzés elkészült.");
