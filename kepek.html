@@ -496,22 +496,21 @@ hideInfo();
 if (!forceRefresh) {
   const savedImages = safeParse(sessionStorage.getItem("analysis_images") || "");
 
-  if (savedImages && savedImages.poem === poem && savedImages.result) {
+  if (savedImages) {
     hideLoading();
     hideError();
     hideInfo();
 
-    renderResult(savedImages.result);
+    renderResult(savedImages);
     showInfo("A korábbi képi eredmény betöltve.");
 
     if (autorun) {
-      window.location.href = NEXT_PAGE;
+      window.location.href = NEXT_PAGE + "?autorun=1";
     }
 
     return;
   }
 }
-
   showLoading("A képi elemzés folyamatban...");
   resultLayout.style.display = "none";
   footerRow.style.display = "none";
@@ -542,10 +541,7 @@ if (!forceRefresh) {
       );
     }
 
-sessionStorage.setItem("analysis_images", JSON.stringify({
-  poem,
-  result: data.result
-}));
+sessionStorage.setItem("analysis_images", JSON.stringify(data.result));
 sessionStorage.setItem("step_imagery_done", Date.now().toString());
 renderResult(data.result);
 showInfo("A képi elemzés elkészült.");
