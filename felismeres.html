@@ -262,6 +262,7 @@ button.next {
 <script>
 const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
 const NEXT_PAGE = "szerkezet.html";
+const autorun = new URLSearchParams(window.location.search).get("autorun") === "1";
 
 const loadingBox = document.getElementById("loadingBox");
 const errorBox = document.getElementById("errorBox");
