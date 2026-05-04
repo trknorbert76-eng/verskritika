@@ -854,9 +854,43 @@ analyzeBtn.addEventListener("click", async () => {
     setStepDone(pipeline[0]);
     appendRunnerInfo("Felismerés kész.");
 
-    const basePrevious = {
+  // 2. ÉRTELMEZÉS — felismerés után indul
+const interpretationStep = pipeline.find(s => s.key === "interpretation");
+
+appendRunnerInfo("Értelmezés indul...");
+setStepLoading(interpretationStep);
+
+const interpretationRes = await fetch(INTERPRETATION_WORKER_URL, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    poem,
+    previous: {
       kind
-    };
+    }
+  })
+});
+
+const interpretationData = await interpretationRes.json();
+
+if (!interpretationRes.ok || !interpretationData.ok) {
+  throw new Error(interpretationData.error || "Az értelmezés hibával leállt.");
+}
+
+const interpretation = interpretationData.result;
+
+sessionStorage.setItem("analysis_interpretation", JSON.stringify(interpretation));
+sessionStorage.setItem("step_interpretation_done", Date.now().toString());
+
+setStepDone(interpretationStep);
+appendRunnerInfo("Értelmezés kész.");
+
+const basePrevious = {
+  kind,
+  interpretation
+};
 
     // 2. ELLENŐR SAJÁT ELSŐ OLVASATA — külön indul
     startCheckSeed(poem);
