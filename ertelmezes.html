@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Értelmezés</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Georgia, serif;
+  background: #111;
+  color: #eee;
+}
+
+.wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 30px 20px 60px;
+}
+
+h1 {
+  font-size: 2.1rem;
+  margin-bottom: 10px;
+}
+
+.intro {
+  color: #bbb;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #d6b36a;
+  color: #111;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+button.secondary {
+  background: #2b2b2b;
+  color: #eee;
+  border: 1px solid #444;
+}
+
+button.next {
+  background: #4caf50;
+  color: #fff;
+}
+
+.loadingBox,
+.errorBox,
+.infoBox {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.loadingBox {
+  display: none;
+  background: #151515;
+  border: 1px solid #333;
+  color: #cfcfcf;
+}
+
+.errorBox {
+  display: none;
+  background: #2a1616;
+  border: 1px solid #6a2c2c;
+  color: #f0c7c7;
+}
+
+.infoBox {
+  display: none;
+  background: #162417;
+  border: 1px solid #2f6a35;
+  color: #cdeccf;
+}
+
+.layout {
+  display: none;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.card {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.card h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #d6b36a;
+  font-size: 1.15rem;
+}
+
+.infoRow {
+  margin-bottom: 16px;
+}
+
+.miniTitle {
+  color: #c9b07a;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+.valueBox {
+  background: #141414;
+  border: 1px solid #2c2c2c;
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #eee;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.list {
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.7;
+  color: #ddd;
+}
+
+.poemPreview {
+  margin-top: 24px;
+  background: #151515;
+  border: 1px solid #303030;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.poemPreview h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #d6b36a;
+  font-size: 1.05rem;
+}
+
+.poemText {
+  white-space: pre-wrap;
+  color: #ddd;
+  line-height: 1.7;
+}
+
+.footerRow {
+  margin-top: 24px;
+  display: none;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 860px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+  <h1>Értelmezés</h1>
+
+  <p class="intro">
+    Ez az oldal nem pontoz és nem kritizál. Csak azt próbálja megérteni, miről szól a vers: mi történik benne, ki vagy mi áll a középpontban, és mi lehet a mélyebb jelentése.
+  </p>
+
+  <div class="topbar">
+    <button class="secondary" id="backBtn">← Vissza a felismeréshez</button>
+    <button id="reloadBtn">Újraértelmezés</button>
+    <button class="next" id="nextBtn">Tovább a szerkezethez →</button>
+  </div>
+
+  <div class="loadingBox" id="loadingBox">Az értelmezés folyamatban...</div>
+  <div class="errorBox" id="errorBox"></div>
+  <div class="infoBox" id="infoBox"></div>
+
+  <div class="layout" id="resultLayout">
+    <div class="card">
+      <h2>Miről szól?</h2>
+
+      <div class="infoRow">
+        <div class="miniTitle">Konkrét tárgy / felszíni téma</div>
+        <div class="valueBox" id="literalSubject">—</div>
+      </div>
+
+      <div class="infoRow">
+        <div class="miniTitle">Felszíni történés</div>
+        <div class="valueBox" id="surfaceStory">—</div>
+      </div>
+
+      <div class="infoRow">
+        <div class="miniTitle">Beszélő helyzete</div>
+        <div class="valueBox" id="speakerPosition">—</div>
+      </div>
+
+      <div class="infoRow">
+        <div class="miniTitle">Központi alak / tárgy</div>
+        <div class="valueBox" id="centralFigure">—</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Mélyebb jelentés</h2>
+
+      <div class="infoRow">
+        <div class="miniTitle">Jelentésmag</div>
+        <div class="valueBox" id="coreSubject">—</div>
+      </div>
+
+      <div class="infoRow">
+        <div class="miniTitle">Mélyebb olvasat</div>
+        <div class="valueBox" id="deeperMeaning">—</div>
+      </div>
+
+      <div class="infoRow">
+        <div class="miniTitle">A vers tétje</div>
+        <div class="valueBox" id="centralStake">—</div>
+      </div>
+
+      <div class="infoRow">
+        <div class="miniTitle">Egyszerű összefoglalás</div>
+        <div class="valueBox" id="plainSummary">—</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Motívumok</h2>
+      <ul class="list" id="keyMotifs"></ul>
+    </div>
+
+    <div class="card">
+      <h2>Bizonytalanságok / több olvasat</h2>
+
+      <div class="infoRow">
+        <div class="miniTitle">Lehetséges olvasatok</div>
+        <ul class="list" id="possibleReadings"></ul>
+      </div>
+
+      <div class="infoRow">
+        <div class="miniTitle">Nem teljesen biztos pontok</div>
+        <ul class="list" id="uncertainPoints"></ul>
+      </div>
+
+      <div class="infoRow">
+        <div class="miniTitle">Biztosság</div>
+        <div class="valueBox" id="confidence">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="poemPreview" id="poemPreview" style="display:none;">
+    <h2>A vizsgált vers</h2>
+    <div class="poemText" id="poemText"></div>
+  </div>
+</div>
+
+<script>
+const WORKER_URL = "https://ertelmezes.trknorbert76.workers.dev";
+const NEXT_PAGE = "szerkezet.html";
+const autorun = new URLSearchParams(window.location.search).get("autorun") === "1";
+
+const loadingBox = document.getElementById("loadingBox");
+const errorBox = document.getElementById("errorBox");
+const infoBox = document.getElementById("infoBox");
+const resultLayout = document.getElementById("resultLayout");
+const poemPreview = document.getElementById("poemPreview");
+const poemText = document.getElementById("poemText");
+
+const backBtn = document.getElementById("backBtn");
+const reloadBtn = document.getElementById("reloadBtn");
+const nextBtn = document.getElementById("nextBtn");
+
+function safeParse(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+function setText(id, value, fallback = "—") {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = typeof value === "string" && value.trim() ? value.trim() : fallback;
+}
+
+function fillList(id, items, fallback) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  el.innerHTML = "";
+
+  if (!Array.isArray(items) || !items.length) {
+    const li = document.createElement("li");
+    li.textContent = fallback || "Nincs megadva.";
+    el.appendChild(li);
+    return;
+  }
+
+  items.forEach(item => {
+    const li = document.createElement("li");
+    li.textContent = String(item);
+    el.appendChild(li);
+  });
+}
+
+function showLoading(message) {
+  loadingBox.textContent = message;
+  loadingBox.style.display = "block";
+}
+
+function hideLoading() {
+  loadingBox.style.display = "none";
+}
+
+function showError(message) {
+  errorBox.textContent = message;
+  errorBox.style.display = "block";
+}
+
+function hideError() {
+  errorBox.textContent = "";
+  errorBox.style.display = "none";
+}
+
+function showInfo(message) {
+  infoBox.textContent = message;
+  infoBox.style.display = "block";
+}
+
+function hideInfo() {
+  infoBox.textContent = "";
+  infoBox.style.display = "none";
+}
+
+function renderResult(result) {
+  setText("literalSubject", result.literal_subject);
+  setText("surfaceStory", result.surface_story);
+  setText("speakerPosition", result.speaker_position);
+  setText("centralFigure", result.central_figure_or_object);
+
+  setText("coreSubject", result.core_subject);
+  setText("deeperMeaning", result.deeper_meaning);
+  setText("centralStake", result.central_stake);
+  setText("plainSummary", result.plain_summary);
+
+  fillList("keyMotifs", result.key_motifs, "Nincs külön megadott motívum.");
+  fillList("possibleReadings", result.possible_readings, "Nincs külön többes olvasat.");
+  fillList("uncertainPoints", result.uncertain_points, "Nincs külön bizonytalanság.");
+
+  setText("confidence", result.confidence);
+
+  resultLayout.style.display = "grid";
+}
+
+async function runInterpretation(forceRefresh = false) {
+  const poem = sessionStorage.getItem("poem");
+  const savedKind = safeParse(sessionStorage.getItem("analysis_kind") || "");
+
+  if (!poem) {
+    window.location.href = "index.html";
+    return;
+  }
+
+  if (!savedKind) {
+    window.location.href = "felismeres.html";
+    return;
+  }
+
+  poemText.textContent = poem;
+  poemPreview.style.display = "block";
+
+  hideLoading();
+  hideError();
+  hideInfo();
+  resultLayout.style.display = "none";
+
+  if (!forceRefresh) {
+    const saved = safeParse(sessionStorage.getItem("analysis_interpretation") || "");
+
+    if (saved) {
+      renderResult(saved);
+      sessionStorage.setItem("step_interpretation_done", Date.now().toString());
+      showInfo("A korábbi értelmezés betöltve.");
+
+      if (autorun) {
+        window.location.href = NEXT_PAGE + "?autorun=1";
+      }
+
+      return;
+    }
+  }
+
+  showLoading("Az értelmezés folyamatban...");
+
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        poem,
+        previous: {
+          kind: savedKind
+        }
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || "Az értelmező worker nem adott megfelelő választ.");
+    }
+
+    sessionStorage.setItem("analysis_interpretation", JSON.stringify(data.result));
+    sessionStorage.setItem("step_interpretation_done", Date.now().toString());
+
+    renderResult(data.result);
+    showInfo("Az értelmezés elkészült.");
+
+    if (autorun) {
+      window.location.href = NEXT_PAGE + "?autorun=1";
+    }
+  } catch (err) {
+    showError(err.message || "Ismeretlen hiba történt.");
+  } finally {
+    hideLoading();
+  }
+}
+
+backBtn.addEventListener("click", () => {
+  window.location.href = "felismeres.html";
+});
+
+reloadBtn.addEventListener("click", () => {
+  sessionStorage.removeItem("analysis_interpretation");
+  sessionStorage.removeItem("step_interpretation_done");
+  runInterpretation(true);
+});
+
+nextBtn.addEventListener("click", () => {
+  window.location.href = NEXT_PAGE;
+});
+
+runInterpretation(false);
+</script>
+
+</body>
+</html>
