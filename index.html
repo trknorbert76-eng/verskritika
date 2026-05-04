@@ -259,6 +259,14 @@ button.done {
     </div>
 
     <div class="stepRow">
+  <button class="stepBtn" id="btn-interpretation" disabled>Értelmezés várakozik</button>
+  <div>
+    <div class="progressBox" id="box-interpretation"><div class="progressFill"></div></div>
+    <div class="stepNote" id="note-interpretation">Még nem indult el.</div>
+  </div>
+</div>
+
+    <div class="stepRow">
       <button class="stepBtn" id="btn-structure" disabled>Szerkezet várakozik</button>
       <div>
         <div class="progressBox" id="box-structure"><div class="progressFill"></div></div>
@@ -315,6 +323,7 @@ button.done {
 <script>
 const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
 const DEPTH_WORKER_URL = "https://melyseg-depth.trknorbert76.workers.dev";
+const INTERPRETATION_WORKER_URL = "https://ertelmezes.trknorbert76.workers.dev";
 
 const analyzeBtn = document.getElementById("analyzeBtn");
 const checkStatusBtn = document.getElementById("checkStatusBtn");
@@ -340,7 +349,19 @@ const pipeline = [
     loadingText: "Felismerés folyamatban",
     doneText: "Felismerés kész"
   },
-  {
+{
+  key: "interpretation",
+  doneKey: "step_interpretation_done",
+  page: "ertelmezes.html?autorun=1",
+  targetPage: "ertelmezes.html",
+  buttonId: "btn-interpretation",
+  boxId: "box-interpretation",
+  noteId: "note-interpretation",
+  waitingText: "Értelmezés várakozik",
+  loadingText: "Értelmezés folyamatban",
+  doneText: "Értelmezés kész"
+},
+   {
     key: "structure",
     doneKey: "step_structure_done",
     page: "szerkezet.html?autorun=1",
@@ -503,6 +524,7 @@ function setStepDone(step) {
 
 function clearStepStorage() {
   sessionStorage.removeItem("analysis_kind");
+  sessionStorage.removeItem("analysis_interpretation");
   sessionStorage.removeItem("analysis_structure");
   sessionStorage.removeItem("analysis_rhythm");
   sessionStorage.removeItem("analysis_rhyme");
@@ -515,6 +537,7 @@ function clearStepStorage() {
   sessionStorage.removeItem("analysis_summary");
 
   sessionStorage.removeItem("step_kind_done");
+  sessionStorage.removeItem("step_interpretation_done");
   sessionStorage.removeItem("step_structure_done");
   sessionStorage.removeItem("step_rhythm_done");
   sessionStorage.removeItem("step_imagery_done");
