@@ -599,10 +599,13 @@ function updateCheckStatus() {
 
   const fill = box.querySelector(".progressFill");
 
-  const impactDone = sessionStorage.getItem("step_impact_done");
-  const impactLoading = sessionStorage.getItem("step_impact_loading");
-  const depthDone = sessionStorage.getItem("step_depth_done");
-  const depthLoading = sessionStorage.getItem("step_depth_loading");
+const hasImpact = sessionStorage.getItem("analysis_impact");
+const impactDone = sessionStorage.getItem("step_impact_done") || hasImpact;
+const impactLoading = sessionStorage.getItem("step_impact_loading");
+
+const hasDepth = sessionStorage.getItem("analysis_depth");
+const depthDone = sessionStorage.getItem("step_depth_done") || hasDepth;
+const depthLoading = sessionStorage.getItem("step_depth_loading");
 
   btn.classList.remove("loading", "done");
   box.classList.remove("loading", "done", "started", "half", "real");
