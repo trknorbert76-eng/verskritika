@@ -177,10 +177,20 @@ button.done {
 }
 
 .progressBox.loading .progressFill {
-  width: 100%;
-  background: linear-gradient(90deg, #ff9800 0%, #ffb74d 50%, #ff9800 100%);
-  background-size: 200% 100%;
-  animation: moveBar 1s linear infinite;
+  background: #ff9800;
+  animation: none;
+}
+
+.progressBox.started .progressFill {
+  background: #ff9800;
+}
+
+.progressBox.half .progressFill {
+  background: #d6b36a;
+}
+
+.progressBox.real .progressFill {
+  background: #4caf50;
 }
 
 .progressBox.done {
@@ -577,6 +587,63 @@ function updateCheckStatus() {
   } else {
     checkStatusBtn.classList.add("secondary");
     checkStatusBtn.textContent = "Ellenőr: nincs";
+  }
+}
+
+  function updateDepthProgress() {
+  const btn = document.getElementById("btn-depth");
+  const box = document.getElementById("box-depth");
+  const note = document.getElementById("note-depth");
+
+  if (!btn || !box || !note) return;
+
+  const fill = box.querySelector(".progressFill");
+
+  const impactDone = sessionStorage.getItem("step_impact_done");
+  const impactLoading = sessionStorage.getItem("step_impact_loading");
+  const depthDone = sessionStorage.getItem("step_depth_done");
+  const depthLoading = sessionStorage.getItem("step_depth_loading");
+
+  btn.classList.remove("loading", "done");
+  box.classList.remove("loading", "done", "started", "half", "real");
+
+  let percent = 0;
+
+  if (impactLoading || depthLoading) percent = 20;
+  if (impactDone || depthDone) percent = 50;
+  if (impactDone && depthDone) percent = 100;
+
+  fill.style.width = percent + "%";
+
+  if (percent === 0) {
+    btn.disabled = true;
+    btn.textContent = "Hatás + mélység várakozik";
+    note.textContent = "Még nem indult el.";
+  }
+
+  if (percent === 20) {
+    btn.disabled = true;
+    btn.classList.add("loading");
+    box.classList.add("started");
+    btn.textContent = "Hatás + mélység folyamatban";
+    note.textContent = "A hatás és mélység háttérben dolgozik...";
+  }
+
+  if (percent === 50) {
+    btn.disabled = true;
+    btn.classList.add("loading");
+    box.classList.add("half");
+    btn.textContent = "Hatás vagy mélység kész";
+    note.textContent = "Az egyik rész elkészült.";
+  }
+
+  if (percent === 100) {
+    btn.disabled = false;
+    btn.classList.add("done");
+    box.classList.add("done", "real");
+    btn.textContent = "Hatás + mélység kész";
+    note.textContent = "Az eredmény elkészült, az oldal megnyitható.";
+    btn.onclick = () => window.location.href = "melyseg.html";
   }
 }
 
