@@ -855,42 +855,32 @@ analyzeBtn.addEventListener("click", async () => {
     appendRunnerInfo("Felismerés kész.");
 
   // 2. ÉRTELMEZÉS — felismerés után indul
+// 2. ÉRTELMEZÉS — PÁRHUZAMOSRA ÁLLÍTVA
 const interpretationStep = pipeline.find(s => s.key === "interpretation");
 
-appendRunnerInfo("Értelmezés indul...");
-setStepLoading(interpretationStep);
+const interpretationPromise = runStepWithUi(interpretationStep, async () => {
+  const res = await fetch(INTERPRETATION_WORKER_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      poem,
+      previous: { kind }
+    })
+  });
 
-const interpretationRes = await fetch(INTERPRETATION_WORKER_URL, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    poem,
-    previous: {
-      kind
-    }
-  })
+  const data = await res.json();
+
+  if (!res.ok || !data.ok) {
+    throw new Error(data.error || "Az értelmezés hibával leállt.");
+  }
+
+  sessionStorage.setItem("analysis_interpretation", JSON.stringify(data.result));
+  sessionStorage.setItem("step_interpretation_done", Date.now().toString());
+
+  return data.result;
 });
-
-const interpretationData = await interpretationRes.json();
-
-if (!interpretationRes.ok || !interpretationData.ok) {
-  throw new Error(interpretationData.error || "Az értelmezés hibával leállt.");
-}
-
-const interpretation = interpretationData.result;
-
-sessionStorage.setItem("analysis_interpretation", JSON.stringify(interpretation));
-sessionStorage.setItem("step_interpretation_done", Date.now().toString());
-
-setStepDone(interpretationStep);
-appendRunnerInfo("Értelmezés kész.");
-
-const basePrevious = {
-  kind,
-  interpretation
-};
 
     // 2. ELLENŐR SAJÁT ELSŐ OLVASATA — külön indul
     startCheckSeed(poem);
@@ -946,19 +936,21 @@ const basePrevious = {
 
     appendRunnerInfo("Szerkezet, ritmus, képek, kifejezésmód és hatás/mélység párhuzamosan fut...");
 
-    const [
-      structure,
-      rhythm,
-      images,
-      expression,
-      depth
-    ] = await Promise.all([
-      structurePromise,
-      rhythmPromise,
-      imageryPromise,
-      expressionPromise,
-      depthPromise
-    ]);
+  const [
+  interpretation,
+  structure,
+  rhythm,
+  images,
+  expression,
+  depth
+] = await Promise.all([
+  interpretationPromise,
+  structurePromise,
+  rhythmPromise,
+  imageryPromise,
+  expressionPromise,
+  depthPromise
+]);
 
     updateDepthStatus();
 
@@ -975,6 +967,7 @@ const basePrevious = {
         poem,
         {
           kind,
+          interpretation,
           structure,
           rhythm,
           images,
