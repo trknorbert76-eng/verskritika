@@ -857,9 +857,9 @@ analyzeBtn.addEventListener("click", async () => {
   // 2. ÉRTELMEZÉS — felismerés után indul
 // 2. ÉRTELMEZÉS — PÁRHUZAMOSRA ÁLLÍTVA
 const interpretationStep = pipeline.find(s => s.key === "interpretation");
+    const interpretationPromise = runStepWithUi(interpretationStep, async () => {
 
-const interpretationPromise = runStepWithUi(interpretationStep, async () => {
-  const res = await fetch(INTERPRETATION_WORKER_URL, {
+      const res = await fetch(INTERPRETATION_WORKER_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -881,6 +881,12 @@ const interpretationPromise = runStepWithUi(interpretationStep, async () => {
 
   return data.result;
 });
+
+const basePrevious = {
+  kind
+};
+
+
 
     // 2. ELLENŐR SAJÁT ELSŐ OLVASATA — külön indul
     startCheckSeed(poem);
