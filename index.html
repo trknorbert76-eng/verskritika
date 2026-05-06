@@ -354,6 +354,9 @@ const stepsWrap = document.getElementById("stepsWrap");
 const runnerInfo = document.getElementById("runnerInfo");
 const runnerFrame = document.getElementById("runnerFrame");
 
+  let depthFakeProgress = 0;
+let depthFakeTimer = null;
+
 const pipeline = [
   {
     key: "kind",
@@ -610,12 +613,15 @@ const depthLoading = sessionStorage.getItem("step_depth_loading");
   btn.classList.remove("loading", "done");
   box.classList.remove("loading", "done", "started", "half", "real");
 
-  let percent = 0;
+let percent = 0;
 
-  if (impactLoading || depthLoading) percent = 20;
-  if (impactDone || depthDone) percent = 50;
-  if (impactDone && depthDone) percent = 100;
+if (impactLoading || depthLoading) {
+  percent = Math.max(20, Math.floor(depthFakeProgress));
+}
 
+if (impactDone && depthDone) {
+  percent = 100;
+}
   fill.style.width = percent + "%";
 
   if (percent === 0) {
@@ -647,6 +653,45 @@ const depthLoading = sessionStorage.getItem("step_depth_loading");
     btn.textContent = "Hatás + mélység kész";
     note.textContent = "Az eredmény elkészült, az oldal megnyitható.";
     btn.onclick = () => window.location.href = "melyseg.html";
+  }
+}
+
+  function startFakeDepthProgress() {
+  stopFakeDepthProgress();
+
+  depthFakeProgress = 18;
+
+  depthFakeTimer = setInterval(() => {
+
+    const hasImpact = sessionStorage.getItem("step_impact_done");
+    const hasDepth = sessionStorage.getItem("step_depth_done");
+
+    // ha kész → leáll
+    if (hasImpact && hasDepth) {
+      stopFakeDepthProgress();
+      return;
+    }
+
+    // lassú növekedés
+    if (depthFakeProgress < 35) {
+      depthFakeProgress += 2;
+    } else if (depthFakeProgress < 55) {
+      depthFakeProgress += 1.2;
+    } else if (depthFakeProgress < 75) {
+      depthFakeProgress += 0.6;
+    } else if (depthFakeProgress < 88) {
+      depthFakeProgress += 0.25;
+    }
+
+    updateDepthProgress();
+
+  }, 700);
+}
+
+function stopFakeDepthProgress() {
+  if (depthFakeTimer) {
+    clearInterval(depthFakeTimer);
+    depthFakeTimer = null;
   }
 }
 
@@ -769,6 +814,7 @@ async function startDepthAndImpactAnalysis(poem) {
   try {
   sessionStorage.setItem("step_impact_loading", "1");
 sessionStorage.setItem("step_depth_loading", "1");
+    startFakeDepthProgress();
 updateDepthStatus();
 updateDepthProgress();
 
@@ -1099,6 +1145,7 @@ if (!poemInput.value.trim()) {
   clearStepStorage();
 }
 
+  stopFakeDepthProgress();
 updateCheckStatus();
 updateDepthStatus();
 updateSummaryStatus();
