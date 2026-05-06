@@ -517,7 +517,10 @@ if (finalCheck) {
 }
 
 async function runCheckAnalysis(forceRefresh = false) {
-  const poem = sessionStorage.getItem("poem");
+const poem =
+  sessionStorage.getItem("poem") ||
+  sessionStorage.getItem("poemText");
+  
 
   const savedKind = readJSON("analysis_kind");
   const savedStructure = readJSON("analysis_structure");
@@ -600,13 +603,13 @@ if (!forceRefresh) {
     return;
   }
 
-if (savedSeed && !savedCheck) {
-  fillView();
-  showNotice("Az első önálló olvasat betöltve, most készül a végső összevetés...");
+  if (savedSeed && !savedCheck) {
+    fillView();
+    showNotice("Az első önálló olvasat betöltve, most készül a végső összevetés...");
+  }
 }
 
-  reanalyzeBtn.disabled = true;
-
+reanalyzeBtn.disabled = true;
   try {
     // ==================================
     // 1. SEED - TISZTA ELSŐ OLVASAT
