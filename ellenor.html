@@ -527,6 +527,11 @@ async function runCheckAnalysis(forceRefresh = false) {
   const savedDepth = readJSON("analysis_depth");
   const savedImpact = readJSON("analysis_impact");
 
+  const savedInterpretation =
+  readJSON("analysis_interpretation") ||
+  readJSON("analysis_ertelmezes") ||
+  readJSON("analysis_interpretation_result");
+
   const kind = unwrapPack(savedKind);
   const structure = unwrapPack(savedStructure);
   const rhythm = unwrapPack(savedRhythm);
@@ -534,6 +539,7 @@ async function runCheckAnalysis(forceRefresh = false) {
   const expression = unwrapPack(savedExpression);
   const depth = unwrapPack(savedDepth);
  const impact = unwrapPack(savedImpact) || depth;
+  const interpretation = unwrapPack(savedInterpretation);
 
   const depthForCheck = depth ? {
   secondary_layer: depth.secondary_layer,
@@ -594,12 +600,11 @@ if (!forceRefresh) {
     return;
   }
 
-  if (savedSeed && !savedCheck) {
-    fillView();
-    showNotice("Az első önálló olvasat betöltve, a végső összevetés még nem készült el.");
-    return;
-  }
+if (savedSeed && !savedCheck) {
+  fillView();
+  showNotice("Az első önálló olvasat betöltve, most készül a végső összevetés...");
 }
+
   reanalyzeBtn.disabled = true;
 
   try {
@@ -642,8 +647,9 @@ if (!forceRefresh) {
       body: JSON.stringify({
         poem,
         step: "check",
-       previous: {
+previous: {
   kind,
+  interpretation,
   structure,
   rhythm,
   images,
