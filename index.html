@@ -637,7 +637,7 @@ if (impactDone && depthDone) {
     note.textContent = "Még nem indult el.";
   }
 
-  if (percent === 20) {
+if (percent > 0 && percent < 50) {
     btn.disabled = true;
     btn.classList.add("loading");
     box.classList.add("started");
@@ -645,7 +645,7 @@ if (impactDone && depthDone) {
     note.textContent = "A hatás és mélység háttérben dolgozik...";
   }
 
-  if (percent === 50) {
+  if (percent >= 50 && percent < 100) {
     btn.disabled = true;
     btn.classList.add("loading");
     box.classList.add("half");
