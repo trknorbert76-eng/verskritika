@@ -767,9 +767,10 @@ async function startCheckSeed(poem) {
 
 async function startDepthAndImpactAnalysis(poem) {
   try {
-    sessionStorage.setItem("step_impact_loading", "1");
-    sessionStorage.setItem("step_depth_loading", "1");
-    updateDepthStatus();
+  sessionStorage.setItem("step_impact_loading", "1");
+sessionStorage.setItem("step_depth_loading", "1");
+updateDepthStatus();
+updateDepthProgress();
 
     const kindPack = JSON.parse(sessionStorage.getItem("analysis_kind") || "null");
     const kind = kindPack?.result || kindPack || {};
@@ -807,10 +808,13 @@ async function startDepthAndImpactAnalysis(poem) {
       // 🔹 MÉLYSÉG külön mentve
       sessionStorage.setItem("analysis_depth", JSON.stringify(data.result));
 
-      sessionStorage.setItem("step_impact_done", Date.now().toString());
-      sessionStorage.setItem("step_depth_done", Date.now().toString());
+   sessionStorage.setItem("step_impact_done", Date.now().toString());
+sessionStorage.setItem("step_depth_done", Date.now().toString());
 
-      appendRunnerInfo("Hatás és mélység elemzés elkészült.");
+updateDepthStatus();
+updateDepthProgress();
+
+appendRunnerInfo("Hatás és mélység elemzés elkészült.");
     } else {
       throw new Error(data.error || "A hatás/mélység elemzés hibával leállt.");
     }
@@ -820,7 +824,8 @@ async function startDepthAndImpactAnalysis(poem) {
   } finally {
     sessionStorage.removeItem("step_impact_loading");
     sessionStorage.removeItem("step_depth_loading");
-    updateDepthStatus();
+   updateDepthStatus();
+updateDepthProgress();
   }
 }
 
@@ -906,9 +911,10 @@ analyzeBtn.addEventListener("click", async () => {
     sessionStorage.setItem("poem", poem);
     sessionStorage.setItem("poemText", poem);
 
-    resetAllStepUi();
-    updateCheckStatus();
-    updateDepthStatus();
+   resetAllStepUi();
+updateCheckStatus();
+updateDepthStatus();
+updateDepthProgress();
 
     stepsWrap.style.display = "block";
     showOk("A vers elfogadva. A háttérelemzés elindult.");
@@ -1096,7 +1102,10 @@ if (!poemInput.value.trim()) {
 updateCheckStatus();
 updateDepthStatus();
 updateSummaryStatus();
-setInterval(updateDepthStatus, 400);
+setInterval(() => {
+  updateDepthStatus();
+  updateDepthProgress();
+}, 400);
 </script>
 </body>
 </html>
