@@ -157,8 +157,8 @@ button.done {
 
 .progressBox {
   height: 14px;
-  background: #2a1616;
-  border: 1px solid #5d2b2b;
+  background: #2d2412;
+  border: 1px solid #8a6a1f;
   border-radius: 999px;
   overflow: hidden;
   position: relative;
@@ -172,21 +172,28 @@ button.done {
 }
 
 .progressBox.loading {
-  background: #3a2605;
-  border-color: #a35d00;
+  background: #4a3508;
+  border-color: #d6b36a;
 }
-
 .progressBox.loading .progressFill {
   background: #ff9800;
   animation: none;
 }
 
 .progressBox.started .progressFill {
-  background: #ff9800;
+  background: linear-gradient(
+    90deg,
+    #ffb300,
+    #ffd54f
+  );
 }
 
 .progressBox.half .progressFill {
-  background: #d6b36a;
+  background: linear-gradient(
+    90deg,
+    #ffd54f,
+    #ffe082
+  );
 }
 
 .progressBox.real .progressFill {
