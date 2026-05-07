@@ -690,8 +690,20 @@ previous: {
     const rangeMin = Number(depth?.checker_min_score ?? 0);
 const rangeMax = Number(depth?.checker_max_score ?? 100);
 
+const innerScore = Number(interpretation?.inner_authenticity_score || 0);
 
-const finalScore = calculateFinalScore(
+if (innerScore >= 9) {
+  finalCheckResult.correction_direction = "feljebb";
+  finalCheckResult.distortion_direction = "enyhe alulértékelés";
+
+  finalCheckResult.correction_reason =
+    "Az értelmezés nagyon erős belső költői működést jelez, ezért a végső ellenőrzés felfelé korrigál.";
+
+  finalCheckResult.final_level = "erős";
+}
+
+    
+    const finalScore = calculateFinalScore(
   rangeMin,
   rangeMax,
   seedData.result?.own_level,
