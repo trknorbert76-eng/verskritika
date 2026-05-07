@@ -431,7 +431,9 @@
       score = fallback;
     }
 
-    score = applyImpactBoost(score, checkData, expression, structure, depthData);
+ if (!checkData || typeof checkData.final_score === "undefined") {
+  score = applyImpactBoost(score, checkData, expression, structure, depthData);
+}
 
     const minScore = Number(depthData?.checker_min_score);
     const maxScore = Number(depthData?.checker_max_score);
