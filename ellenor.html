@@ -710,7 +710,7 @@ if (innerScore >= 9) {
 const finalScore = calculateFinalScore(
   rangeMin,
   rangeMax,
-  finalCheckResult?.own_level || seedData.result?.own_level,
+  finalCheckResult?.final_level || finalCheckResult?.own_level || seedData.result?.own_level,
   finalCheckResult?.correction_direction,
   interpretation?.inner_authenticity_score
 );
