@@ -400,6 +400,7 @@ function getLevelPosition(level) {
   return map[level] ?? 0.5;
 }
 
+
 function getCorrectionOffset(correction) {
   const map = {
     "erősen lejjebb": -0.10,
@@ -411,7 +412,10 @@ function getCorrectionOffset(correction) {
     "erősen feljebb": 0.10
   };
 
-  function getInterpretationOffset(innerScore) {
+  return map[correction] ?? 0;
+}
+
+function getInterpretationOffset(innerScore) {
   const s = Number(innerScore);
 
   if (Number.isNaN(s)) return 0;
@@ -425,8 +429,6 @@ function getCorrectionOffset(correction) {
   return 0;
 }
 
-  return map[correction] ?? 0;
-}
 
 function calculateFinalScore(rangeMin, rangeMax, ownLevel, correctionDirection, innerScore) {
   const span = rangeMax - rangeMin;
@@ -637,10 +639,12 @@ reanalyzeBtn.disabled = true;
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        poem,
-        step: "check_seed",
-        previous: {}
-      })
+  poem,
+  step: "check_seed",
+  previous: {
+    interpretation
+  }
+})
     });
 
     const seedData = await seedRes.json();
@@ -703,10 +707,10 @@ if (innerScore >= 9) {
 }
 
     
-    const finalScore = calculateFinalScore(
+const finalScore = calculateFinalScore(
   rangeMin,
   rangeMax,
-  seedData.result?.own_level,
+  finalCheckResult?.own_level || seedData.result?.own_level,
   finalCheckResult?.correction_direction,
   interpretation?.inner_authenticity_score
 );
