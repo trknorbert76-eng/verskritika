@@ -411,16 +411,31 @@ function getCorrectionOffset(correction) {
     "erősen feljebb": 0.10
   };
 
+  function getInterpretationOffset(innerScore) {
+  const s = Number(innerScore);
+
+  if (Number.isNaN(s)) return 0;
+
+  if (s >= 1 && s <= 3) return -0.10;
+  if (s === 4) return -0.06;
+  if (s >= 5 && s <= 6) return 0;
+  if (s >= 7 && s <= 8) return 0.06;
+  if (s >= 9 && s <= 10) return 0.10;
+
+  return 0;
+}
+
   return map[correction] ?? 0;
 }
 
-function calculateFinalScore(rangeMin, rangeMax, ownLevel, correctionDirection) {
+function calculateFinalScore(rangeMin, rangeMax, ownLevel, correctionDirection, innerScore) {
   const span = rangeMax - rangeMin;
 
   const position = getLevelPosition(ownLevel);
   const correction = getCorrectionOffset(correctionDirection);
+  const interpretationOffset = getInterpretationOffset(innerScore);
 
-  const raw = rangeMin + span * (position + correction);
+  const raw = rangeMin + span * (position + correction + interpretationOffset);
 
   return Math.round(clampScore(raw, rangeMin, rangeMax));
 }
@@ -680,7 +695,8 @@ const finalScore = calculateFinalScore(
   rangeMin,
   rangeMax,
   seedData.result?.own_level,
-  finalCheckResult?.correction_direction
+  finalCheckResult?.correction_direction,
+  interpretation?.inner_authenticity_score
 );
 
 finalCheckResult.final_score = finalScore;
