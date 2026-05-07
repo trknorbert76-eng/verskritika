@@ -240,6 +240,11 @@ button.next {
        <div class="miniTitle">Organikus vagy dekoratív?</div>
         <div class="valueBox" id="plainSummary">—</div>
       </div>
+
+      <div class="infoRow">
+  <div class="miniTitle">Belső működés pontszáma</div>
+  <div class="valueBox" id="innerScore">—</div>
+</div>
     </div>
 
     <div class="card">
@@ -389,6 +394,7 @@ function renderResult(result) {
   setText("deeperMeaning", result.deep_reading);
   setText("centralStake", result.inner_movement);
   setText("plainSummary", result.organic_vs_decorative);
+  setText("innerScore", result.inner_authenticity_score);
 
   fillList("keyMotifs", result.image_activation, "Nincs külön megadott képi aktiváció.");
   fillList("possibleReadings", result.symbolic_emotional_network, "Nincs külön megadott jelentésháló.");
