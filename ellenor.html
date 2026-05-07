@@ -699,11 +699,11 @@ const innerScore = Number(interpretation?.inner_authenticity_score || 0);
 if (innerScore >= 9) {
   finalCheckResult.correction_direction = "feljebb";
   finalCheckResult.distortion_direction = "enyhe alulértékelés";
+  finalCheckResult.own_level = "erős";
+  finalCheckResult.final_level = "erős";
 
   finalCheckResult.correction_reason =
     "Az értelmezés nagyon erős belső költői működést jelez, ezért a végső ellenőrzés felfelé korrigál.";
-
-  finalCheckResult.final_level = "erős";
 }
 
     
