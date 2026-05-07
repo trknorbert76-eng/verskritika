@@ -305,9 +305,14 @@ function safeParse(text) {
 function setText(id, value, fallback = "—") {
   const el = document.getElementById(id);
   if (!el) return;
-  el.textContent = typeof value === "string" && value.trim() ? value.trim() : fallback;
-}
 
+  if (value === null || value === undefined || value === "") {
+    el.textContent = fallback;
+    return;
+  }
+
+  el.textContent = String(value).trim();
+}
 function fillList(id, items, fallback) {
   const el = document.getElementById(id);
   if (!el) return;
