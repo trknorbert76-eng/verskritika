@@ -316,11 +316,29 @@ function fillList(id, items, fallback) {
     return;
   }
 
-  items.forEach(item => {
-    const li = document.createElement("li");
+items.forEach(item => {
+  const li = document.createElement("li");
+
+  if (typeof item === "object" && item !== null) {
+
+    if (item.image_or_phrase) {
+      li.textContent =
+        item.image_or_phrase +
+        " → " +
+        (Array.isArray(item.possible_emotional_activations)
+          ? item.possible_emotional_activations.join(", ")
+          : "");
+
+    } else {
+      li.textContent = JSON.stringify(item);
+    }
+
+  } else {
     li.textContent = String(item);
-    el.appendChild(li);
-  });
+  }
+
+  el.appendChild(li);
+});
 }
 
 function showLoading(message) {
