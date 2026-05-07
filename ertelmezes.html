@@ -195,25 +195,25 @@ button.next {
 
   <div class="layout" id="resultLayout">
     <div class="card">
-      <h2>Miről szól?</h2>
+      <h2>Belső működés</h2>
 
       <div class="infoRow">
-        <div class="miniTitle">Konkrét tárgy / felszíni téma</div>
+        <div class="miniTitle">Domináns belső állapot</div>
         <div class="valueBox" id="literalSubject">—</div>
       </div>
 
       <div class="infoRow">
-        <div class="miniTitle">Felszíni történés</div>
+        <div class="miniTitle">Érzelmi erőterek</div>
         <div class="valueBox" id="surfaceStory">—</div>
       </div>
 
       <div class="infoRow">
-        <div class="miniTitle">Beszélő helyzete</div>
+        <div class="miniTitle">Motívumkapcsolatok</div>
         <div class="valueBox" id="speakerPosition">—</div>
       </div>
 
       <div class="infoRow">
-        <div class="miniTitle">Központi alak / tárgy</div>
+       <div class="miniTitle">Rejtett feszültségek</div>
         <div class="valueBox" id="centralFigure">—</div>
       </div>
     </div>
@@ -222,7 +222,7 @@ button.next {
       <h2>Mélyebb jelentés</h2>
 
       <div class="infoRow">
-        <div class="miniTitle">Jelentésmag</div>
+       <div class="miniTitle">Miért ezek a képek?</div>
         <div class="valueBox" id="coreSubject">—</div>
       </div>
 
@@ -232,12 +232,12 @@ button.next {
       </div>
 
       <div class="infoRow">
-        <div class="miniTitle">A vers tétje</div>
+        <div class="miniTitle">Belső mozgás</div>
         <div class="valueBox" id="centralStake">—</div>
       </div>
 
       <div class="infoRow">
-        <div class="miniTitle">Egyszerű összefoglalás</div>
+       <div class="miniTitle">Organikus vagy dekoratív?</div>
         <div class="valueBox" id="plainSummary">—</div>
       </div>
     </div>
@@ -353,19 +353,28 @@ function hideInfo() {
 }
 
 function renderResult(result) {
-  setText("literalSubject", result.literal_subject);
-  setText("surfaceStory", result.surface_story);
-  setText("speakerPosition", result.speaker_position);
-  setText("centralFigure", result.central_figure_or_object);
+  setText("literalSubject", result.dominant_inner_state);
 
-  setText("coreSubject", result.core_subject);
-  setText("deeperMeaning", result.deeper_meaning);
-  setText("centralStake", result.central_stake);
-  setText("plainSummary", result.plain_summary);
+  setText("surfaceStory", Array.isArray(result.emotional_force_fields)
+    ? result.emotional_force_fields.join(", ")
+    : result.emotional_force_fields);
 
-  fillList("keyMotifs", result.key_motifs, "Nincs külön megadott motívum.");
-  fillList("possibleReadings", result.possible_readings, "Nincs külön többes olvasat.");
-  fillList("uncertainPoints", result.uncertain_points, "Nincs külön bizonytalanság.");
+  setText("speakerPosition", Array.isArray(result.motif_connections)
+    ? result.motif_connections.join("\n")
+    : result.motif_connections);
+
+  setText("centralFigure", Array.isArray(result.hidden_tensions)
+    ? result.hidden_tensions.join("\n")
+    : result.hidden_tensions);
+
+  setText("coreSubject", result.why_these_images);
+  setText("deeperMeaning", result.deep_reading);
+  setText("centralStake", result.inner_movement);
+  setText("plainSummary", result.organic_vs_decorative);
+
+  fillList("keyMotifs", result.image_activation, "Nincs külön megadott képi aktiváció.");
+  fillList("possibleReadings", result.symbolic_emotional_network, "Nincs külön megadott jelentésháló.");
+  fillList("uncertainPoints", result.uncertain_but_possible, "Nincs külön bizonytalanság.");
 
   setText("confidence", result.confidence);
 
