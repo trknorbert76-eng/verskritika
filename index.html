@@ -827,6 +827,8 @@ updateDepthProgress();
 
     const kindPack = JSON.parse(sessionStorage.getItem("analysis_kind") || "null");
     const kind = kindPack?.result || kindPack || {};
+    const interpretationPack = JSON.parse(sessionStorage.getItem("analysis_interpretation") || "null");
+const interpretation = interpretationPack?.result || interpretationPack || {};
 
     const response = await fetch(DEPTH_WORKER_URL, {
       method: "POST",
@@ -835,13 +837,15 @@ updateDepthProgress();
       },
       body: JSON.stringify({
         poem,
-        previous: {
-          kind: {
-            main_type: kind.main_type || "",
-            style_label: kind.style_label || "",
-            speech_mode: kind.speech_mode || "",
-            style_traits: kind.style_traits || []
-          }
+     previous: {
+  kind: {
+    main_type: kind.main_type || "",
+    style_label: kind.style_label || "",
+    speech_mode: kind.speech_mode || "",
+    style_traits: kind.style_traits || []
+  },
+  analysis_interpretation: interpretation
+}
         }
       })
     });
@@ -1029,7 +1033,9 @@ const basePrevious = {
     startCheckSeed(poem);
 
     // 3. HATÁS + MÉLYSÉG — külön worker, párhuzamosan indul
-    const depthPromise = startDepthAndImpactAnalysis(poem);
+const depthPromise = interpretationPromise.then(() =>
+  startDepthAndImpactAnalysis(poem)
+);
 
     // 4. RÉSZ-ELEMZŐK — PÁRHUZAMOSAN FUTNAK
     const structureStep = pipeline.find(s => s.key === "structure");
