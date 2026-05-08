@@ -500,7 +500,7 @@ const poem =
   const images = unwrapPack(savedImages);
   const expression = unwrapPack(savedExpression);
   const depth = unwrapPack(savedDepth);
- const impact = unwrapPack(savedImpact) || depth;
+ const impact = unwrapPack(savedImpact) || {};
   const interpretation = unwrapPack(savedInterpretation);
 
   const depthForCheck = depth ? {
