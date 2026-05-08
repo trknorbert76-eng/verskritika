@@ -623,8 +623,16 @@ const depthLoading = sessionStorage.getItem("step_depth_loading");
 
 let percent = 0;
 
-if (impactLoading || depthLoading) {
+if (depthLoading) {
   percent = Math.max(20, Math.floor(depthFakeProgress));
+}
+
+if (depthDone && !impactDone) {
+  percent = 50;
+}
+
+if (impactLoading && depthDone) {
+  percent = Math.max(55, Math.floor(depthFakeProgress));
 }
 
 if (impactDone && depthDone) {
@@ -642,16 +650,16 @@ if (percent > 0 && percent < 50) {
     btn.disabled = true;
     btn.classList.add("loading");
     box.classList.add("started");
-    btn.textContent = "Hatás + mélység folyamatban";
-    note.textContent = "A hatás és mélység háttérben dolgozik...";
+   btn.textContent = "Mélység dolgozik";
+note.textContent = "A mélység dolgozik a háttérben...";
   }
 
   if (percent >= 50 && percent < 100) {
     btn.disabled = true;
     btn.classList.add("loading");
     box.classList.add("half");
-    btn.textContent = "Hatás vagy mélység kész";
-    note.textContent = "Az egyik rész elkészült.";
+   btn.textContent = "Hatás dolgozik";
+note.textContent = "A mélység kész. A hatás dolgozik a háttérben...";
   }
 
   if (percent === 100) {
