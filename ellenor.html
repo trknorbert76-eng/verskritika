@@ -383,64 +383,7 @@ function setText(id, value, fallback = "—") {
   el.textContent = text;
 }
 
-function clampScore(score, min, max) {
-  return Math.max(min, Math.min(max, score));
-}
-
-function getLevelPosition(level) {
-  const map = {
-    "közhelyes": 0.20,
-    "gyenge": 0.30,
-    "vegyes": 0.45,
-    "részben egyedi": 0.55,
-    "erős": 0.65,
-    "kiemelkedő": 0.80
-  };
-
-  return map[level] ?? 0.5;
-}
-
-
-function getCorrectionOffset(correction) {
-  const map = {
-    "erősen lejjebb": -0.10,
-    "lejjebb": -0.06,
-    "kissé lejjebb": -0.03,
-    "nincs korrekció": 0,
-    "kissé feljebb": 0.03,
-    "feljebb": 0.06,
-    "erősen feljebb": 0.10
-  };
-
-  return map[correction] ?? 0;
-}
-
-function getInterpretationOffset(innerScore) {
-  const s = Number(innerScore);
-
-  if (Number.isNaN(s)) return 0;
-
-  if (s >= 1 && s <= 3) return -0.10;
-  if (s === 4) return -0.06;
-  if (s >= 5 && s <= 6) return 0;
-  if (s >= 7 && s <= 8) return 0.06;
-  if (s >= 9 && s <= 10) return 0.10;
-
-  return 0;
-}
-
-
-function calculateFinalScore(rangeMin, rangeMax, ownLevel, correctionDirection, innerScore) {
-  const span = rangeMax - rangeMin;
-
-  const position = getLevelPosition(ownLevel);
-  const correction = getCorrectionOffset(correctionDirection);
-  const interpretationOffset = getInterpretationOffset(innerScore);
-
-  const raw = rangeMin + span * (position + correction + interpretationOffset);
-
-  return Math.round(clampScore(raw, rangeMin, rangeMax));
-}
+  }
   
 function showNotice(message) {
   noticeEl.textContent = message;
