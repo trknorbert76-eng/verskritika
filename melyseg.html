@@ -487,10 +487,6 @@ function scoreToLabel(score) {
   return "kiemelkedő";
 }
 
-function applyImpactToDepthRange(depth) {
-  let min = Number(depth?.checker_min_score ?? 0);
-  let max = Number(depth?.checker_max_score ?? 100);
-
 function applyImpactToDepthRange(depth, impact) {
   let min = Number(depth?.checker_min_score ?? 0);
   let max = Number(depth?.checker_max_score ?? 100);
