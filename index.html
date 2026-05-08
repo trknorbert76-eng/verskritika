@@ -843,31 +843,17 @@ async function startDepthAndImpactAnalysis(poem) {
       analysis_interpretation: interpretation
     };
 
-    const depthFetch = fetch(DEPTH_WORKER_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        poem,
-        previous
-      })
-    });
-
-    const impactFetch = fetch(IMPACT_WORKER_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        poem,
-        previous
-      })
-    });
-
     const [depthResponse, impactResponse] = await Promise.all([
-      depthFetch,
-      impactFetch
+      fetch(DEPTH_WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ poem, previous })
+      }),
+      fetch(IMPACT_WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ poem, previous })
+      })
     ]);
 
     const depthData = await depthResponse.json();
@@ -887,9 +873,26 @@ async function startDepthAndImpactAnalysis(poem) {
     sessionStorage.setItem("step_depth_done", Date.now().toString());
     sessionStorage.setItem("step_impact_done", Date.now().toString());
 
+    sessionStorage.removeItem("step_depth_loading");
+    sessionStorage.removeItem("step_impact_loading");
+
+    stopFakeDepthProgress();
     updateDepthStatus();
     updateDepthProgress();
-      }
+
+    return {
+      depth: depthData.result,
+      impact: impactData.result
+    };
+
+  } catch (err) {
+    sessionStorage.removeItem("step_depth_loading");
+    sessionStorage.removeItem("step_impact_loading");
+    stopFakeDepthProgress();
+    updateDepthStatus();
+    updateDepthProgress();
+    throw err;
+  }
 }
 
 
