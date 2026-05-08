@@ -434,12 +434,7 @@
  if (!checkData || typeof checkData.final_score === "undefined") {
   score = applyImpactBoost(score, checkData, expression, structure, depthData);
 }
-
-    const minScore = Number(depthData?.checker_min_score);
-    const maxScore = Number(depthData?.checker_max_score);
-
-    if (!Number.isNaN(minScore) && score < minScore) score = minScore;
-    if (!Number.isNaN(maxScore) && score > maxScore) score = maxScore;
+ if (!Number.isNaN(maxScore) && score > maxScore) score = maxScore;
 
     return Math.max(0, Math.min(100, score));
   }
