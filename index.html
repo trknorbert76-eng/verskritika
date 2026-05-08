@@ -1206,7 +1206,7 @@ updateSummaryStatus();
  } catch (err) {
   console.error("INDEX HIBA:", err);
   showError(err.message || "Nem sikerült kapcsolódni az elemzőhöz.");
-}
+
   } finally {
     setLoading(false);
     updateCheckStatus();
