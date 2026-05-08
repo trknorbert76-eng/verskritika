@@ -612,7 +612,10 @@ function renderImpactDetails(depth) {
   }
 
   if (reasoningBox) {
-    reasoningBox.textContent = depth?.impact_reasoning || "Nincs külön hatásindoklás.";
+    reasoningBox.textContent =
+  depth?.impact_reasoning ||
+  depth?.reasoning ||
+  "Nincs külön hatásindoklás.";
   }
 
   if (!listBox) return;
