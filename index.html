@@ -346,6 +346,7 @@ button.done {
 </div>
 
 <script>
+const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
 const DEPTH_WORKER_URL = "https://melyseg-depth.trknorbert76.workers.dev";
 const IMPACT_WORKER_URL = "https://hatas-depth.trknorbert76.workers.dev";
 const INTERPRETATION_WORKER_URL = "https://ertelmezes.trknorbert76.workers.dev";
@@ -889,32 +890,6 @@ async function startDepthAndImpactAnalysis(poem) {
     updateDepthStatus();
     updateDepthProgress();
 
-    appendRunnerInfo("Hatás és mélység elemzés elkészült.");
-  } catch (err) {
-    appendRunnerInfo("A hatás/mélység elemzés most nem készült el.");
-    throw err;
-  } finally {
-    sessionStorage.removeItem("step_impact_loading");
-    sessionStorage.removeItem("step_depth_loading");
-    updateDepthStatus();
-    updateDepthProgress();
-  }
-}
-
-appendRunnerInfo("Hatás és mélység elemzés elkészült.");
-    } else {
-      throw new Error(data.error || "A hatás/mélység elemzés hibával leállt.");
-    }
-  } catch (err) {
-    appendRunnerInfo("A hatás/mélység elemzés most nem készült el.");
-    throw err;
-  } finally {
-    sessionStorage.removeItem("step_impact_loading");
-    sessionStorage.removeItem("step_depth_loading");
-   updateDepthStatus();
-updateDepthProgress();
-  }
-}
 
  checkStatusBtn.addEventListener("click", () => {
 window.location.href = "ellenor.html";
