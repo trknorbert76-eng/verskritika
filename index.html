@@ -346,10 +346,10 @@ button.done {
 </div>
 
 <script>
-const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
 const DEPTH_WORKER_URL = "https://melyseg-depth.trknorbert76.workers.dev";
+const IMPACT_WORKER_URL = "https://hatas-depth.trknorbert76.workers.dev";
 const INTERPRETATION_WORKER_URL = "https://ertelmezes.trknorbert76.workers.dev";
-
+  
 const analyzeBtn = document.getElementById("analyzeBtn");
 const checkStatusBtn = document.getElementById("checkStatusBtn");
 const depthStatusBtn = document.getElementById("depthStatusBtn");
@@ -819,56 +819,87 @@ async function startCheckSeed(poem) {
 
 async function startDepthAndImpactAnalysis(poem) {
   try {
-  sessionStorage.setItem("step_impact_loading", "1");
-sessionStorage.setItem("step_depth_loading", "1");
+    sessionStorage.setItem("step_impact_loading", "1");
+    sessionStorage.setItem("step_depth_loading", "1");
+
     startFakeDepthProgress();
-updateDepthStatus();
-updateDepthProgress();
+    updateDepthStatus();
+    updateDepthProgress();
 
     const kindPack = JSON.parse(sessionStorage.getItem("analysis_kind") || "null");
     const kind = kindPack?.result || kindPack || {};
-    const interpretationPack = JSON.parse(sessionStorage.getItem("analysis_interpretation") || "null");
-const interpretation = interpretationPack?.result || interpretationPack || {};
 
-    const response = await fetch(DEPTH_WORKER_URL, {
+    const interpretationPack = JSON.parse(sessionStorage.getItem("analysis_interpretation") || "null");
+    const interpretation = interpretationPack?.result || interpretationPack || {};
+
+    const previous = {
+      kind: {
+        main_type: kind.main_type || "",
+        style_label: kind.style_label || "",
+        speech_mode: kind.speech_mode || "",
+        style_traits: kind.style_traits || []
+      },
+      analysis_interpretation: interpretation
+    };
+
+    const depthFetch = fetch(DEPTH_WORKER_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
         poem,
-     previous: {
-  kind: {
-    main_type: kind.main_type || "",
-    style_label: kind.style_label || "",
-    speech_mode: kind.speech_mode || "",
-    style_traits: kind.style_traits || []
-  },
-  analysis_interpretation: interpretation
-}
-        })
+        previous
+      })
     });
 
-    const data = await response.json();
+    const impactFetch = fetch(IMPACT_WORKER_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        poem,
+        previous
+      })
+    });
 
-    if (response.ok && data.ok) {
+    const [depthResponse, impactResponse] = await Promise.all([
+      depthFetch,
+      impactFetch
+    ]);
 
-      // 🔹 HATÁS külön mentve
-      sessionStorage.setItem("analysis_impact", JSON.stringify({
-        impact_score: data.result.impact_score,
-        impact_level: data.result.impact_level,
-        highlighted_lines: data.result.highlighted_lines,
-        impact_reasoning: data.result.impact_reasoning
-      }));
+    const depthData = await depthResponse.json();
+    const impactData = await impactResponse.json();
 
-      // 🔹 MÉLYSÉG külön mentve
-      sessionStorage.setItem("analysis_depth", JSON.stringify(data.result));
+    if (!depthResponse.ok || !depthData.ok) {
+      throw new Error(depthData.error || "A mélység elemzés hibával leállt.");
+    }
 
-   sessionStorage.setItem("step_impact_done", Date.now().toString());
-sessionStorage.setItem("step_depth_done", Date.now().toString());
+    if (!impactResponse.ok || !impactData.ok) {
+      throw new Error(impactData.error || "A hatás elemzés hibával leállt.");
+    }
 
-updateDepthStatus();
-updateDepthProgress();
+    sessionStorage.setItem("analysis_depth", JSON.stringify(depthData.result));
+    sessionStorage.setItem("analysis_impact", JSON.stringify(impactData.result));
+
+    sessionStorage.setItem("step_depth_done", Date.now().toString());
+    sessionStorage.setItem("step_impact_done", Date.now().toString());
+
+    updateDepthStatus();
+    updateDepthProgress();
+
+    appendRunnerInfo("Hatás és mélység elemzés elkészült.");
+  } catch (err) {
+    appendRunnerInfo("A hatás/mélység elemzés most nem készült el.");
+    throw err;
+  } finally {
+    sessionStorage.removeItem("step_impact_loading");
+    sessionStorage.removeItem("step_depth_loading");
+    updateDepthStatus();
+    updateDepthProgress();
+  }
+}
 
 appendRunnerInfo("Hatás és mélység elemzés elkészült.");
     } else {
