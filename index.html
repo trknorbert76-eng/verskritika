@@ -818,12 +818,62 @@ async function startCheckSeed(poem) {
   }
 }
 
-async function startDepthAndImpactAnalysis(poem) {
+async function startDepthAnalysis(poem) {
   try {
-    sessionStorage.setItem("step_impact_loading", "1");
     sessionStorage.setItem("step_depth_loading", "1");
 
     startFakeDepthProgress();
+    updateDepthStatus();
+    updateDepthProgress();
+
+    const kindPack = JSON.parse(sessionStorage.getItem("analysis_kind") || "null");
+    const kind = kindPack?.result || kindPack || {};
+
+    const previous = {
+      kind: {
+        main_type: kind.main_type || "",
+        style_label: kind.style_label || "",
+        speech_mode: kind.speech_mode || "",
+        style_traits: kind.style_traits || []
+      }
+    };
+
+    const depthResponse = await fetch(DEPTH_WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ poem, previous })
+    });
+
+    const depthData = await depthResponse.json();
+
+    if (!depthResponse.ok || !depthData.ok) {
+      throw new Error(depthData.error || "A mélység elemzés hibával leállt.");
+    }
+
+    sessionStorage.setItem("analysis_depth", JSON.stringify(depthData.result));
+    sessionStorage.setItem("step_depth_done", Date.now().toString());
+
+    sessionStorage.removeItem("step_depth_loading");
+
+    updateDepthStatus();
+    updateDepthProgress();
+
+    return depthData.result;
+
+  } catch (err) {
+    sessionStorage.removeItem("step_depth_loading");
+
+    updateDepthStatus();
+    updateDepthProgress();
+
+    throw err;
+  }
+}
+
+async function startImpactAnalysis(poem) {
+  try {
+    sessionStorage.setItem("step_impact_loading", "1");
+
     updateDepthStatus();
     updateDepthProgress();
 
@@ -843,54 +893,36 @@ async function startDepthAndImpactAnalysis(poem) {
       analysis_interpretation: interpretation
     };
 
-    const [depthResponse, impactResponse] = await Promise.all([
-      fetch(DEPTH_WORKER_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ poem, previous })
-      }),
-      fetch(IMPACT_WORKER_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ poem, previous })
-      })
-    ]);
+    const impactResponse = await fetch(IMPACT_WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ poem, previous })
+    });
 
-    const depthData = await depthResponse.json();
     const impactData = await impactResponse.json();
-
-    if (!depthResponse.ok || !depthData.ok) {
-      throw new Error(depthData.error || "A mélység elemzés hibával leállt.");
-    }
 
     if (!impactResponse.ok || !impactData.ok) {
       throw new Error(impactData.error || "A hatás elemzés hibával leállt.");
     }
 
-    sessionStorage.setItem("analysis_depth", JSON.stringify(depthData.result));
     sessionStorage.setItem("analysis_impact", JSON.stringify(impactData.result));
-
-    sessionStorage.setItem("step_depth_done", Date.now().toString());
     sessionStorage.setItem("step_impact_done", Date.now().toString());
 
-    sessionStorage.removeItem("step_depth_loading");
     sessionStorage.removeItem("step_impact_loading");
 
     stopFakeDepthProgress();
+
     updateDepthStatus();
     updateDepthProgress();
 
-    return {
-      depth: depthData.result,
-      impact: impactData.result
-    };
+    return impactData.result;
 
   } catch (err) {
-    sessionStorage.removeItem("step_depth_loading");
     sessionStorage.removeItem("step_impact_loading");
-    stopFakeDepthProgress();
+
     updateDepthStatus();
     updateDepthProgress();
+
     throw err;
   }
 }
@@ -1042,9 +1074,10 @@ const basePrevious = {
     // 2. ELLENŐR SAJÁT ELSŐ OLVASATA — külön indul
     startCheckSeed(poem);
 
-    // 3. HATÁS + MÉLYSÉG — külön worker, párhuzamosan indul
-const depthPromise = interpretationPromise.then(() =>
-  startDepthAndImpactAnalysis(poem)
+const depthPromise = startDepthAnalysis(poem);
+
+const impactPromise = interpretationPromise.then(() =>
+  startImpactAnalysis(poem)
 );
 
     // 4. RÉSZ-ELEMZŐK — PÁRHUZAMOSAN FUTNAK
@@ -1095,20 +1128,22 @@ const depthPromise = interpretationPromise.then(() =>
 
     appendRunnerInfo("Szerkezet, ritmus, képek, kifejezésmód és hatás/mélység párhuzamosan fut...");
 
-  const [
+const [
   interpretation,
   structure,
   rhythm,
   images,
   expression,
-  depth
+  depth,
+  impact
 ] = await Promise.all([
   interpretationPromise,
   structurePromise,
   rhythmPromise,
   imageryPromise,
   expressionPromise,
-  depthPromise
+  depthPromise,
+  impactPromise
 ]);
 
     updateDepthStatus();
