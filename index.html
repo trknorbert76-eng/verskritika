@@ -654,13 +654,19 @@ if (percent > 0 && percent < 50) {
 note.textContent = "A mélység dolgozik a háttérben...";
   }
 
-  if (percent >= 50 && percent < 100) {
-    btn.disabled = true;
-    btn.classList.add("loading");
-    box.classList.add("half");
-   btn.textContent = "Hatás dolgozik";
-note.textContent = "A mélység kész. A hatás dolgozik a háttérben...";
+if (percent >= 50 && percent < 100) {
+  btn.disabled = true;
+  btn.classList.add("loading");
+  box.classList.add("half");
+
+  if (impactLoading) {
+    btn.textContent = "Hatás dolgozik";
+    note.textContent = "A mélység kész. A hatás dolgozik a háttérben...";
+  } else {
+    btn.textContent = "Hatás várakozik";
+    note.textContent = "A mélység kész. A hatás az értelmezésre vár...";
   }
+}
 
   if (percent === 100) {
     btn.disabled = false;
