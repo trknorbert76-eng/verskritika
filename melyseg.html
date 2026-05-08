@@ -491,8 +491,12 @@ function applyImpactToDepthRange(depth) {
   let min = Number(depth?.checker_min_score ?? 0);
   let max = Number(depth?.checker_max_score ?? 100);
 
-  const impactScore = Number(depth?.impact_score);
-  const impactLevel = String(depth?.impact_level || "").toLowerCase();
+function applyImpactToDepthRange(depth, impact) {
+  let min = Number(depth?.checker_min_score ?? 0);
+  let max = Number(depth?.checker_max_score ?? 100);
+
+  const impactScore = Number(impact?.impact_score);
+  const impactLevel = String(impact?.impact_level || "").toLowerCase();
 
   if (
     (!Number.isNaN(impactScore) && impactScore >= 70) ||
@@ -641,16 +645,24 @@ function fillView() {
     sessionStorage.getItem("poem") ||
     "Nincs betöltött vers.";
 
-  const savedDepth = safeParse(sessionStorage.getItem("analysis_depth") || "");
-  const depth = unwrapPack(savedDepth) || savedDepth || null;
+const savedDepth = safeParse(sessionStorage.getItem("analysis_depth") || "");
+const depth = unwrapPack(savedDepth) || savedDepth || null;
 
-  if (!depth) {
-    showError("Még nincs elkészült mélységi eredmény.");
-    return;
-  }
- renderPoemWithImpact(poem, depth.highlighted_lines || [], depth.cliche_lines || []);
-  renderImpactDetails(depth);
+const savedImpact = safeParse(sessionStorage.getItem("analysis_impact") || "");
+const impact = unwrapPack(savedImpact) || savedImpact || null;
 
+if (!depth) {
+  showError("Még nincs elkészült mélységi eredmény.");
+  return;
+}
+
+renderPoemWithImpact(
+  poem,
+  impact?.highlighted_lines || [],
+  impact?.cliche_lines || []
+);
+
+renderImpactDetails(impact || {});
   setText("q1Title", "1. " + (depth.q1_question || "—"));
   setText("q2Title", "2. " + (depth.q2_question || "—"));
   setText("q3Title", "3. " + (depth.q3_question || "—"));
@@ -675,7 +687,7 @@ function fillView() {
   setText("depthLevel", depth.depth_level, "—");
   setText("reasoningBox", depth.reasoning, "Nincs összegzés.");
 
-  const adjustedRange = applyImpactToDepthRange(depth);
+  const adjustedRange = applyImpactToDepthRange(depth, impact);
 
 depth.checker_min_score = adjustedRange.min;
 depth.checker_max_score = adjustedRange.max;
