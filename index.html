@@ -206,8 +206,8 @@ button.done {
 }
 
 .progressBox.done .progressFill {
-  width: 100%;
-  background: #4caf50;
+  width: 100% !important;
+  background: #4caf50 !important;
   animation: none;
 }
 
@@ -382,22 +382,28 @@ function startInterpretationFakeProgress() {
 
     const done = sessionStorage.getItem("step_interpretation_done");
 
-    if (done) {
-      interpretationFakeProgress = 100;
-      fill.style.width = "100%";
-      box.classList.remove("loading", "started", "half");
-      box.classList.add("done", "real");
-      stopInterpretationFakeProgress();
-      return;
-    }
+  if (done) {
+
+  interpretationFakeProgress = 100;
+
+  box.classList.remove("loading", "started", "half");
+  box.classList.add("done", "real");
+
+  fill.style.transition = "width 0.4s ease";
+  fill.style.width = "100%";
+  fill.style.background = "#4caf50";
+
+  stopInterpretationFakeProgress();
+  return;
+}
 
     if (interpretationFakeProgress < interpretationFakeTarget) {
-      interpretationFakeProgress += 1;
+      interpretationFakeProgress += 0.08;
       fill.style.width = interpretationFakeProgress + "%";
     }
 
     box.classList.add("loading", "started");
-  }, 80);
+  }, 100);
 }
 
 function setInterpretationFakeTarget(value) {
@@ -1106,7 +1112,7 @@ const interpretationStep = pipeline.find(s => s.key === "interpretation");
       startInterpretationFakeProgress();
 setInterpretationFakeTarget(20);
 
-      setInterpretationFakeTarget(50);
+      setInterpretationFakeTarget(95);
 
       const res = await fetch(INTERPRETATION_WORKER_URL, {
     method: "POST",
@@ -1120,7 +1126,7 @@ setInterpretationFakeTarget(20);
   });
 
   const data = await res.json();
-      setInterpretationFakeTarget(80);
+      setInterpretationFakeTarget(95);
 
   if (!res.ok || !data.ok) {
     throw new Error(data.error || "Az értelmezés hibával leállt.");
