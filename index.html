@@ -365,6 +365,52 @@ const runnerFrame = document.getElementById("runnerFrame");
   let depthFakeProgress = 0;
 let depthFakeTimer = null;
 
+  let interpretationFakeProgress = 0;
+let interpretationFakeTarget = 0;
+let interpretationFakeTimer = null;
+
+function startInterpretationFakeProgress() {
+  stopInterpretationFakeProgress();
+
+  interpretationFakeProgress = 0;
+  interpretationFakeTarget = 20;
+
+  interpretationFakeTimer = setInterval(() => {
+    const box = document.getElementById("box-interpretation");
+    const fill = box?.querySelector(".progressFill");
+    if (!box || !fill) return;
+
+    const done = sessionStorage.getItem("step_interpretation_done");
+
+    if (done) {
+      interpretationFakeProgress = 100;
+      fill.style.width = "100%";
+      box.classList.remove("loading", "started", "half");
+      box.classList.add("done", "real");
+      stopInterpretationFakeProgress();
+      return;
+    }
+
+    if (interpretationFakeProgress < interpretationFakeTarget) {
+      interpretationFakeProgress += 1;
+      fill.style.width = interpretationFakeProgress + "%";
+    }
+
+    box.classList.add("loading", "started");
+  }, 80);
+}
+
+function setInterpretationFakeTarget(value) {
+  interpretationFakeTarget = Math.max(interpretationFakeTarget, value);
+}
+
+function stopInterpretationFakeProgress() {
+  if (interpretationFakeTimer) {
+    clearInterval(interpretationFakeTimer);
+    interpretationFakeTimer = null;
+  }
+}
+
 const pipeline = [
   {
     key: "kind",
@@ -507,7 +553,9 @@ function resetStepUi(step) {
 
   btn.disabled = true;
   btn.textContent = step.waitingText;
-  btn.classList.remove("loading", "done");
+  box.classList.remove("loading", "done", "started", "half", "real");
+const fill = box.querySelector(".progressFill");
+if (fill) fill.style.width = "0%";
 
   box.classList.remove("loading", "done");
   note.textContent = "Még nem indult el.";
@@ -1055,6 +1103,10 @@ updateDepthProgress();
 // 2. ÉRTELMEZÉS — PÁRHUZAMOSRA ÁLLÍTVA
 const interpretationStep = pipeline.find(s => s.key === "interpretation");
     const interpretationPromise = runStepWithUi(interpretationStep, async () => {
+      startInterpretationFakeProgress();
+setInterpretationFakeTarget(20);
+
+      setInterpretationFakeTarget(50);
 
       const res = await fetch(INTERPRETATION_WORKER_URL, {
     method: "POST",
@@ -1068,10 +1120,13 @@ const interpretationStep = pipeline.find(s => s.key === "interpretation");
   });
 
   const data = await res.json();
+      setInterpretationFakeTarget(80);
 
   if (!res.ok || !data.ok) {
     throw new Error(data.error || "Az értelmezés hibával leállt.");
   }
+
+      setInterpretationFakeTarget(95);
 
   sessionStorage.setItem("analysis_interpretation", JSON.stringify(data.result));
   sessionStorage.setItem("step_interpretation_done", Date.now().toString());
