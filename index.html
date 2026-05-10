@@ -671,14 +671,21 @@ function updateCheckStatus() {
   if (!btn || !box || !note) return;
 
   const fill = box.querySelector(".progressFill");
-    box.classList.add("slow");
 
 const hasImpact = sessionStorage.getItem("analysis_impact");
 const impactDone = sessionStorage.getItem("step_impact_done") || hasImpact;
-const impactLoading = sessionStorage.getItem("step_impact_loading");
 
 const hasDepth = sessionStorage.getItem("analysis_depth");
 const depthDone = sessionStorage.getItem("step_depth_done") || hasDepth;
+
+if (impactDone && depthDone) {
+  box.classList.remove("slow");
+  if (fill) fill.style.transition = "width 0.35s ease";
+} else {
+  box.classList.add("slow");
+}
+
+const impactLoading = sessionStorage.getItem("step_impact_loading");
 const depthLoading = sessionStorage.getItem("step_depth_loading");
 
   btn.classList.remove("loading", "done");
@@ -701,7 +708,17 @@ if (impactLoading && depthDone) {
 if (impactDone && depthDone) {
   percent = 100;
 }
-  fill.style.width = percent + "%";
+  if (percent === 100) {
+  box.classList.remove("slow");
+  if (fill) {
+    fill.style.transition = "none";
+    fill.style.width = "100%";
+  }
+} else {
+  if (fill) {
+    fill.style.width = percent + "%";
+  }
+}
 
   if (percent === 0) {
     btn.disabled = true;
@@ -731,14 +748,20 @@ if (percent >= 50 && percent < 100) {
   }
 }
 
-  if (percent === 100) {
-    btn.disabled = false;
-    btn.classList.add("done");
-    box.classList.add("done", "real");
-    btn.textContent = "Hatás + mélység kész";
-    note.textContent = "Az eredmény elkészült, az oldal megnyitható.";
-    btn.onclick = () => window.location.href = "melyseg.html";
+if (percent === 100) {
+  box.classList.remove("slow");
+  if (fill) {
+    fill.style.transition = "none";
+    fill.style.width = "100%";
   }
+
+  btn.disabled = false;
+  btn.classList.add("done");
+  box.classList.add("done", "real");
+  btn.textContent = "Hatás + mélység kész";
+  note.textContent = "Az eredmény elkészült, az oldal megnyitható.";
+  btn.onclick = () => window.location.href = "melyseg.html";
+   }
 }
 
   function startFakeDepthProgress() {
