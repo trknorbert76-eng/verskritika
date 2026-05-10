@@ -795,21 +795,17 @@ if (percent >= 50 && percent < 100) {
   if (impactLoading) {
     btn.textContent = "Hatás folyamatban";
     note.textContent = "A hatás dolgozik a háttérben...";
- else {
-
-  if (depthFakeProgress < 55) {
-
-    btn.textContent = "Mélység folyamatban";
-    note.textContent = "A mélység dolgozik a háttérben...";
-
   } else {
-
-    btn.textContent = "Hatás vár";
-    note.textContent = "A hatás az értelmezés eredményére vár...";
-
+    if (depthFakeProgress < 55) {
+      btn.textContent = "Mélység folyamatban";
+      note.textContent = "A mélység dolgozik a háttérben...";
+    } else {
+      btn.textContent = "Hatás vár";
+      note.textContent = "A hatás az értelmezés eredményére vár...";
+    }
   }
 }
-
+    
 if (percent === 100) {
   box.classList.remove("slow");
   if (fill) {
