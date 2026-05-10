@@ -171,6 +171,10 @@ button.done {
   transition: width 0.35s ease;
 }
 
+.progressBox.slow .progressFill {
+  transition: width 40s linear;
+}
+
 .progressBox.loading {
   background: #4a3508;
   border-color: #d6b36a;
@@ -557,16 +561,20 @@ function resetStepUi(step) {
   const box = document.getElementById(step.boxId);
   const note = document.getElementById(step.noteId);
 
-  btn.disabled = true;
-  btn.textContent = step.waitingText;
-  box.classList.remove("loading", "done", "started", "half", "real");
+btn.disabled = true;
+btn.textContent = step.waitingText;
+
+box.classList.remove("loading", "done", "started", "half", "real", "slow");
+
 const fill = box.querySelector(".progressFill");
-if (fill) fill.style.width = "0%";
+if (fill) {
+  fill.style.transition = "";
+  fill.style.width = "0%";
+}
 
-  box.classList.remove("loading", "done");
-  note.textContent = "Még nem indult el.";
+note.textContent = "Még nem indult el.";
 
-  btn.onclick = null;
+btn.onclick = null;
 }
 
 function setStepLoading(step) {
@@ -663,6 +671,7 @@ function updateCheckStatus() {
   if (!btn || !box || !note) return;
 
   const fill = box.querySelector(".progressFill");
+    box.classList.add("slow");
 
 const hasImpact = sessionStorage.getItem("analysis_impact");
 const impactDone = sessionStorage.getItem("step_impact_done") || hasImpact;
@@ -807,11 +816,11 @@ if (impactLoading && depthLoading) {
     return;
   }
 
-  if (hasDepth && depthDone) {
-    depthStatusBtn.classList.add("done");
-    depthStatusBtn.textContent = "Mélység: kész";
-    return;
-  }
+if (hasDepth && depthDone) {
+  depthStatusBtn.classList.add("seed", "pulse");
+  depthStatusBtn.textContent = "Mélység kész, hatás vár...";
+  return;
+}
 
   depthStatusBtn.classList.add("secondary");
   depthStatusBtn.textContent = "Elemzés: nincs";
