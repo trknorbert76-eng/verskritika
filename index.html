@@ -831,31 +831,42 @@ if (percent === 100) {
    }
 }
 
-  function startFakeDepthProgress() {
+function startFakeDepthProgress() {
   stopFakeDepthProgress();
 
   depthFakeProgress = 18;
 
   depthFakeTimer = setInterval(() => {
-
     const hasImpact = sessionStorage.getItem("step_impact_done");
     const hasDepth = sessionStorage.getItem("step_depth_done");
+    const impactLoading = sessionStorage.getItem("step_impact_loading");
 
-    // ha kész → leáll
     if (hasImpact && hasDepth) {
       stopFakeDepthProgress();
       return;
     }
 
-    // lassú növekedés
-    if (depthFakeProgress < 35) {
-      depthFakeProgress += 2;
-    } else if (depthFakeProgress < 55) {
-      depthFakeProgress += 1.2;
-    } else if (depthFakeProgress < 75) {
-      depthFakeProgress += 0.6;
-    } else if (depthFakeProgress < 88) {
-      depthFakeProgress += 0.25;
+    // MÉLYSÉG FUT: lassan menjen 50-55 környékéig
+    if (!hasDepth) {
+      if (depthFakeProgress < 35) {
+        depthFakeProgress += 2;
+      } else if (depthFakeProgress < 55) {
+        depthFakeProgress += 1.1;
+      }
+    }
+
+    // MÉLYSÉG KÉSZ, HATÁS MÉG NEM INDULT:
+    // itt álljon, ne másszon tovább titokban
+    if (hasDepth && !impactLoading && !hasImpact) {
+      depthFakeProgress = 55;
+    }
+
+    // HATÁS ELINDULT:
+    // innen lassan másszon 95-96%-ig kb. 40 mp alatt
+    if (hasDepth && impactLoading && !hasImpact) {
+      if (depthFakeProgress < 96) {
+        depthFakeProgress += 0.7;
+      }
     }
 
     updateDepthProgress();
@@ -1048,6 +1059,7 @@ async function startDepthAnalysis(poem) {
 async function startImpactAnalysis(poem) {
   try {
     sessionStorage.setItem("step_impact_loading", "1");
+    depthFakeProgress = Math.max(55, Math.min(depthFakeProgress, 56));
 
     updateDepthStatus();
     updateDepthProgress();
