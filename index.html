@@ -795,6 +795,11 @@ if (percent >= 50 && percent < 100) {
   if (impactLoading) {
     btn.textContent = "Hatás folyamatban";
     note.textContent = "A hatás dolgozik a háttérben...";
+
+     if (fill) {
+    fill.style.transition = "width 0.7s linear";
+  }
+    
   } else {
     if (depthFakeProgress < 55) {
       btn.textContent = "Mélység folyamatban";
