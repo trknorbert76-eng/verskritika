@@ -369,6 +369,58 @@ const runnerFrame = document.getElementById("runnerFrame");
   let depthFakeProgress = 0;
 let depthFakeTimer = null;
 
+  let checkFakeTimer = null;
+let checkFakeProgress = 0;
+
+function startFakeCheckProgress() {
+  stopFakeCheckProgress();
+
+  const box = document.getElementById("box-check");
+  const fill = box?.querySelector(".progressFill");
+  const note = document.getElementById("note-check");
+
+  if (!box || !fill || !note) return;
+
+  checkFakeProgress = 0;
+
+  box.classList.remove("done", "real", "slow");
+  box.classList.add("loading", "half");
+
+  fill.style.transition = "width 0.25s linear";
+  fill.style.width = "0%";
+
+  note.textContent = "Az ellenőr dolgozik a háttérben...";
+
+  checkFakeTimer = setInterval(() => {
+    if (checkFakeProgress < 95) {
+      checkFakeProgress += 2;
+      fill.style.width = checkFakeProgress + "%";
+    }
+  }, 250);
+}
+
+function finishFakeCheckProgress() {
+  stopFakeCheckProgress();
+
+  const box = document.getElementById("box-check");
+  const fill = box?.querySelector(".progressFill");
+
+  if (!box || !fill) return;
+
+  box.classList.remove("loading", "half");
+  box.classList.add("done", "real");
+
+  fill.style.transition = "width 0.35s ease";
+  fill.style.width = "100%";
+}
+
+function stopFakeCheckProgress() {
+  if (checkFakeTimer) {
+    clearInterval(checkFakeTimer);
+    checkFakeTimer = null;
+  }
+}
+
   let interpretationFakeProgress = 0;
 let interpretationFakeTarget = 0;
 let interpretationFakeTimer = null;
@@ -1258,9 +1310,11 @@ const [
     // 5. ELLENŐR — CSAK MOST INDUL, HA MINDEN KÉSZ
     const checkStep = pipeline.find(s => s.key === "check");
 
-    appendRunnerInfo("Minden szükséges rész elkészült. Ellenőr indul...");
+ appendRunnerInfo("Minden szükséges rész elkészült. Ellenőr indul...");
 
-    const check = await runStepWithUi(checkStep, () =>
+startFakeCheckProgress();
+
+const check = await runStepWithUi(checkStep, () =>
       runWorkerStep(
         "check",
         "analysis_check",
@@ -1279,7 +1333,7 @@ const [
         }
       )
     );
-
+    finishFakeCheckProgress();
     updateCheckStatus();
 
     // 6. ÖSSZEGZÉS — ezt meghagyhatjuk iframe-ben, mert az oldalad valószínűleg sessionStorage-ból dolgozik
@@ -1296,7 +1350,8 @@ appendRunnerInfo("Összegzés kész.");
 updateSummaryStatus();
 
     showOk("Minden elemzés elkészült. Beléphetsz bármelyik oldalra.");
- } catch (err) {
+} catch (err) {
+  stopFakeCheckProgress();
   console.error("INDEX HIBA:", err);
   showError(err.message || "Nem sikerült kapcsolódni az elemzőhöz.");
 
