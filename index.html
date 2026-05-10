@@ -779,12 +779,13 @@ if (impactDone && depthDone) {
   }
 
 if (percent > 0 && percent < 50) {
-    btn.disabled = true;
-    btn.classList.add("loading");
-    box.classList.add("started");
-   btn.textContent = "Mélység dolgozik";
-note.textContent = "A mélység dolgozik a háttérben...";
-  }
+  btn.disabled = true;
+  btn.classList.add("loading");
+  box.classList.add("started");
+
+  btn.textContent = "Mélység folyamatban";
+  note.textContent = "A mélység dolgozik a háttérben...";
+}
 
 if (percent >= 50 && percent < 100) {
   btn.disabled = true;
@@ -792,11 +793,11 @@ if (percent >= 50 && percent < 100) {
   box.classList.add("half");
 
   if (impactLoading) {
-    btn.textContent = "Hatás dolgozik";
-    note.textContent = "A mélység kész. A hatás dolgozik a háttérben...";
+    btn.textContent = "Hatás folyamatban";
+    note.textContent = "A hatás dolgozik a háttérben...";
   } else {
-    btn.textContent = "Hatás várakozik";
-    note.textContent = "A mélység kész. A hatás az értelmezésre vár...";
+    btn.textContent = "Hatás vár";
+    note.textContent = "A hatás az értelmezés eredményére vár...";
   }
 }
 
