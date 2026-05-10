@@ -802,6 +802,10 @@ if (percent >= 50 && percent < 100) {
     } else {
       btn.textContent = "Hatás vár";
       note.textContent = "A hatás az értelmezés eredményére vár...";
+
+      if (fill) {
+        fill.style.transition = "none";
+      }
     }
   }
 }
@@ -899,7 +903,15 @@ if (impactLoading && depthLoading) {
 
 if (hasDepth && depthDone) {
   depthStatusBtn.classList.add("seed", "pulse");
-  depthStatusBtn.textContent = "Mélység kész, hatás vár...";
+
+  if (depthFakeProgress < 55) {
+    depthStatusBtn.textContent = "Mélység dolgozik...";
+  } else if (impactLoading) {
+    depthStatusBtn.textContent = "Hatás dolgozik...";
+  } else {
+    depthStatusBtn.textContent = "Hatás értelmezésre vár...";
+  }
+
   return;
 }
 
