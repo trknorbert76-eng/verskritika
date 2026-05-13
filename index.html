@@ -288,6 +288,14 @@ button.done {
 </div>
 
     <div class="stepRow">
+  <button class="stepBtn" id="btn-inner" disabled>Belső mérés várakozik</button>
+  <div>
+    <div class="progressBox" id="box-inner"><div class="progressFill"></div></div>
+    <div class="stepNote" id="note-inner">Még nem indult el.</div>
+  </div>
+</div>
+
+    <div class="stepRow">
       <button class="stepBtn" id="btn-structure" disabled>Szerkezet várakozik</button>
       <div>
         <div class="progressBox" id="box-structure"><div class="progressFill"></div></div>
@@ -354,6 +362,7 @@ const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
 const DEPTH_WORKER_URL = "https://melyseg-depth.trknorbert76.workers.dev";
 const IMPACT_WORKER_URL = "https://hatas-depth.trknorbert76.workers.dev";
 const INTERPRETATION_WORKER_URL = "https://ertelmezes.trknorbert76.workers.dev";
+  const INNER_WORKER_URL = "https://belsomeres.trknorbert76.workers.dev";
   
 const analyzeBtn = document.getElementById("analyzeBtn");
 const checkStatusBtn = document.getElementById("checkStatusBtn");
@@ -498,6 +507,19 @@ const pipeline = [
   loadingText: "Értelmezés folyamatban",
   doneText: "Értelmezés kész"
 },
+{
+  key: "inner",
+  doneKey: "step_inner_measure_done",
+  page: "belsomeres.html?autorun=1",
+  targetPage: "belsomeres.html",
+  buttonId: "btn-inner",
+  boxId: "box-inner",
+  noteId: "note-inner",
+  waitingText: "Belső mérés várakozik",
+  loadingText: "Belső mérés folyamatban",
+  doneText: "Belső mérés kész"
+},
+  
    {
     key: "structure",
     doneKey: "step_structure_done",
@@ -678,6 +700,7 @@ function clearStepStorage() {
   sessionStorage.removeItem("analysis_impact");
   sessionStorage.removeItem("analysis_depth");
   sessionStorage.removeItem("analysis_summary");
+  sessionStorage.removeItem("analysis_inner_measure");
 
   sessionStorage.removeItem("step_kind_done");
   sessionStorage.removeItem("step_interpretation_done");
@@ -691,6 +714,8 @@ function clearStepStorage() {
   sessionStorage.removeItem("step_depth_done");
   sessionStorage.removeItem("step_depth_loading");
   sessionStorage.removeItem("step_summary_done");
+  sessionStorage.removeItem("step_inner_measure_done");
+sessionStorage.removeItem("step_inner_measure_loading");
 }
 
 function resetAllStepUi() {
@@ -1114,6 +1139,47 @@ async function startImpactAnalysis(poem) {
   }
 }
 
+  async function startInnerMeasure(poem, kind) {
+  try {
+    sessionStorage.setItem("step_inner_measure_loading", "1");
+
+    const innerStep = pipeline.find(s => s.key === "inner");
+
+    const result = await runStepWithUi(innerStep, async () => {
+      const res = await fetch(INNER_WORKER_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          poem,
+          previous: {
+            kind
+          }
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || "A belső mérés hibával leállt.");
+      }
+
+      sessionStorage.setItem("analysis_inner_measure", JSON.stringify(data.result));
+      sessionStorage.setItem("step_inner_measure_done", Date.now().toString());
+      sessionStorage.removeItem("step_inner_measure_loading");
+
+      return data.result;
+    });
+
+    return result;
+
+  } catch (err) {
+    sessionStorage.removeItem("step_inner_measure_loading");
+    throw err;
+  }
+}
+
 
  checkStatusBtn.addEventListener("click", () => {
 window.location.href = "ellenor.html";
@@ -1263,6 +1329,8 @@ const basePrevious = {
   kind
 };
 
+  const innerPromise = startInnerMeasure(poem, kind);  
+
 
 
     // 2. ELLENŐR SAJÁT ELSŐ OLVASATA — külön indul
@@ -1320,10 +1388,11 @@ const impactPromise = interpretationPromise.then(() =>
       )
     );
 
-    appendRunnerInfo("Szerkezet, ritmus, képek, kifejezésmód és hatás/mélység párhuzamosan fut...");
+    appendRunnerInfo("Értelmezés, belső mérés, szerkezet, ritmus, képek, kifejezésmód és hatás/mélység párhuzamosan fut...");
 
 const [
   interpretation,
+  innerMeasure,
   structure,
   rhythm,
   images,
@@ -1332,6 +1401,7 @@ const [
   impact
 ] = await Promise.all([
   interpretationPromise,
+  innerPromise,
   structurePromise,
   rhythmPromise,
   imageryPromise,
@@ -1358,6 +1428,7 @@ const check = await runStepWithUi(checkStep, () =>
         {
           kind,
           interpretation,
+          inner_measure: innerMeasure,
           structure,
           rhythm,
           images,
