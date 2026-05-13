@@ -334,14 +334,14 @@ function setBlock(name, data) {
 }
 
 function renderResult(result) {
-  setBlock("presence", result.presence);
-  setBlock("transformation", result.transformation);
-  setBlock("memorability", result.memorability);
-  setBlock("risk", result.risk);
-  setBlock("musicality", result.musicality);
-  setBlock("density", result.density);
-  setBlock("silence", result.silence);
-  setBlock("stakes", result.stakes);
+  setBlock("presence", result.textual_support);
+  setBlock("transformation", result.necessity);
+  setBlock("memorability", result.coherence);
+  setBlock("risk", result.resistance_to_overreading);
+  setBlock("musicality", result.concrete_power);
+  setBlock("density", result.empty_depth_risk);
+  setBlock("silence", result.compression);
+  setBlock("stakes", result.independent_poetic_life);
 
   document.getElementById("overallScore").textContent =
     result.overall_score !== undefined && result.overall_score !== null
@@ -390,6 +390,7 @@ async function runInnerMeasure(forceRefresh = false) {
     sessionStorage.setItem("step_inner_measure_loading", "1");
 
     const kind = safeParse(sessionStorage.getItem("analysis_kind") || "") || {};
+const interpretation = safeParse(sessionStorage.getItem("analysis_interpretation") || "") || {};
 
     const res = await fetch(INNER_WORKER_URL, {
       method: "POST",
@@ -398,9 +399,10 @@ async function runInnerMeasure(forceRefresh = false) {
       },
       body: JSON.stringify({
         poem,
-        previous: {
-          kind
-        }
+     previous: {
+  kind,
+  interpretation
+}
       })
     });
 
