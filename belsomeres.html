@@ -318,30 +318,52 @@ function safeParse(jsonText) {
   }
 }
 
-function getScoreText(obj) {
-  const n = Number(obj?.score);
+function getScoreText(data, fallbackScore) {
+  let n;
+
+  if (typeof data === "number") {
+    n = data;
+  } else if (data && typeof data === "object") {
+    n = Number(data.score);
+  } else {
+    n = Number(fallbackScore);
+  }
+
   if (Number.isNaN(n)) return "—";
   return n + " / 10";
 }
 
-function getReason(obj) {
-  return obj?.reason || "Nincs indoklás.";
+function getReason(data, fallbackReason) {
+  if (data && typeof data === "object" && data.reason) {
+    return data.reason;
+  }
+
+  if (fallbackReason) {
+    return fallbackReason;
+  }
+
+  return "Nincs indoklás.";
 }
 
-function setBlock(name, data) {
-  document.getElementById(name + "Score").textContent = getScoreText(data);
-  document.getElementById(name + "Reason").textContent = getReason(data);
+function setBlock(name, data, fallbackScore, fallbackReason) {
+  document.getElementById(name + "Score").textContent =
+    getScoreText(data, fallbackScore);
+
+  document.getElementById(name + "Reason").textContent =
+    getReason(data, fallbackReason);
 }
 
 function renderResult(result) {
-  setBlock("presence", result.textual_support);
-  setBlock("transformation", result.necessity);
-  setBlock("memorability", result.coherence);
-  setBlock("risk", result.resistance_to_overreading);
-  setBlock("musicality", result.concrete_power);
-  setBlock("density", result.empty_depth_risk);
-  setBlock("silence", result.compression);
-  setBlock("stakes", result.independent_poetic_life);
+  console.log("BELSŐ MÉRÉS RESULT:", result);
+
+  setBlock("presence", result.textual_support, result.textual_support_score, result.textual_support_reason);
+  setBlock("transformation", result.necessity, result.necessity_score, result.necessity_reason);
+  setBlock("memorability", result.coherence, result.coherence_score, result.coherence_reason);
+  setBlock("risk", result.resistance_to_overreading, result.resistance_to_overreading_score, result.resistance_to_overreading_reason);
+  setBlock("musicality", result.concrete_power, result.concrete_power_score, result.concrete_power_reason);
+  setBlock("density", result.empty_depth_risk, result.empty_depth_risk_score, result.empty_depth_risk_reason);
+  setBlock("silence", result.compression, result.compression_score, result.compression_reason);
+  setBlock("stakes", result.independent_poetic_life, result.independent_poetic_life_score, result.independent_poetic_life_reason);
 
   document.getElementById("overallScore").textContent =
     result.overall_score !== undefined && result.overall_score !== null
