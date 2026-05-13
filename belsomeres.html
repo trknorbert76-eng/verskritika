@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Belső mérés</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Georgia, serif;
+  background: #111;
+  color: #eee;
+}
+
+.wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 30px 20px 60px;
+}
+
+h1 {
+  font-size: 2.1rem;
+  margin-bottom: 10px;
+}
+
+.intro {
+  color: #bbb;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #d6b36a;
+  color: #111;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+button.secondary {
+  background: #2b2b2b;
+  color: #eee;
+  border: 1px solid #444;
+}
+
+button.next {
+  background: #4caf50;
+  color: #fff;
+}
+
+.loadingBox,
+.errorBox,
+.infoBox {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.loadingBox {
+  display: none;
+  background: #151515;
+  border: 1px solid #333;
+  color: #cfcfcf;
+}
+
+.errorBox {
+  display: none;
+  background: #2a1616;
+  border: 1px solid #6a2c2c;
+  color: #f0c7c7;
+}
+
+.infoBox {
+  display: none;
+  background: #162417;
+  border: 1px solid #2f6a35;
+  color: #cdeccf;
+}
+
+.grid {
+  display: none;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.card {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.card h2 {
+  margin: 0 0 10px;
+  color: #d6b36a;
+  font-size: 1.1rem;
+}
+
+.score {
+  font-size: 1.55rem;
+  color: #fff;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.reason {
+  background: #121212;
+  border: 1px solid #2c2c2c;
+  border-radius: 10px;
+  padding: 12px 14px;
+  line-height: 1.6;
+}
+
+.summaryBox {
+  display: none;
+  margin-top: 22px;
+  background: #1a1a1a;
+  border: 1px solid #6b5520;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.summaryBox h2 {
+  margin-top: 0;
+  color: #d6b36a;
+}
+
+.poemPreview {
+  display: none;
+  margin-top: 24px;
+  background: #151515;
+  border: 1px solid #303030;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.poemPreview h2 {
+  margin-top: 0;
+  color: #d6b36a;
+  font-size: 1.05rem;
+}
+
+.poemText {
+  white-space: pre-wrap;
+  color: #ddd;
+  line-height: 1.7;
+}
+
+.footerRow {
+  display: none;
+  margin-top: 24px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 860px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+  <h1>Belső mérés</h1>
+
+  <p class="intro">
+    Ez az oldal a vers finomabb belső költészeti mércéit mutatja: jelenlét, átalakulás, memorabilitás, kockázat, nyelvi zeneiség, sűrűség, csend és tét.
+  </p>
+
+  <div class="topbar">
+    <button class="secondary" id="backBtn">← Vissza az értelmezéshez</button>
+    <button id="reloadBtn">Újramérés</button>
+  </div>
+
+  <div class="loadingBox" id="loadingBox">A belső mérés folyamatban...</div>
+  <div class="errorBox" id="errorBox"></div>
+  <div class="infoBox" id="infoBox"></div>
+
+  <div class="grid" id="resultGrid">
+
+    <div class="card">
+      <h2>Jelenlét / hitelesség</h2>
+      <div class="score" id="presenceScore">—</div>
+      <div class="reason" id="presenceReason">—</div>
+    </div>
+
+    <div class="card">
+      <h2>Átalakulás intenzitása</h2>
+      <div class="score" id="transformationScore">—</div>
+      <div class="reason" id="transformationReason">—</div>
+    </div>
+
+    <div class="card">
+      <h2>Memorabilitás</h2>
+      <div class="score" id="memorabilityScore">—</div>
+      <div class="reason" id="memorabilityReason">—</div>
+    </div>
+
+    <div class="card">
+      <h2>Költői kockázat</h2>
+      <div class="score" id="riskScore">—</div>
+      <div class="reason" id="riskReason">—</div>
+    </div>
+
+    <div class="card">
+      <h2>Nyelvi zeneiség</h2>
+      <div class="score" id="musicalityScore">—</div>
+      <div class="reason" id="musicalityReason">—</div>
+    </div>
+
+    <div class="card">
+      <h2>Sűrűség / rétegzettség</h2>
+      <div class="score" id="densityScore">—</div>
+      <div class="reason" id="densityReason">—</div>
+    </div>
+
+    <div class="card">
+      <h2>Csend / kimondatlanság</h2>
+      <div class="score" id="silenceScore">—</div>
+      <div class="reason" id="silenceReason">—</div>
+    </div>
+
+    <div class="card">
+      <h2>Tét</h2>
+      <div class="score" id="stakesScore">—</div>
+      <div class="reason" id="stakesReason">—</div>
+    </div>
+
+  </div>
+
+  <div class="summaryBox" id="summaryBox">
+    <h2>Összkép</h2>
+    <div class="score" id="overallScore">—</div>
+    <div class="reason" id="summaryText">—</div>
+  </div>
+
+  <div class="poemPreview" id="poemPreview">
+    <h2>A vizsgált vers</h2>
+    <div class="poemText" id="poemText"></div>
+  </div>
+
+  <div class="footerRow" id="footerRow">
+    <button class="next" id="nextBtn">Tovább a mélységhez →</button>
+  </div>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const autorun = params.get("autorun") === "1";
+
+const INNER_WORKER_URL = "https://belsomeres.trknorbert76.workers.dev";
+const NEXT_PAGE = "melyseg.html";
+
+const loadingBox = document.getElementById("loadingBox");
+const errorBox = document.getElementById("errorBox");
+const infoBox = document.getElementById("infoBox");
+const resultGrid = document.getElementById("resultGrid");
+const summaryBox = document.getElementById("summaryBox");
+const poemPreview = document.getElementById("poemPreview");
+const poemText = document.getElementById("poemText");
+const footerRow = document.getElementById("footerRow");
+
+const backBtn = document.getElementById("backBtn");
+const reloadBtn = document.getElementById("reloadBtn");
+const nextBtn = document.getElementById("nextBtn");
+
+function showLoading(message) {
+  loadingBox.textContent = message;
+  loadingBox.style.display = "block";
+}
+
+function hideLoading() {
+  loadingBox.style.display = "none";
+}
+
+function showError(message) {
+  errorBox.textContent = message;
+  errorBox.style.display = "block";
+}
+
+function hideError() {
+  errorBox.textContent = "";
+  errorBox.style.display = "none";
+}
+
+function showInfo(message) {
+  infoBox.textContent = message;
+  infoBox.style.display = "block";
+}
+
+function hideInfo() {
+  infoBox.textContent = "";
+  infoBox.style.display = "none";
+}
+
+function safeParse(jsonText) {
+  try {
+    return JSON.parse(jsonText);
+  } catch {
+    return null;
+  }
+}
+
+function getScoreText(obj) {
+  const n = Number(obj?.score);
+  if (Number.isNaN(n)) return "—";
+  return n + " / 10";
+}
+
+function getReason(obj) {
+  return obj?.reason || "Nincs indoklás.";
+}
+
+function setBlock(name, data) {
+  document.getElementById(name + "Score").textContent = getScoreText(data);
+  document.getElementById(name + "Reason").textContent = getReason(data);
+}
+
+function renderResult(result) {
+  setBlock("presence", result.presence);
+  setBlock("transformation", result.transformation);
+  setBlock("memorability", result.memorability);
+  setBlock("risk", result.risk);
+  setBlock("musicality", result.musicality);
+  setBlock("density", result.density);
+  setBlock("silence", result.silence);
+  setBlock("stakes", result.stakes);
+
+  document.getElementById("overallScore").textContent =
+    result.overall_score !== undefined && result.overall_score !== null
+      ? result.overall_score + " / 10"
+      : "—";
+
+  document.getElementById("summaryText").textContent =
+    result.summary || "Nincs összegzés.";
+
+  resultGrid.style.display = "grid";
+  summaryBox.style.display = "block";
+  footerRow.style.display = "flex";
+}
+
+async function runInnerMeasure(forceRefresh = false) {
+  const poem = sessionStorage.getItem("poem") || sessionStorage.getItem("poemText");
+
+  if (!poem) {
+    window.location.href = "index.html";
+    return;
+  }
+
+  poemText.textContent = poem;
+  poemPreview.style.display = "block";
+
+  hideError();
+  hideInfo();
+
+  if (!forceRefresh) {
+    const saved = safeParse(sessionStorage.getItem("analysis_inner_measure") || "");
+    if (saved) {
+      renderResult(saved);
+      showInfo("A korábbi belső mérés betöltve.");
+
+      if (autorun) {
+        sessionStorage.setItem("step_inner_measure_done", Date.now().toString());
+      }
+
+      return;
+    }
+  }
+
+  try {
+    showLoading("A belső mérés folyamatban...");
+
+    sessionStorage.setItem("step_inner_measure_loading", "1");
+
+    const kind = safeParse(sessionStorage.getItem("analysis_kind") || "") || {};
+
+    const res = await fetch(INNER_WORKER_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        poem,
+        previous: {
+          kind
+        }
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || "A belső mérés hibával leállt.");
+    }
+
+    sessionStorage.setItem("analysis_inner_measure", JSON.stringify(data.result));
+    sessionStorage.setItem("step_inner_measure_done", Date.now().toString());
+    sessionStorage.removeItem("step_inner_measure_loading");
+
+    renderResult(data.result);
+    showInfo("A belső mérés elkészült.");
+
+  } catch (err) {
+    sessionStorage.removeItem("step_inner_measure_loading");
+    showError(err.message || "Ismeretlen hiba történt.");
+  } finally {
+    hideLoading();
+  }
+}
+
+backBtn.addEventListener("click", () => {
+  window.location.href = "ertelmezes.html";
+});
+
+reloadBtn.addEventListener("click", () => {
+  sessionStorage.removeItem("analysis_inner_measure");
+  sessionStorage.removeItem("step_inner_measure_done");
+  sessionStorage.removeItem("step_inner_measure_loading");
+  runInnerMeasure(true);
+});
+
+nextBtn.addEventListener("click", () => {
+  window.location.href = NEXT_PAGE;
+});
+
+runInnerMeasure(autorun);
+</script>
+
+</body>
+</html>
