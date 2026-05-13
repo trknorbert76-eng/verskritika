@@ -1140,7 +1140,7 @@ async function startImpactAnalysis(poem) {
   }
 }
 
-  async function startInnerMeasure(poem, kind) {
+ async function startInnerMeasure(poem, kind, interpretation) {
   try {
     sessionStorage.setItem("step_inner_measure_loading", "1");
 
@@ -1152,12 +1152,13 @@ async function startImpactAnalysis(poem) {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          poem,
-          previous: {
-            kind
-          }
-        })
+       body: JSON.stringify({
+  poem,
+  previous: {
+    kind,
+    interpretation
+  }
+})
       });
 
       const data = await res.json();
@@ -1330,7 +1331,7 @@ const basePrevious = {
   kind
 };
 
-  const innerPromise = startInnerMeasure(poem, kind);  
+  
 
 
 
@@ -1338,6 +1339,10 @@ const basePrevious = {
     startCheckSeed(poem);
 
 const depthPromise = startDepthAnalysis(poem);
+
+const innerPromise = interpretationPromise.then((interpretation) =>
+  startInnerMeasure(poem, kind, interpretation)
+);
 
 const impactPromise = interpretationPromise.then(() =>
   startImpactAnalysis(poem)
