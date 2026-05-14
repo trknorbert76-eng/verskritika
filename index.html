@@ -223,17 +223,23 @@ button.done {
   color: #bbb;
 }
 
-  #estimateTimer {
+#estimateTimer {
   position: absolute;
-  top: 28px;
-  right: 38px;
-  font-family: monospace;
-  font-size: 1.65rem;
+  top: 58px;
+  right: 70px;
+
+  font-family: Georgia, serif;
+  font-size: 2.2rem;
   font-weight: bold;
+
   color: #fff;
   letter-spacing: 1px;
-  opacity: 0.9;
+
+  opacity: 0.95;
   display: none;
+
+  text-shadow:
+    0 0 10px rgba(255,255,255,0.08);
 }
 
 .runnerInfo {
@@ -399,13 +405,15 @@ function estimateAnalysisTimeMs(poem) {
   const lines = poem.split("\n").filter(l => l.trim()).length;
   const words = poem.split(/\s+/).filter(Boolean).length;
 
-  let seconds = 70;
+  let seconds = 75;
   seconds += chars * 0.015;
   seconds += lines * 0.55;
   seconds += words * 0.18;
 
   seconds = Math.max(120, seconds);
   seconds = Math.min(330, seconds);
+
+  seconds += 25;
 
   return Math.round(seconds * 1000);
 }
