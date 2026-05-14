@@ -560,12 +560,12 @@ if (!forceRefresh) {
   const savedSeed = unwrapPack(readJSON("analysis_check_seed"));
   const savedCheck = unwrapPack(readJSON("analysis_check"));
 
-  if (savedSeed && savedCheck) {
-    sessionStorage.setItem("step_check_done", Date.now().toString());
-    fillView();
-    showNotice("A korábbi ellenőrzési eredmény betöltve.");
-    return;
-  }
+if (savedSeed && savedCheck && savedCheck.inner_score !== null && savedCheck.inner_score !== undefined) {
+  sessionStorage.setItem("step_check_done", Date.now().toString());
+  fillView();
+  showNotice("A korábbi ellenőrzési eredmény betöltve.");
+  return;
+}
 
   if (savedSeed && !savedCheck) {
     fillView();
