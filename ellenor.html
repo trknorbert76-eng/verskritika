@@ -590,14 +590,12 @@ if (!forceRefresh) {
     sessionStorage.removeItem("analysis_check");
     sessionStorage.removeItem("step_check_done");
   }
-}
 
   if (savedSeed && !unwrapPack(readJSON("analysis_check"))) {
     fillView();
     showNotice("Az első önálló olvasat betöltve, most készül a végső összevetés...");
   }
 }
-
 
 
 reanalyzeBtn.disabled = true;
