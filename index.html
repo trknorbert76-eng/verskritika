@@ -1268,6 +1268,14 @@ async function runStepWithUi(step, task) {
 analyzeBtn.addEventListener("click", async () => {
   const poem = poemInput.value.trim();
 
+  const fullStartedAt = performance.now();
+
+const fullStats = {
+  chars: poem.length,
+  lines: poem.split("\n").filter(l => l.trim()).length,
+  words: poem.split(/\s+/).filter(Boolean).length
+};
+
   clearMessages();
   resetRunnerInfo();
   stepsWrap.style.display = "none";
@@ -1481,6 +1489,15 @@ appendRunnerInfo("Összegzés kész.");
 updateSummaryStatus();
 
     showOk("Minden elemzés elkészült. Beléphetsz bármelyik oldalra.");
+    const fullEndedAt = performance.now();
+
+const durationSec =
+  ((fullEndedAt - fullStartedAt) / 1000).toFixed(2);
+
+console.log("TELJES ELEMZÉS IDŐADAT:", {
+  ...fullStats,
+  durationSec
+});
 } catch (err) {
   stopFakeCheckProgress();
   console.error("INDEX HIBA:", err);
