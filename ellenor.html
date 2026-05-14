@@ -673,9 +673,11 @@ finalCheckResult.score_range_max = rangeMax;
   fillView();
 showNotice("Az ellenőrzés elkészült.");
 
-if (autorun && forceRefresh) {
+    if (autorun) {
   window.location.href = NEXT_PAGE + "?autorun=1";
 }
+
+
   } catch (err) {
     showNotice("Hiba történt az ellenőrzés során: " + (err.message || "ismeretlen hiba"));
   } finally {
