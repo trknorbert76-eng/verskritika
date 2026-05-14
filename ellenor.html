@@ -593,23 +593,7 @@ if (!forceRefresh) {
   }
 }
 
-if (
-  savedSeed &&
-  savedCheck &&
-  inner &&
-  savedCheck.inner_score === inner.overall_score
-) {
-  sessionStorage.setItem("step_check_done", Date.now().toString());
-  fillView();
-  showNotice("A korábbi ellenőrzési eredmény betöltve.");
-  return;
-}
 
-  if (savedSeed && !savedCheck) {
-    fillView();
-    showNotice("Az első önálló olvasat betöltve, most készül a végső összevetés...");
-  }
-}
 
 reanalyzeBtn.disabled = true;
   try {
