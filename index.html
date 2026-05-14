@@ -431,7 +431,9 @@ function estimateAnalysisTimeMs(poem) {
   seconds = Math.max(125, seconds);
   seconds = Math.min(165, seconds);
 
-  return Math.round(seconds * 1000);
+   seconds += 28;
+
+    return Math.round(seconds * 1000);
 }
 
 function formatTimeMs(ms) {
