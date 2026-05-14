@@ -554,13 +554,51 @@ const poem =
     return;
   }
 
+  if (!inner || inner.overall_score === undefined || inner.overall_score === null) {
+  showNotice("A belső mérés még nem készült el, várok rá...");
+  setTimeout(() => runCheckAnalysis(forceRefresh), 1500);
+  return;
+}
+
   fillView();
 
 if (!forceRefresh) {
   const savedSeed = unwrapPack(readJSON("analysis_check_seed"));
   const savedCheck = unwrapPack(readJSON("analysis_check"));
 
-if (savedSeed && savedCheck && savedCheck.inner_score !== null && savedCheck.inner_score !== undefined) {
+  if (
+    savedSeed &&
+    savedCheck &&
+    inner &&
+    Number(savedCheck.inner_score) === Number(inner.overall_score)
+  ) {
+    sessionStorage.setItem("step_check_done", Date.now().toString());
+    fillView();
+    showNotice("A korábbi ellenőrzési eredmény betöltve.");
+    return;
+  }
+
+  if (
+    savedCheck &&
+    inner &&
+    Number(savedCheck.inner_score) !== Number(inner.overall_score)
+  ) {
+    sessionStorage.removeItem("analysis_check");
+    sessionStorage.removeItem("step_check_done");
+  }
+
+  if (savedSeed && !unwrapPack(readJSON("analysis_check"))) {
+    fillView();
+    showNotice("Az első önálló olvasat betöltve, most készül a végső összevetés...");
+  }
+}
+
+if (
+  savedSeed &&
+  savedCheck &&
+  inner &&
+  savedCheck.inner_score === inner.overall_score
+) {
   sessionStorage.setItem("step_check_done", Date.now().toString());
   fillView();
   showNotice("A korábbi ellenőrzési eredmény betöltve.");
