@@ -570,7 +570,8 @@ if (!forceRefresh) {
     savedSeed &&
     savedCheck &&
     inner &&
-    Number(savedCheck.inner_score) === Number(inner.overall_score)
+    Number(savedCheck.inner_score) === Number(inner.overall_score) &&
+savedCheck.inner_adjustment !== undefined
   ) {
     sessionStorage.setItem("step_check_done", Date.now().toString());
     fillView();
@@ -673,7 +674,7 @@ finalCheckResult.score_range_max = rangeMax;
   fillView();
 showNotice("Az ellenőrzés elkészült.");
 
-    if (autorun) {
+if (autorun && !forceRefresh) {
   window.location.href = NEXT_PAGE + "?autorun=1";
 }
 
