@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Versminőség-elemző</title>
 
+  <div id="estimateTimer">00:00</div>
+
 <style>
 body {
   margin: 0;
@@ -221,6 +223,19 @@ button.done {
   color: #bbb;
 }
 
+  #estimateTimer {
+  position: absolute;
+  top: 28px;
+  right: 38px;
+  font-family: monospace;
+  font-size: 1.65rem;
+  font-weight: bold;
+  color: #fff;
+  letter-spacing: 1px;
+  opacity: 0.9;
+  display: none;
+}
+
 .runnerInfo {
   margin-top: 18px;
   padding: 14px 16px;
@@ -374,6 +389,62 @@ const okBox = document.getElementById("okBox");
 const stepsWrap = document.getElementById("stepsWrap");
 const runnerInfo = document.getElementById("runnerInfo");
 const runnerFrame = document.getElementById("runnerFrame");
+  const estimateTimer = document.getElementById("estimateTimer");
+
+let estimateTimerInterval = null;
+let estimateRemainingMs = 0;
+
+function estimateAnalysisTimeMs(poem) {
+  const chars = poem.length;
+  const lines = poem.split("\n").filter(l => l.trim()).length;
+  const words = poem.split(/\s+/).filter(Boolean).length;
+
+  let seconds = 70;
+  seconds += chars * 0.015;
+  seconds += lines * 0.55;
+  seconds += words * 0.18;
+
+  seconds = Math.max(120, seconds);
+  seconds = Math.min(330, seconds);
+
+  return Math.round(seconds * 1000);
+}
+
+function formatTimeMs(ms) {
+  ms = Math.max(0, ms);
+
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+  const seconds = String(totalSeconds % 60).padStart(2, "0");
+  const centi = String(Math.floor((ms % 1000) / 10)).padStart(2, "0");
+
+  return `${minutes}:${seconds},${centi}`;
+}
+
+function startEstimateTimer(poem) {
+  stopEstimateTimer();
+
+  estimateRemainingMs = estimateAnalysisTimeMs(poem);
+  estimateTimer.textContent = formatTimeMs(estimateRemainingMs);
+  estimateTimer.style.display = "block";
+
+  estimateTimerInterval = setInterval(() => {
+    estimateRemainingMs -= 100;
+
+    estimateTimer.textContent = formatTimeMs(estimateRemainingMs);
+
+    if (estimateRemainingMs <= 0) {
+      estimateTimer.textContent = "00:00,00";
+    }
+  }, 100);
+}
+
+function stopEstimateTimer() {
+  if (estimateTimerInterval) {
+    clearInterval(estimateTimerInterval);
+    estimateTimerInterval = null;
+  }
+}
 
   let depthFakeProgress = 0;
 let depthFakeTimer = null;
@@ -1286,6 +1357,7 @@ const fullStats = {
   }
 
   setLoading(true);
+  startEstimateTimer(poem);
 
   try {
     clearStepStorage();
@@ -1489,6 +1561,8 @@ appendRunnerInfo("Összegzés kész.");
 updateSummaryStatus();
 
     showOk("Minden elemzés elkészült. Beléphetsz bármelyik oldalra.");
+    stopEstimateTimer();
+estimateTimer.textContent = "00:00,00";
     const fullEndedAt = performance.now();
 
 const durationSec =
@@ -1502,6 +1576,7 @@ console.log("TELJES ELEMZÉS IDŐADAT:", {
   stopFakeCheckProgress();
   console.error("INDEX HIBA:", err);
   showError(err.message || "Nem sikerült kapcsolódni az elemzőhöz.");
+    stopEstimateTimer();
 
   } finally {
     setLoading(false);
