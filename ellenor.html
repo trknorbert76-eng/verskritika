@@ -571,7 +571,7 @@ if (!forceRefresh) {
     savedCheck &&
     inner &&
     Number(savedCheck.inner_score) === Number(inner.overall_score) &&
-savedCheck.inner_adjustment !== undefined
+    savedCheck.inner_adjustment !== undefined
   ) {
     sessionStorage.setItem("step_check_done", Date.now().toString());
     fillView();
@@ -582,11 +582,15 @@ savedCheck.inner_adjustment !== undefined
   if (
     savedCheck &&
     inner &&
-    Number(savedCheck.inner_score) !== Number(inner.overall_score)
+    (
+      Number(savedCheck.inner_score) !== Number(inner.overall_score) ||
+      savedCheck.inner_adjustment === undefined
+    )
   ) {
     sessionStorage.removeItem("analysis_check");
     sessionStorage.removeItem("step_check_done");
   }
+}
 
   if (savedSeed && !unwrapPack(readJSON("analysis_check"))) {
     fillView();
