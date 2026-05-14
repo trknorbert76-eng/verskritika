@@ -19,8 +19,6 @@ body {
   max-width: 980px;
   margin: 0 auto;
   padding: 30px 20px 60px;
-
-  position: relative;
 }
 
 h1 {
@@ -226,12 +224,12 @@ button.done {
 }
 
 #estimateTimer {
-  position: absolute;
+  position: fixed;
 
-  top: 48px;
-  right: 25px;
+  top: 58px;
+  right: 360px;
 
-  width: 170px;
+  width: 180px;
   text-align: right;
 
   font-family: Georgia, serif;
@@ -245,6 +243,7 @@ button.done {
 
   font-variant-numeric: tabular-nums;
   letter-spacing: 1px;
+  z-index: 999;
 }
 
 
