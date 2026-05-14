@@ -226,7 +226,10 @@ button.done {
 #estimateTimer {
   position: absolute;
   top: 58px;
-  right: 70px;
+  right: 170px;
+
+  width: 170px;
+  text-align: right;
 
   font-family: Georgia, serif;
   font-size: 2.2rem;
@@ -238,8 +241,8 @@ button.done {
   opacity: 0.95;
   display: none;
 
-  text-shadow:
-    0 0 10px rgba(255,255,255,0.08);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 10px rgba(255,255,255,0.08);
 }
 
 .runnerInfo {
@@ -413,7 +416,7 @@ function estimateAnalysisTimeMs(poem) {
   seconds = Math.max(120, seconds);
   seconds = Math.min(330, seconds);
 
-  seconds += 25;
+  seconds += 30;
 
   return Math.round(seconds * 1000);
 }
