@@ -415,6 +415,7 @@ const runnerFrame = document.getElementById("runnerFrame");
 
 let estimateTimerInterval = null;
 let estimateRemainingMs = 0;
+  let finalCountdownStarted = false;
 
 function estimateAnalysisTimeMs(poem) {
   const chars = poem.length;
@@ -577,14 +578,10 @@ function stopFakeCheckProgress() {
   innerFakeTimer = setInterval(() => {
     const done = sessionStorage.getItem("step_inner_measure_done");
 
-    if (done) {
-      finishFakeInnerProgress();
-      if (!finalCountdownStarted) {
-  finalCountdownStarted = true;
-  restartEstimateTimerFrom(15000);
+if (done) {
+  finishFakeInnerProgress();
+  return;
 }
-      return;
-    }
 
     if (innerFakeProgress < 98) {
       innerFakeProgress += 0.57;
@@ -1657,7 +1654,12 @@ const [
     // 5. ELLENŐR — CSAK MOST INDUL, HA MINDEN KÉSZ
     const checkStep = pipeline.find(s => s.key === "check");
 
- appendRunnerInfo("Minden szükséges rész elkészült. Ellenőr indul...");
+appendRunnerInfo("Minden szükséges rész elkészült. Ellenőr indul...");
+
+if (!finalCountdownStarted) {
+  finalCountdownStarted = true;
+  restartEstimateTimerFrom(15000);
+}
 
 startFakeCheckProgress();
 
