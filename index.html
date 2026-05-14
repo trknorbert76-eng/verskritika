@@ -463,6 +463,27 @@ function startEstimateTimer(poem) {
   }, 100);
 }
 
+  function restartEstimateTimerFrom(ms) {
+  stopEstimateTimer();
+
+  estimateRemainingMs = ms;
+  estimateTimer.textContent = formatTimeMs(estimateRemainingMs);
+  estimateTimer.style.display = "block";
+
+  estimateTimerInterval = setInterval(() => {
+    estimateRemainingMs -= 100;
+
+    if (estimateRemainingMs <= 0) {
+      estimateRemainingMs = 0;
+      estimateTimer.textContent = "00:00,00";
+      stopEstimateTimer();
+      return;
+    }
+
+    estimateTimer.textContent = formatTimeMs(estimateRemainingMs);
+  }, 100);
+}
+
 function stopEstimateTimer() {
   if (estimateTimerInterval) {
     clearInterval(estimateTimerInterval);
@@ -558,6 +579,10 @@ function stopFakeCheckProgress() {
 
     if (done) {
       finishFakeInnerProgress();
+      if (!finalCountdownStarted) {
+  finalCountdownStarted = true;
+  restartEstimateTimerFrom(15000);
+}
       return;
     }
 
@@ -1469,6 +1494,7 @@ const fullStats = {
 
   setLoading(true);
   startEstimateTimer(poem);
+  finalCountdownStarted = false;
 
   try {
     clearStepStorage();
