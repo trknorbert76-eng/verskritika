@@ -665,11 +665,7 @@ function startInterpretationFakeProgress() {
       fill.style.width = interpretationFakeProgress + "%";
     }
 
-    if (interpretationFakeProgress >= 35) {
-  startFakeInnerProgress();
-}
-
-    box.classList.add("loading", "started");
+  box.classList.add("loading", "started");
   }, 100);
 }
 
@@ -1342,9 +1338,10 @@ async function startImpactAnalysis(poem) {
   }
 }
 
- async function startInnerMeasure(poem, kind, interpretation) {
+async function startInnerMeasure(poem, kind) {
   try {
     sessionStorage.setItem("step_inner_measure_loading", "1");
+    startFakeInnerProgress();
 
     const innerStartedAt = performance.now();
 
@@ -1352,7 +1349,7 @@ const poemStats = {
   chars: poem.length,
   lines: poem.split("\n").filter(l => l.trim()).length,
   words: poem.split(/\s+/).filter(Boolean).length,
-  interpretationChars: JSON.stringify(interpretation || {}).length
+  
 };
 
     const innerStep = pipeline.find(s => s.key === "inner");
@@ -1363,11 +1360,10 @@ const poemStats = {
         headers: {
           "Content-Type": "application/json"
         },
-       body: JSON.stringify({
+body: JSON.stringify({
   poem,
   previous: {
-    kind,
-    interpretation
+    kind
   }
 })
       });
@@ -1573,9 +1569,7 @@ const basePrevious = {
 
 const depthPromise = startDepthAnalysis(poem);
 
-const innerPromise = interpretationPromise.then((interpretation) =>
-  startInnerMeasure(poem, kind, interpretation)
-);
+const innerPromise = startInnerMeasure(poem, kind);
 
 const impactPromise = interpretationPromise.then(() =>
   startImpactAnalysis(poem)
