@@ -476,6 +476,9 @@ let depthFakeTimer = null;
   let checkFakeTimer = null;
 let checkFakeProgress = 0;
 
+  let innerFakeProgress = 0;
+let innerFakeTimer = null;
+
 function startFakeCheckProgress() {
   stopFakeCheckProgress();
 
@@ -525,6 +528,84 @@ function stopFakeCheckProgress() {
   }
 }
 
+  function startFakeInnerProgress() {
+  if (innerFakeTimer) return;
+
+  const btn = document.getElementById("btn-inner");
+  const box = document.getElementById("box-inner");
+  const note = document.getElementById("note-inner");
+  const fill = box?.querySelector(".progressFill");
+
+  if (!btn || !box || !note || !fill) return;
+
+  innerFakeProgress = Math.max(innerFakeProgress, 1);
+
+  btn.disabled = true;
+  btn.textContent = "Belső mérés folyamatban";
+  btn.classList.remove("done");
+  btn.classList.add("loading");
+
+  box.classList.remove("done", "real");
+  box.classList.add("loading", "half");
+
+  note.textContent = "A belső mérés dolgozik a háttérben...";
+
+  fill.style.transition = "width 0.7s linear";
+  fill.style.width = innerFakeProgress + "%";
+
+  innerFakeTimer = setInterval(() => {
+    const done = sessionStorage.getItem("step_inner_measure_done");
+
+    if (done) {
+      finishFakeInnerProgress();
+      return;
+    }
+
+    if (innerFakeProgress < 98) {
+      innerFakeProgress += 0.57;
+      fill.style.width = innerFakeProgress + "%";
+    }
+  }, 700);
+}
+
+function finishFakeInnerProgress() {
+  if (innerFakeTimer) {
+    clearInterval(innerFakeTimer);
+    innerFakeTimer = null;
+  }
+
+  const btn = document.getElementById("btn-inner");
+  const box = document.getElementById("box-inner");
+  const note = document.getElementById("note-inner");
+  const fill = box?.querySelector(".progressFill");
+
+  if (!btn || !box || !note || !fill) return;
+
+  btn.disabled = false;
+  btn.textContent = "Belső mérés kész";
+  btn.classList.remove("loading");
+  btn.classList.add("done");
+
+  box.classList.remove("loading", "half");
+  box.classList.add("done", "real");
+
+  fill.style.transition = "width 0.35s ease";
+  fill.style.width = "100%";
+
+  note.textContent = "Az eredmény elkészült, az oldal megnyitható.";
+
+  btn.onclick = () => {
+    window.location.href = "belsomeres.html";
+  };
+}
+
+function stopFakeInnerProgress() {
+  if (innerFakeTimer) {
+    clearInterval(innerFakeTimer);
+    innerFakeTimer = null;
+  }
+}
+
   let interpretationFakeProgress = 0;
 let interpretationFakeTarget = 0;
 let interpretationFakeTimer = null;
@@ -561,6 +642,10 @@ function startInterpretationFakeProgress() {
       interpretationFakeProgress += 0.08;
       fill.style.width = interpretationFakeProgress + "%";
     }
+
+    if (interpretationFakeProgress >= 35) {
+  startFakeInnerProgress();
+}
 
     box.classList.add("loading", "started");
   }, 100);
@@ -1275,6 +1360,8 @@ const poemStats = {
       sessionStorage.setItem("step_inner_measure_done", Date.now().toString());
       sessionStorage.removeItem("step_inner_measure_loading");
 
+      finishFakeInnerProgress();
+
       const innerEndedAt = performance.now();
 
 const durationSec =
@@ -1598,6 +1685,7 @@ console.log("TELJES ELEMZÉS IDŐADAT:", {
 });
 } catch (err) {
   stopFakeCheckProgress();
+     stopFakeInnerProgress();
   console.error("INDEX HIBA:", err);
   showError(err.message || "Nem sikerült kapcsolódni az elemzőhöz.");
     stopEstimateTimer();
