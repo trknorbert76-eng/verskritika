@@ -422,15 +422,14 @@ function estimateAnalysisTimeMs(poem) {
   const lines = poem.split("\n").filter(l => l.trim()).length;
   const words = poem.split(/\s+/).filter(Boolean).length;
 
-  let seconds = 75;
-  seconds += chars * 0.015;
-  seconds += lines * 0.55;
-  seconds += words * 0.18;
+  let seconds = 108;
 
-  seconds = Math.max(120, seconds);
-  seconds = Math.min(330, seconds);
+  seconds += chars * 0.003;
+  seconds += lines * 0.08;
+  seconds += words * 0.015;
 
-  seconds += 28;
+  seconds = Math.max(125, seconds);
+  seconds = Math.min(165, seconds);
 
   return Math.round(seconds * 1000);
 }
@@ -1652,7 +1651,7 @@ appendRunnerInfo("Minden szükséges rész elkészült. Ellenőr indul...");
 
 if (!finalCountdownStarted) {
   finalCountdownStarted = true;
-  restartEstimateTimerFrom(15000);
+  restartEstimateTimerFrom(18000);
 }
 
 startFakeCheckProgress();
