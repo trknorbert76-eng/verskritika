@@ -1144,6 +1144,15 @@ async function startImpactAnalysis(poem) {
   try {
     sessionStorage.setItem("step_inner_measure_loading", "1");
 
+    const innerStartedAt = performance.now();
+
+const poemStats = {
+  chars: poem.length,
+  lines: poem.split("\n").filter(l => l.trim()).length,
+  words: poem.split(/\s+/).filter(Boolean).length,
+  interpretationChars: JSON.stringify(interpretation || {}).length
+};
+
     const innerStep = pipeline.find(s => s.key === "inner");
 
     const result = await runStepWithUi(innerStep, async () => {
@@ -1170,6 +1179,16 @@ async function startImpactAnalysis(poem) {
       sessionStorage.setItem("analysis_inner_measure", JSON.stringify(data.result));
       sessionStorage.setItem("step_inner_measure_done", Date.now().toString());
       sessionStorage.removeItem("step_inner_measure_loading");
+
+      const innerEndedAt = performance.now();
+
+const durationSec =
+  ((innerEndedAt - innerStartedAt) / 1000).toFixed(2);
+
+console.log("BELSŐ MÉRÉS IDŐADAT:", {
+  ...poemStats,
+  durationSec
+});
 
       return data.result;
     });
