@@ -338,6 +338,13 @@ button.secondary,
       </div>
 
       <div class="field">
+  <span class="label">Belső réteg</span>
+  <div id="innerLayerNote" class="value">
+    —
+  </div>
+</div>
+
+      <div class="field">
         <span class="label">Indoklás</span>
         <div id="correctionReason" class="value">Még nincs indoklás.</div>
       </div>
@@ -460,6 +467,13 @@ function fillView() {
     finalCheck?.correction_direction,
     seedCheck ? "Még nincs végső döntés." : "—"
   );
+  
+setText(
+  "innerLayerNote",
+  finalCheck?.inner_layer_note,
+  "Nincs belső réteg megjegyzés."
+);
+  
 
 let correctionText = "Még nincs indoklás.";
 if (finalCheck) {
