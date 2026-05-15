@@ -574,7 +574,14 @@ const poem =
   return;
 }
 
-  fillView();
+fillView();
+
+const existingFinalCheck = unwrapPack(readJSON("analysis_check"));
+
+if (!existingFinalCheck) {
+  sessionStorage.removeItem("step_check_done");
+  sessionStorage.removeItem("step_summary_done");
+}
 
 if (!forceRefresh) {
   const savedSeed = unwrapPack(readJSON("analysis_check_seed"));
