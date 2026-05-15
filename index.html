@@ -1161,12 +1161,13 @@ if (hasDepth && depthDone) {
   depthStatusBtn.classList.remove("pulse");
 }
 
-  function updateSummaryStatus() {
+function updateSummaryStatus() {
   const hasSummary = sessionStorage.getItem("step_summary_done");
+  const hasCheck = sessionStorage.getItem("analysis_check");
 
   summaryStatusBtn.classList.remove("secondary", "seed", "done");
 
-  if (hasSummary) {
+  if (hasSummary && hasCheck) {
     summaryStatusBtn.classList.add("done");
     summaryStatusBtn.textContent = "Összegzés: kész";
   } else {
@@ -1174,23 +1175,22 @@ if (hasDepth && depthDone) {
     summaryStatusBtn.textContent = "Összegzés: nincs";
   }
 }
-
-function waitForStep(doneKey, timeoutMs = 180000) {
+function waitForStep(doneKey, timeoutMs = 220000) {
   return new Promise((resolve, reject) => {
     const startedAt = Date.now();
 
     const timer = setInterval(() => {
       const done = sessionStorage.getItem(doneKey);
 
-      const checkReady =
-        doneKey === "step_check_done" &&
-        sessionStorage.getItem("analysis_check");
+      if (doneKey === "step_check_done") {
+        const hasFinalCheck = sessionStorage.getItem("analysis_check");
 
-      if (done || checkReady) {
-        if (doneKey === "step_check_done" && !done) {
-          sessionStorage.setItem("step_check_done", Date.now().toString());
+        if (done && hasFinalCheck) {
+          clearInterval(timer);
+          resolve(true);
+          return;
         }
-
+      } else if (done) {
         clearInterval(timer);
         resolve(true);
         return;
@@ -1733,6 +1733,18 @@ setInterval(() => {
   updateDepthStatus();
   updateDepthProgress();
 }, 400);
+
+setInterval(() => {
+  const hasFinalCheck = sessionStorage.getItem("analysis_check");
+
+  if (!hasFinalCheck) {
+    sessionStorage.removeItem("step_check_done");
+    sessionStorage.removeItem("step_summary_done");
+  }
+
+  updateCheckStatus();
+  updateSummaryStatus();
+}, 500);
 </script>
 </body>
 </html>
