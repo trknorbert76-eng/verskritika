@@ -617,9 +617,14 @@ reanalyzeBtn.disabled = true;
     // ==================================
     // 1. SEED - TISZTA ELSŐ OLVASAT
     // ==================================
-    showNotice("Az ellenőr első önálló olvasata készül...");
+  let seedResult = !forceRefresh
+  ? unwrapPack(readJSON("analysis_check_seed"))
+  : null;
 
-    const seedRes = await fetch(WORKER_URL, {
+if (!seedResult) {
+  showNotice("Az ellenőr első önálló olvasata készül...");
+
+  const seedRes = await fetch(WORKER_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -639,8 +644,15 @@ reanalyzeBtn.disabled = true;
       throw new Error(seedData.error || "A seed ellenőrzés nem sikerült.");
     }
 
-    sessionStorage.setItem("analysis_check_seed", JSON.stringify(seedData.result));
-    fillView();
+  seedResult = seedData.result;
+sessionStorage.setItem("analysis_check_seed", JSON.stringify(seedResult));
+sessionStorage.setItem("step_check_seed_done", Date.now().toString());
+fillView();
+
+} else {
+  fillView();
+  showNotice("A korábbi első olvasat betöltve, készül a végső összevetés...");
+}
 
     // ==================================
     // 2. CHECK - ÖSSZEVETÉS
@@ -665,7 +677,7 @@ previous: {
   depth: depthForCheck,
   impact,
   inner,
-  seed: seedData.result
+  seed: seedResult
 }
       })
     });
@@ -708,7 +720,14 @@ reanalyzeBtn.addEventListener("click", () => {
   sessionStorage.removeItem("step_check_done");
   runCheckAnalysis(true);
 });
+setInterval(() => {
+  const seed = unwrapPack(readJSON("analysis_check_seed"));
+  const check = unwrapPack(readJSON("analysis_check"));
 
+  if (seed || check) {
+    fillView();
+  }
+}, 1000);
 runCheckAnalysis(false);
 </script>
 </body>
