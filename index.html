@@ -56,6 +56,25 @@ function count(txt){
 const master=document.getElementById("master");
 const masterInputs=[];
 
+ function updateMaster(){
+
+    const szonettek = document.querySelectorAll("#others details");
+
+    szonettek.forEach((szonett,index)=>{
+
+        const sorok = szonett.querySelectorAll(".line");
+
+        if(sorok.length>0){
+
+            masterInputs[index].value = sorok[0].value;
+            masterInputs[index].dispatchEvent(new Event("input"));
+
+        }
+
+    });
+
+}
+
 function upd(inp,box){
  const n=count(inp.value);
  box.textContent=n;
@@ -94,6 +113,7 @@ function add(parent,no,fixed=false,idx=-1){
          if(rows[start+k].classList.contains("fixed")){
     rows[start+k].dispatchEvent(new Event("input"));
 }
+         updateMaster();
 
         }
 
