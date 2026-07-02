@@ -74,6 +74,29 @@ function add(parent,no,fixed=false,idx=-1){
    masterInputs[idx].addEventListener("input",()=>{i.value=masterInputs[idx].value;upd(i,syl);});
  }
  i.oninput=()=>upd(i,syl);
+ i.addEventListener("paste", function(e){
+
+    let txt = (e.clipboardData || window.clipboardData).getData("text");
+    let sorok = txt.split(/\r?\n/).filter(s => s.trim()!="");
+
+    if(sorok.length>1){
+
+        e.preventDefault();
+
+        let rows = [...parent.querySelectorAll(".line")];
+
+        let start = rows.indexOf(i);
+
+        for(let k=0; k<sorok.length && start+k<rows.length; k++){
+
+            rows[start+k].value = sorok[k];
+            rows[start+k].dispatchEvent(new Event("input"));
+
+        }
+
+    }
+
+});
  upd(i,syl);
  r.append(a,i,rhyme,syl);
  parent.appendChild(r);
