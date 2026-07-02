@@ -91,6 +91,9 @@ function add(parent,no,fixed=false,idx=-1){
 
             rows[start+k].value = sorok[k];
             rows[start+k].dispatchEvent(new Event("input"));
+         if(rows[start+k].classList.contains("fixed")){
+    rows[start+k].dispatchEvent(new Event("input"));
+}
 
         }
 
