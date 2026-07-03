@@ -3,34 +3,30 @@
 <head>
     <meta charset="utf-8">
     <title>Szonettkoszorú Szerkesztő</title>
-   <style>
-    body { font-family: Segoe UI, Arial; background: #eef2f5; margin: 20px; }
-    
-    /* Az egész tartalom korlátozása, hogy ne legyen széthúzva */
-    .card { background: #fff; border-radius: 12px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,.12); margin-bottom: 18px; max-width: 1100px; margin-left: auto; margin-right: auto; } 
-    
-    .controls { position: sticky; top: 0; background: #fff; padding: 15px; border-radius: 12px; z-index: 100; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; gap: 10px; max-width: 1070px; margin-left: auto; margin-right: auto; }
-    
-    /* A kétoszlopos elrendezés (Szerkesztő | Összegző) */
-    .editor-grid { display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; margin-top: 10px; }
-    
-    .header, .row { display: grid; grid-template-columns: 40px 1fr 60px 70px; gap: 10px; align-items: center; }
-    
-    /* A beviteli mezők ne feszüljenek ki teljesen */
-    .line { width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 5px; font-size: 16px; }
-    
-    /* A másolható doboz fix mérete */
-    .copy-area { width: 300px; height: 350px; font-family: monospace; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: #f9f9f9; resize: vertical; }
-    
-    .fixed { background: #f0f0f0; }
-    .center { text-align: center; }
-    .good { color: green; font-weight: bold; }
-    .bad { color: #d00000; font-weight: bold; }
-    
-    button { padding: 8px 16px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; }
-    details { margin-bottom: 15px; max-width: 1100px; margin-left: auto; margin-right: auto; }
-    summary { cursor: pointer; padding: 10px; background: #fff; border-radius: 8px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-</style>
+    <style>
+        body { font-family: Segoe UI, Arial; background: #eef2f5; margin: 20px; }
+        
+        .card { background: #fff; border-radius: 12px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,.12); margin-bottom: 18px; max-width: 900px; margin-left: auto; margin-right: auto; } 
+        .controls { position: sticky; top: 0; background: #fff; padding: 15px; border-radius: 12px; z-index: 100; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; gap: 10px; max-width: 870px; margin-left: auto; margin-right: auto; }
+        
+        .editor-grid { display: grid; grid-template-columns: 1fr 250px; gap: 20px; align-items: start; margin-top: 10px; }
+        
+        /* Oszlopok beállítása: #, Sor, Szótag - Fix szélességekkel */
+        .header, .row { display: grid; grid-template-columns: 30px 1fr 60px; gap: 10px; align-items: center; }
+        
+        .line { width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 5px; font-size: 14px; }
+        .copy-area { width: 100%; height: 350px; font-family: monospace; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: #f9f9f9; resize: vertical; font-size: 12px; }
+        
+        .fixed { background: #f0f0f0; }
+        .center { text-align: center; }
+        .syllable-count { font-weight: bold; }
+        .good { color: green; }
+        .bad { color: #d00000; }
+        
+        button { padding: 8px 16px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; }
+        details { margin-bottom: 15px; max-width: 900px; margin-left: auto; margin-right: auto; }
+        summary { cursor: pointer; padding: 10px; background: #fff; border-radius: 8px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    </style>
 </head>
 <body>
 
@@ -44,7 +40,7 @@
 
 <div class="card">
     <h2>15. Mesterszonett</h2>
-    <div class="header"><div>#</div><div>Sor</div><div class="center">Rím</div><div class="center">Szótag</div></div>
+    <div class="header"><div>#</div><div>Sor</div><div class="center">Szótag</div></div>
     <div id="master"></div>
 </div>
 
@@ -83,12 +79,11 @@
     function createRow(parent, no, isFixed = false) {
         const r = document.createElement("div");
         r.className = "row";
-        r.innerHTML = `<div class="num">${no}</div><input type="text" class="line ${isFixed ? 'fixed' : ''}" ${isFixed ? 'readonly' : ''}><div class="center">-</div><div class="center syllable-count">0</div>`;
+        r.innerHTML = `<div class="num">${no}</div><input type="text" class="line ${isFixed ? 'fixed' : ''}" ${isFixed ? 'readonly' : ''}><div class="center syllable-count">0</div>`;
         parent.appendChild(r);
         return r.querySelector("input");
     }
 
-    // Inicializálás
     const master = document.getElementById("master");
     for (let x = 1; x <= 14; x++) createRow(master, x, true);
 
@@ -100,28 +95,21 @@
             <div class="card editor-grid">
                 <div class="editor"></div>
                 <div>
-                    <label>Másolható szöveg:</label>
+                    <label style="font-size:12px; color:#666;">Másolható szöveg:</label>
                     <textarea class="copy-area" readonly></textarea>
                 </div>
             </div>
         `;
-        
         const editor = d.querySelector(".editor");
         const textarea = d.querySelector(".copy-area");
-        
         for (let x = 1; x <= 14; x++) {
             const input = createRow(editor, x);
-            input.oninput = () => { 
-                checkSyllables(input); 
-                updatePreview(editor, textarea); 
-                updateMaster(); 
-            };
+            input.oninput = () => { checkSyllables(input); updatePreview(editor, textarea); updateMaster(); };
         }
         others.appendChild(d);
     }
 
-    // Mentés/Betöltés/Export funkciók változatlanok
-    function mentes() {
+    function mentes() { 
         const data = Array.from(document.querySelectorAll("#others .line")).map(i => i.value);
         localStorage.setItem("szonettKoszoruData", JSON.stringify(data));
         alert("Sikeres mentés!");
@@ -131,10 +119,7 @@
         const saved = JSON.parse(localStorage.getItem("szonettKoszoruData"));
         if (!saved) return alert("Nincs mentett adat!");
         const allInputs = document.querySelectorAll("#others .line");
-        allInputs.forEach((input, i) => { 
-            input.value = saved[i] || ""; 
-            checkSyllables(input); 
-        });
+        allInputs.forEach((input, i) => { input.value = saved[i] || ""; checkSyllables(input); });
         document.querySelectorAll("#others .editor-grid").forEach(ed => updatePreview(ed, ed.querySelector("textarea")));
         updateMaster();
     }
