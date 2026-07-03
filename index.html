@@ -5,45 +5,52 @@
     <title>Szonettkoszorú Szerkesztő</title>
     <style>
         body { font-family: Segoe UI, Arial; background: #eef2f5; margin: 20px; }
-        .card { background: #fff; border-radius: 12px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,.12); margin-bottom: 18px; max-width: 900px; margin-left: auto; margin-right: auto; } 
-        .controls { position: sticky; top: 0; background: #fff; padding: 15px; border-radius: 12px; z-index: 100; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; gap: 10px; max-width: 870px; margin-left: auto; margin-right: auto; }
-        
+        .main-layout { display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; max-width: 1200px; margin: auto; }
+        .card { background: #fff; border-radius: 12px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,.12); margin-bottom: 18px; } 
+        .controls { position: sticky; top: 0; background: #fff; padding: 15px; border-radius: 12px; z-index: 100; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; gap: 10px; }
         .editor-grid { display: grid; grid-template-columns: 1fr 250px; gap: 20px; align-items: start; margin-top: 10px; }
-        
-        /* Itt a lényeg: pontosan 3 oszlop (szám, input, szótag) */
         .header, .row { display: grid; grid-template-columns: 30px 1fr 60px; gap: 10px; align-items: center; }
-        
         .line { width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 5px; font-size: 14px; }
         .copy-area { width: 100%; height: 350px; font-family: monospace; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: #f9f9f9; resize: vertical; font-size: 12px; }
-        
         .fixed { background: #f0f0f0; }
         .center { text-align: center; }
         .syllable-count { font-weight: bold; }
         .good { color: green; }
         .bad { color: #d00000; }
-        
         button { padding: 8px 16px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; }
-        details { margin-bottom: 15px; max-width: 900px; margin-left: auto; margin-right: auto; }
+        details { margin-bottom: 15px; }
         summary { cursor: pointer; padding: 10px; background: #fff; border-radius: 8px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .structure-panel { position: sticky; top: 20px; background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.1); font-size: 12px; }
+        .stanza-group { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        .stanza-group h4 { margin: 0 0 5px 0; color: #555; }
     </style>
 </head>
 <body>
 
 <h1>📖 Szonettkoszorú Szerkesztő</h1>
 
-<div class="controls">
-    <button onclick="mentes()" style="background:#007bff; color:white;">💾 Mentés</button>
-    <button onclick="betoltes()" style="background:#28a745; color:white;">📂 Betöltés</button>
-    <button onclick="exportalas()" style="background:#6c757d; color:white;">📄 Exportálás</button>
-</div>
+<div class="main-layout">
+    <div class="content">
+        <div class="controls">
+            <button onclick="mentes()" style="background:#007bff; color:white;">💾 Mentés</button>
+            <button onclick="betoltes()" style="background:#28a745; color:white;">📂 Betöltés</button>
+            <button onclick="exportalas()" style="background:#6c757d; color:white;">📄 Exportálás</button>
+        </div>
 
-<div class="card">
-    <h2>15. Mesterszonett</h2>
-    <div class="header"><div>#</div><div>Sor</div><div class="center">Szótag</div></div>
-    <div id="master"></div>
-</div>
+        <div class="card">
+            <h2>15. Mesterszonett</h2>
+            <div class="header"><div>#</div><div>Sor</div><div class="center">Szótag</div></div>
+            <div id="master"></div>
+        </div>
 
-<div id="others"></div>
+        <div id="others"></div>
+    </div>
+
+    <div class="structure-panel">
+        <h3>Szerkezet (4-4-3-3)</h3>
+        <div id="stanza-content"></div>
+    </div>
+</div>
 
 <script>
     function countSyllables(t) {
@@ -64,10 +71,8 @@
     }
 
     function updateMaster() {
-        // A mesterszonett csak az egyes szonettek ELSŐ sorait tartalmazza
         const szonettEditors = document.querySelectorAll("#others .editor");
         const masterInputs = document.querySelectorAll("#master .line");
-        
         szonettEditors.forEach((editor, index) => {
             const firstLine = editor.querySelector(".line");
             if (masterInputs[index] && firstLine) {
@@ -75,6 +80,24 @@
                 checkSyllables(masterInputs[index]);
             }
         });
+        updateStructure();
+    }
+
+    function updateStructure() {
+        const lines = Array.from(document.querySelectorAll("#master .line")).map(i => i.value);
+        const container = document.getElementById("stanza-content");
+        const groups = [
+            { title: "1. Kvartett (4)", start: 0, end: 4 },
+            { title: "2. Kvartett (4)", start: 4, end: 8 },
+            { title: "1. Tercett (3)", start: 8, end: 11 },
+            { title: "2. Tercett (3)", start: 11, end: 14 }
+        ];
+        container.innerHTML = groups.map(g => `
+            <div class="stanza-group">
+                <h4>${g.title}</h4>
+                <div>${lines.slice(g.start, g.end).map((l, i) => (l || "(üres)")).join("<br>")}</div>
+            </div>
+        `).join("");
     }
 
     function createRow(parent, no, isFixed = false) {
@@ -85,84 +108,50 @@
         return r.querySelector("input");
     }
 
-    // Inicializálás
     const master = document.getElementById("master");
     for (let x = 1; x <= 14; x++) createRow(master, x, true);
 
     const others = document.getElementById("others");
     for (let n = 1; n <= 14; n++) {
         const d = document.createElement("details");
-        d.innerHTML = `
-            <summary>${n}. Szonett szerkesztése</summary>
+        d.innerHTML = `<summary>${n}. Szonett szerkesztése</summary>
             <div class="card editor-grid">
                 <div class="editor"></div>
-                <div>
-                    <label style="font-size:12px; color:#666;">Másolható szöveg:</label>
-                    <textarea class="copy-area" readonly></textarea>
-                </div>
-            </div>
-        `;
+                <div><label style="font-size:12px; color:#666;">Másolható szöveg:</label>
+                <textarea class="copy-area" readonly></textarea></div>
+            </div>`;
         const editor = d.querySelector(".editor");
         const textarea = d.querySelector(".copy-area");
-        
         for (let x = 1; x <= 14; x++) {
             const input = createRow(editor, x);
-            
-            // Itt kezeljük a sima írást ÉS a beillesztést
             input.onpaste = (e) => {
                 e.preventDefault();
                 const text = (e.clipboardData || window.clipboardData).getData('text');
                 const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
                 const allInputs = editor.querySelectorAll(".line");
-                
-                lines.forEach((line, i) => {
-                    if (allInputs[i]) {
-                        allInputs[i].value = line.trim();
-                        checkSyllables(allInputs[i]);
-                    }
-                });
+                lines.forEach((line, i) => { if (allInputs[i]) { allInputs[i].value = line.trim(); checkSyllables(allInputs[i]); } });
                 updatePreview(editor, textarea);
                 updateMaster();
             };
-
-            input.oninput = () => { 
-                checkSyllables(input); 
-                updatePreview(editor, textarea); 
-                updateMaster(); 
-            };
+            input.oninput = () => { checkSyllables(input); updatePreview(editor, textarea); updateMaster(); };
         }
         others.appendChild(d);
     }
 
-    // Mentés/Betöltés/Export változatlan marad...
-    function mentes() { 
-        const data = Array.from(document.querySelectorAll("#others .line")).map(i => i.value);
-        localStorage.setItem("szonettKoszoruData", JSON.stringify(data));
-        alert("Sikeres mentés!");
-    }
-
+    function mentes() { localStorage.setItem("szonettKoszoruData", JSON.stringify(Array.from(document.querySelectorAll("#others .line")).map(i => i.value))); alert("Sikeres mentés!"); }
     function betoltes() {
         const saved = JSON.parse(localStorage.getItem("szonettKoszoruData"));
         if (!saved) return alert("Nincs mentett adat!");
-        const allInputs = document.querySelectorAll("#others .line");
-        allInputs.forEach((input, i) => { 
-            input.value = saved[i] || ""; 
-            checkSyllables(input); 
-        });
+        document.querySelectorAll("#others .line").forEach((input, i) => { input.value = saved[i] || ""; checkSyllables(input); });
         document.querySelectorAll("#others .editor-grid").forEach(ed => updatePreview(ed, ed.querySelector("textarea")));
         updateMaster();
     }
-
     function exportalas() {
         let txt = "MESTERSZONETT:\n" + Array.from(document.querySelectorAll("#master .line")).map(i=>i.value).join("\n");
-        document.querySelectorAll("#others details").forEach((d, idx) => {
-            txt += `\n\n--- ${idx+1}. SZONETT ---\n` + d.querySelector("textarea").value;
-        });
-        const a = document.createElement("a");
-        a.href = "data:text/plain;charset=utf-8," + encodeURIComponent(txt);
-        a.download = "szonettkoszoru.txt";
-        a.click();
+        document.querySelectorAll("#others details").forEach((d, idx) => { txt += `\n\n--- ${idx+1}. SZONETT ---\n` + d.querySelector("textarea").value; });
+        const a = document.createElement("a"); a.href = "data:text/plain;charset=utf-8," + encodeURIComponent(txt); a.download = "szonettkoszoru.txt"; a.click();
     }
+    updateStructure();
 </script>
 </body>
 </html>
