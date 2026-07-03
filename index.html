@@ -46,10 +46,13 @@
         <div id="others"></div>
     </div>
 
-    <div class="structure-panel">
-        <h3>Szerkezet (4-4-3-3)</h3>
-        <div id="stanza-content"></div>
-    </div>
+   <div class="structure-panel">
+    <h3>Szerkezet (4-4-3-3)</h3>
+    <button onclick="navigator.clipboard.writeText(document.getElementById('stanza-content').innerText.replace(/\(üres sor\)/g, ''))" 
+            style="margin-bottom:15px; width:100%; font-size:11px; background:#6c757d; color:white;">📋 Teljes szöveg másolása</button>
+            
+    <div id="stanza-content"></div>
+</div>
 </div>
 
 <script>
@@ -84,27 +87,27 @@
     }
 
 function updateStructure() {
-        const container = document.getElementById("stanza-content");
-        // Lekérjük a mesterszonett összes sorát (ez a koszorú "gerince")
-        const masterLines = Array.from(document.querySelectorAll("#master .line")).map(i => i.value);
-        
-        // A 4-4-3-3 tagolás beállítása
-        const groups = [
-            { title: "1. Kvartett (4)", start: 0, end: 4 },
-            { title: "2. Kvartett (4)", start: 4, end: 8 },
-            { title: "1. Tercett (3)", start: 8, end: 11 },
-            { title: "2. Tercett (3)", start: 11, end: 14 }
-        ];
-        
-        container.innerHTML = groups.map(g => `
-            <div class="stanza-group">
-                <h4>${g.title}</h4>
-                <div style="font-family: monospace; white-space: pre-wrap; line-height: 1.5;">
-                    ${masterLines.slice(g.start, g.end).map((l, i) => (l || "(üres sor)")).join("<br>")}
-                </div>
+    const container = document.getElementById("stanza-content");
+    const allSzonettEditors = document.querySelectorAll("#others .editor");
+    
+    // Ide gyűjtjük össze a teljes koszorú szövegét
+    let fullContent = "";
+
+    allSzonettEditors.forEach((editor, szonettIdx) => {
+        const lines = Array.from(editor.querySelectorAll(".line")).map(i => i.value);
+        fullContent += `\n--- ${szonettIdx + 1}. SZONETT ---\n`;
+        fullContent += lines.join("\n") + "\n";
+    });
+
+    // Megjelenítés a panelben
+    container.innerHTML = `
+        <div class="stanza-group">
+            <div style="font-family: monospace; white-space: pre-wrap; line-height: 1.4; font-size: 11px;">
+                ${fullContent}
             </div>
-        `).join("");
-    }
+        </div>
+    `;
+}
 
     function createRow(parent, no, isFixed = false) {
         const r = document.createElement("div");
