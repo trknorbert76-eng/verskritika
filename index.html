@@ -83,19 +83,25 @@
         updateStructure();
     }
 
-    function updateStructure() {
-        const lines = Array.from(document.querySelectorAll("#master .line")).map(i => i.value);
+function updateStructure() {
         const container = document.getElementById("stanza-content");
+        // Lekérjük a mesterszonett összes sorát (ez a koszorú "gerince")
+        const masterLines = Array.from(document.querySelectorAll("#master .line")).map(i => i.value);
+        
+        // A 4-4-3-3 tagolás beállítása
         const groups = [
             { title: "1. Kvartett (4)", start: 0, end: 4 },
             { title: "2. Kvartett (4)", start: 4, end: 8 },
             { title: "1. Tercett (3)", start: 8, end: 11 },
             { title: "2. Tercett (3)", start: 11, end: 14 }
         ];
+        
         container.innerHTML = groups.map(g => `
             <div class="stanza-group">
                 <h4>${g.title}</h4>
-                <div>${lines.slice(g.start, g.end).map((l, i) => (l || "(üres)")).join("<br>")}</div>
+                <div style="font-family: monospace; white-space: pre-wrap; line-height: 1.5;">
+                    ${masterLines.slice(g.start, g.end).map((l, i) => (l || "(üres sor)")).join("<br>")}
+                </div>
             </div>
         `).join("");
     }
