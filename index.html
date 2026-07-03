@@ -56,20 +56,28 @@ function count(txt){
 const master=document.getElementById("master");
 const masterInputs=[];
 
- function updateMaster(){
+function updateMaster(){
 
-    const szonettek = document.querySelectorAll("#others details");
+    const szonettek=document.querySelectorAll("#others details");
 
+    // Mesterszonett feltöltése
     szonettek.forEach((szonett,index)=>{
 
-        const sorok = szonett.querySelectorAll(".line");
+        const sorok=szonett.querySelectorAll(".line");
 
-        if(sorok.length>0){
+        masterInputs[index].value=sorok[0].value;
+        upd(masterInputs[index], masterInputs[index].parentNode.children[3]);
 
-            masterInputs[index].value = sorok[0].value;
-            masterInputs[index].dispatchEvent(new Event("input"));
+    });
 
-        }
+    // 14. sorok feltöltése
+    szonettek.forEach((szonett,index)=>{
+
+        const sorok=szonett.querySelectorAll(".line");
+        const kov=szonettek[(index+1)%14].querySelectorAll(".line");
+
+        sorok[13].value=kov[0].value;
+        sorok[13].dispatchEvent(new Event("input"));
 
     });
 
@@ -88,17 +96,14 @@ function add(parent,no,fixed=false,idx=-1){
  let i=document.createElement("input");i.className="line"+(fixed?" fixed":"");
  let rhyme=document.createElement("div");rhyme.className="center";rhyme.textContent="";
  let syl=document.createElement("div");
- if(fixed){
-   i.value=masterInputs[idx].value;
-   masterInputs[idx].addEventListener("input",()=>{i.value=masterInputs[idx].value;upd(i,syl);});
- }
-i.oninput=()=>{
-    upd(i,syl);
 
-    if(parent.id!="master"){
+ i.oninput=()=>{
+    upd(i,syl);
+    if(parent!=master){
         updateMaster();
     }
 };
+
  i.addEventListener("paste", function(e){ 
 
     let txt = (e.clipboardData || window.clipboardData).getData("text");
@@ -152,7 +157,7 @@ for(let n=1;n<=14;n++){
  c.appendChild(h);
  for(let x=1;x<=14;x++){
    let f=false,id=-1;
-   if(x==1){f=true;id=n-1;}
+   
    if(x==14){f=true;id=n%14;}
    add(c,x,f,id);
    if(x==4||x==8||x==11){
