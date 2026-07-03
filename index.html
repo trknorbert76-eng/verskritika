@@ -64,13 +64,15 @@
     }
 
     function updateMaster() {
-        const szonettek = document.querySelectorAll("#others .editor-grid");
-        const masterRows = document.querySelectorAll("#master .row input");
-        szonettek.forEach((grid, index) => {
-            const firstLine = grid.querySelector(".line");
-            if (masterRows[index] && firstLine) {
-                masterRows[index].value = firstLine.value;
-                checkSyllables(masterRows[index]);
+        // A mesterszonett csak az egyes szonettek ELSŐ sorait tartalmazza
+        const szonettEditors = document.querySelectorAll("#others .editor");
+        const masterInputs = document.querySelectorAll("#master .line");
+        
+        szonettEditors.forEach((editor, index) => {
+            const firstLine = editor.querySelector(".line");
+            if (masterInputs[index] && firstLine) {
+                masterInputs[index].value = firstLine.value;
+                checkSyllables(masterInputs[index]);
             }
         });
     }
@@ -78,12 +80,12 @@
     function createRow(parent, no, isFixed = false) {
         const r = document.createElement("div");
         r.className = "row";
-        // Itt 3 elem van: szám, input, szótag
         r.innerHTML = `<div>${no}</div><input type="text" class="line ${isFixed ? 'fixed' : ''}" ${isFixed ? 'readonly' : ''}><div class="center syllable-count">0</div>`;
         parent.appendChild(r);
         return r.querySelector("input");
     }
 
+    // Inicializálás
     const master = document.getElementById("master");
     for (let x = 1; x <= 14; x++) createRow(master, x, true);
 
@@ -102,13 +104,37 @@
         `;
         const editor = d.querySelector(".editor");
         const textarea = d.querySelector(".copy-area");
+        
         for (let x = 1; x <= 14; x++) {
             const input = createRow(editor, x);
-            input.oninput = () => { checkSyllables(input); updatePreview(editor, textarea); updateMaster(); };
+            
+            // Itt kezeljük a sima írást ÉS a beillesztést
+            input.onpaste = (e) => {
+                e.preventDefault();
+                const text = (e.clipboardData || window.clipboardData).getData('text');
+                const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+                const allInputs = editor.querySelectorAll(".line");
+                
+                lines.forEach((line, i) => {
+                    if (allInputs[i]) {
+                        allInputs[i].value = line.trim();
+                        checkSyllables(allInputs[i]);
+                    }
+                });
+                updatePreview(editor, textarea);
+                updateMaster();
+            };
+
+            input.oninput = () => { 
+                checkSyllables(input); 
+                updatePreview(editor, textarea); 
+                updateMaster(); 
+            };
         }
         others.appendChild(d);
     }
 
+    // Mentés/Betöltés/Export változatlan marad...
     function mentes() { 
         const data = Array.from(document.querySelectorAll("#others .line")).map(i => i.value);
         localStorage.setItem("szonettKoszoruData", JSON.stringify(data));
@@ -119,7 +145,10 @@
         const saved = JSON.parse(localStorage.getItem("szonettKoszoruData"));
         if (!saved) return alert("Nincs mentett adat!");
         const allInputs = document.querySelectorAll("#others .line");
-        allInputs.forEach((input, i) => { input.value = saved[i] || ""; checkSyllables(input); });
+        allInputs.forEach((input, i) => { 
+            input.value = saved[i] || ""; 
+            checkSyllables(input); 
+        });
         document.querySelectorAll("#others .editor-grid").forEach(ed => updatePreview(ed, ed.querySelector("textarea")));
         updateMaster();
     }
