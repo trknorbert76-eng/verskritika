@@ -94,7 +94,10 @@ function add(parent,no,fixed=false,idx=-1){
  }
 i.oninput=()=>{
     upd(i,syl);
-    updateMaster();
+
+    if(parent.id!="master"){
+        updateMaster();
+    }
 };
  i.addEventListener("paste", function(e){ 
 
