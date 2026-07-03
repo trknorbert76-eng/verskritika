@@ -92,7 +92,10 @@ function add(parent,no,fixed=false,idx=-1){
    i.value=masterInputs[idx].value;
    masterInputs[idx].addEventListener("input",()=>{i.value=masterInputs[idx].value;upd(i,syl);});
  }
- i.oninput=()=>upd(i,syl);
+i.oninput=()=>{
+    upd(i,syl);
+    updateMaster();
+};
  i.addEventListener("paste", function(e){ 
 
     let txt = (e.clipboardData || window.clipboardData).getData("text");
