@@ -93,11 +93,20 @@ function updateStructure() {
     // Ide gyűjtjük össze a teljes koszorú szövegét
     let fullContent = "";
 
-    allSzonettEditors.forEach((editor, szonettIdx) => {
-        const lines = Array.from(editor.querySelectorAll(".line")).map(i => i.value);
-        fullContent += `\n--- ${szonettIdx + 1}. SZONETT ---\n`;
-        fullContent += lines.join("\n") + "\n";
+ allSzonettEditors.forEach((editor, szonettIdx) => {
+    const lines = Array.from(editor.querySelectorAll(".line")).map(i => i.value);
+    fullContent += `\n--- ${szonettIdx + 1}. SZONETT ---\n`;
+    
+    // Itt dolgozzuk fel a sorokat egyesével, hogy beszúrjuk a szóközöket
+    lines.forEach((line, index) => {
+        fullContent += line + "\n";
+        // Ha elértük a 4., 8. vagy 11. sort (index: 3, 7, 10), szúrunk be egy plusz sort
+        if (index === 3 || index === 7 || index === 10) {
+            fullContent += "\n";
+        }
     });
+    fullContent += "\n";
+});
 
     // Megjelenítés a panelben
     container.innerHTML = `
