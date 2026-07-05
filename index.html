@@ -5,7 +5,7 @@
     <title>Szonettkoszorú Szerkesztő</title> 
     <style>
         body { font-family: Segoe UI, Arial; background: #eef2f5; margin: 20px; }
-        .main-layout { display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; max-width: 1200px; margin: auto; } 
+        .main-layout { display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; max-width: 1200px; margin: auto; }
         .card { background: #fff; border-radius: 12px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,.12); margin-bottom: 18px; } 
         .controls { position: sticky; top: 0; background: #fff; padding: 15px; border-radius: 12px; z-index: 100; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; gap: 10px; }
         .editor-grid { display: grid; grid-template-columns: 1fr 250px; gap: 20px; align-items: start; margin-top: 10px; }
@@ -17,18 +17,17 @@
         .syllable-count { font-weight: bold; }
         .good { color: green; }
         .bad { color: #d00000; }
-        /* Új színek a strófákhoz */
-        .strófa-3 { background-color: #e3f2fd; } /* Halványkék */
-        .strófa-4 { background-color: #e8f5e9; } /* Halványzöld */
+        .strófa-3 { background-color: #e3f2fd; }
+        .strófa-4 { background-color: #e8f5e9; }
         button { padding: 8px 16px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; }
         details { margin-bottom: 15px; }
         summary { cursor: pointer; padding: 10px; background: #fff; border-radius: 8px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .structure-panel { position: sticky; top: 20px; background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.1); font-size: 12px; }
-        .stanza-group { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
-/* Ritmus jelző színek */
-.bg-good { background-color: #d4edda !important; }    /* Zöld - Tökéletes */
-.bg-fair { background-color: #fff3cd !important; }    /* Narancs - Közelítő */
-.bg-bad { background-color: #f8d7da !important; }     /* Piros - Hibás */
+        
+        /* Új ritmus színek */
+        .syl-good { color: #28a745; font-weight: bold; }
+        .syl-bad { color: #d00000; font-weight: bold; }
+        .rhythm-container { font-size: 11px; margin-top: 2px; height: 15px; overflow: hidden; }
     </style>
 </head>
 <body>
@@ -42,20 +41,16 @@
             <button onclick="betoltes()" style="background:#28a745; color:white;">📂 Betöltés</button>
             <button onclick="exportalas()" style="background:#6c757d; color:white;">📄 Exportálás</button>
         </div>
-
         <div class="card">
             <h2>15. Mesterszonett</h2>
             <div class="header"><div>#</div><div>Sor</div><div class="center">Szótag</div></div>
             <div id="master"></div>
         </div>
-
         <div id="others"></div>
     </div>
-
     <div class="structure-panel">
         <h3>Szerkezet (4-4-3-3)</h3>
-        <button onclick="navigator.clipboard.writeText(document.getElementById('stanza-content').innerText)" 
-                style="margin-bottom:15px; width:100%; font-size:11px; background:#6c757d; color:white;">📋 Teljes szöveg másolása</button>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('stanza-content').innerText)" style="margin-bottom:15px; width:100%; font-size:11px; background:#6c757d; color:white;">📋 Teljes szöveg másolása</button>
         <div id="stanza-content"></div>
     </div>
 </div>
@@ -66,42 +61,28 @@
         return (t.match(/[aáeéiíoóöőuúüű]/g) || []).length;
     }
 
-    // ÚJ: Ritmus ellenőrző függvény
-    function checkJambus(text) {
-        if (!text.trim()) return "none";
-        const words = text.toLowerCase().match(/\b(\w+)\b/g) || [];
-        let rhythmScore = 0;
-        let totalSyllables = 0;
-
+    function processLineRitmus(text) {
+        const words = text.split(/\s+/);
+        let htmlOutput = "";
+        let sylIdx = 0;
         words.forEach(word => {
-            let syllables = countSyllables(word);
-            // A magyar szókezdő hangsúly vizsgálata
-            // A jambusban (10-11 szótag) a 2, 4, 6, 8, 10. pozíciók a hangsúlyosak
-            if ((totalSyllables + 1) % 2 === 0) rhythmScore++; 
-            totalSyllables += syllables;
+            const parts = word.match(/[^aeiouáéíóöőúüű]*[aeiouáéíóöőúüű]+/gi) || [word];
+            parts.forEach(part => {
+                sylIdx++;
+                const className = (sylIdx % 2 === 0) ? "syl-good" : "syl-bad";
+                htmlOutput += `<span class="${className}">${part}</span> `;
+            });
         });
-
-        const ratio = totalSyllables > 0 ? (rhythmScore / (words.length)) : 0;
-        if (ratio >= 0.7) return "good";
-        if (ratio >= 0.4) return "fair";
-        return "bad";
+        return htmlOutput;
     }
 
-    // JAVÍTOTT: Egyesített ellenőrző függvény
     function checkSyllables(input) {
         const n = countSyllables(input.value);
-        const box = input.parentNode.querySelector(".syllable-count");
-        box.textContent = n;
-        box.className = "center syllable-count " + ((n === 10 || n === 11) ? "good" : "bad");
-
-        // Ritmus osztályok kezelése
-        const row = input.parentNode;
-        const rhythmStatus = checkJambus(input.value);
-        
-        row.classList.remove("bg-good", "bg-fair", "bg-bad");
-        if (rhythmStatus === "good") row.classList.add("bg-good");
-        else if (rhythmStatus === "fair") row.classList.add("bg-fair");
-        else if (rhythmStatus === "bad") row.classList.add("bg-bad");
+        const box = input.parentNode.parentNode.querySelector(".syllable-count");
+        if(box) {
+            box.textContent = n;
+            box.className = "center syllable-count " + ((n === 10 || n === 11) ? "good" : "bad");
+        }
     }
 
     function updatePreview(editor, textarea) {
@@ -143,7 +124,13 @@
         r.className = "row";
         if (no >= 9 && no <= 11) r.classList.add("strófa-3");
         if (no >= 12 && no <= 14) r.classList.add("strófa-4");
-        r.innerHTML = `<div>${no}</div><input type="text" class="line ${isFixed ? 'fixed' : ''}" ${isFixed ? 'readonly' : ''}><div class="center syllable-count">0</div>`;
+
+        r.innerHTML = `<div>${no}</div>
+                       <div>
+                         <input type="text" class="line ${isFixed ? 'fixed' : ''}" ${isFixed ? 'readonly' : ''}>
+                         <div class="rhythm-container"></div>
+                       </div>
+                       <div class="center syllable-count">0</div>`;
         parent.appendChild(r);
         return r.querySelector("input");
     }
@@ -164,16 +151,12 @@
         const textarea = d.querySelector(".copy-area");
         for (let x = 1; x <= 14; x++) {
             const input = createRow(editor, x);
-            input.onpaste = (e) => {
-                e.preventDefault();
-                const text = (e.clipboardData || window.clipboardData).getData('text');
-                const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
-                const allInputs = editor.querySelectorAll(".line");
-                lines.forEach((line, i) => { if (allInputs[i]) { allInputs[i].value = line.trim(); checkSyllables(allInputs[i]); } });
-                updatePreview(editor, textarea);
-                updateMaster();
+            input.oninput = () => { 
+                checkSyllables(input); 
+                if (x >= 9) input.parentNode.querySelector(".rhythm-container").innerHTML = processLineRitmus(input.value);
+                updatePreview(editor, textarea); 
+                updateMaster(); 
             };
-            input.oninput = () => { checkSyllables(input); updatePreview(editor, textarea); updateMaster(); };
         }
         others.appendChild(d);
     }
