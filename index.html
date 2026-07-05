@@ -17,12 +17,14 @@
         .syllable-count { font-weight: bold; }
         .good { color: green; }
         .bad { color: #d00000; }
+        /* Új színek a strófákhoz */
+        .strófa-3 { background-color: #e3f2fd; } /* Halványkék */
+        .strófa-4 { background-color: #e8f5e9; } /* Halványzöld */
         button { padding: 8px 16px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; }
         details { margin-bottom: 15px; }
         summary { cursor: pointer; padding: 10px; background: #fff; border-radius: 8px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .structure-panel { position: sticky; top: 20px; background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.1); font-size: 12px; }
         .stanza-group { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
-        .stanza-group h4 { margin: 0 0 5px 0; color: #555; }
     </style>
 </head>
 <body>
@@ -46,13 +48,12 @@
         <div id="others"></div>
     </div>
 
-   <div class="structure-panel">
-    <h3>Szerkezet (4-4-3-3)</h3>
-    <button onclick="navigator.clipboard.writeText(document.getElementById('stanza-content').innerText.replace(/\(üres sor\)/g, ''))" 
-            style="margin-bottom:15px; width:100%; font-size:11px; background:#6c757d; color:white;">📋 Teljes szöveg másolása</button>
-            
-    <div id="stanza-content"></div>
-</div>
+    <div class="structure-panel">
+        <h3>Szerkezet (4-4-3-3)</h3>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('stanza-content').innerText)" 
+                style="margin-bottom:15px; width:100%; font-size:11px; background:#6c757d; color:white;">📋 Teljes szöveg másolása</button>
+        <div id="stanza-content"></div>
+    </div>
 </div>
 
 <script>
@@ -65,7 +66,7 @@
         const n = countSyllables(input.value);
         const box = input.parentNode.querySelector(".syllable-count");
         box.textContent = n;
-       box.className = "center syllable-count " + ((n === 10 || n === 11) ? "good" : "bad");
+        box.className = "center syllable-count " + ((n === 10 || n === 11) ? "good" : "bad");
     }
 
     function updatePreview(editor, textarea) {
@@ -86,41 +87,31 @@
         updateStructure();
     }
 
-function updateStructure() {
-    const container = document.getElementById("stanza-content");
-    const allSzonettEditors = document.querySelectorAll("#others .editor");
-    
-    // Ide gyűjtjük össze a teljes koszorú szövegét
-    let fullContent = "";
-
- allSzonettEditors.forEach((editor, szonettIdx) => {
-    const lines = Array.from(editor.querySelectorAll(".line")).map(i => i.value);
-    fullContent += `\n--- ${szonettIdx + 1}. SZONETT ---\n`;
-    
-    // Itt dolgozzuk fel a sorokat egyesével, hogy beszúrjuk a szóközöket
-    lines.forEach((line, index) => {
-        fullContent += line + "\n";
-        // Ha elértük a 4., 8. vagy 11. sort (index: 3, 7, 10), szúrunk be egy plusz sort
-        if (index === 3 || index === 7 || index === 10) {
+    function updateStructure() {
+        const container = document.getElementById("stanza-content");
+        const allSzonettEditors = document.querySelectorAll("#others .editor");
+        let fullContent = "";
+        allSzonettEditors.forEach((editor, szonettIdx) => {
+            const lines = Array.from(editor.querySelectorAll(".line")).map(i => i.value);
+            fullContent += `\n--- ${szonettIdx + 1}. SZONETT ---\n`;
+            lines.forEach((line, index) => {
+                fullContent += line + "\n";
+                if (index === 3 || index === 7 || index === 10) fullContent += "\n";
+            });
             fullContent += "\n";
-        }
-    });
-    fullContent += "\n";
-});
+        });
+        container.innerHTML = `<div style="font-family: monospace; white-space: pre-wrap; line-height: 1.4; font-size: 11px;">${fullContent}</div>`;
+    }
 
-    // Megjelenítés a panelben
-    container.innerHTML = `
-        <div class="stanza-group">
-            <div style="font-family: monospace; white-space: pre-wrap; line-height: 1.4; font-size: 11px;">
-                ${fullContent}
-            </div>
-        </div>
-    `;
-}
-
+    // Módosított függvény: osztályok hozzáadása a sorokhoz
     function createRow(parent, no, isFixed = false) {
         const r = document.createElement("div");
         r.className = "row";
+        
+        // Strófa szerinti színezés a 9-14. soroknál
+        if (no >= 9 && no <= 11) r.classList.add("strófa-3");
+        if (no >= 12 && no <= 14) r.classList.add("strófa-4");
+
         r.innerHTML = `<div>${no}</div><input type="text" class="line ${isFixed ? 'fixed' : ''}" ${isFixed ? 'readonly' : ''}><div class="center syllable-count">0</div>`;
         parent.appendChild(r);
         return r.querySelector("input");
