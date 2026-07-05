@@ -170,10 +170,20 @@ function processLineRitmus(text) {
     }
 
     function mentes() { localStorage.setItem("szonettKoszoruData", JSON.stringify(Array.from(document.querySelectorAll("#others .line")).map(i => i.value))); alert("Sikeres mentés!"); }
-    function betoltes() {
+ function betoltes() {
         const saved = JSON.parse(localStorage.getItem("szonettKoszoruData"));
         if (!saved) return alert("Nincs mentett adat!");
-        document.querySelectorAll("#others .line").forEach((input, i) => { input.value = saved[i] || ""; checkSyllables(input); });
+        
+        const allInputs = document.querySelectorAll("#others .line");
+        allInputs.forEach((input, i) => { 
+            input.value = saved[i] || ""; 
+            checkSyllables(input);
+            // Ritmus frissítése betöltéskor:
+            const rowNo = (i % 14) + 1; 
+            if (rowNo >= 9) {
+                input.parentNode.querySelector(".rhythm-container").innerHTML = processLineRitmus(input.value);
+            }
+        });
         document.querySelectorAll("#others .editor-grid").forEach(ed => updatePreview(ed, ed.querySelector("textarea")));
         updateMaster();
     }
