@@ -23,11 +23,6 @@
         details { margin-bottom: 15px; }
         summary { cursor: pointer; padding: 10px; background: #fff; border-radius: 8px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .structure-panel { position: sticky; top: 20px; background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.1); font-size: 12px; }
-        
-        /* Új ritmus színek */
-        .syl-good { color: #28a745; font-weight: bold; }
-        .syl-bad { color: #d00000; font-weight: bold; }
-        .rhythm-container { font-size: 11px; margin-top: 2px; height: 15px; overflow: hidden; }
     </style>
 </head>
 <body>
@@ -60,29 +55,6 @@
         t = t.toLowerCase().replace(/[^a-záéíóöőúüű]/g, "");
         return (t.match(/[aáeéiíoóöőuúüű]/g) || []).length;
     }
-
-function processLineRitmus(text) {
-    // Ezzel a reguláris kifejezéssel bontjuk a szavakat szótagokra
-    // Magyar nyelvű egyszerűsített szótagoló
-    const syllableRegex = /[^aeiouáéíóöőúüű]*[aeiouáéíóöőúüű]+(?:[^aeiouáéíóöőúüű]*(?![aeiouáéíóöőúüű]))?/gi;
-    
-    const words = text.split(/\s+/);
-    let htmlOutput = "";
-    let sylIdx = 0;
-
-    words.forEach(word => {
-        const syllables = word.match(syllableRegex) || [word];
-        syllables.forEach(syl => {
-            sylIdx++;
-            // Jambus (páros hely = erős/zöld, páratlan hely = gyenge/piros)
-            // A színezés itt történik: a span a szótagot tartalmazza
-            const color = (sylIdx % 2 === 0) ? "#28a745" : "#d00000"; 
-            htmlOutput += `<span style="color: ${color}; font-weight: bold;">${syl}</span>`;
-        });
-        htmlOutput += " "; // Szóközi szóköz
-    });
-    return htmlOutput;
-}
 
     function checkSyllables(input) {
         const n = countSyllables(input.value);
@@ -134,10 +106,7 @@ function processLineRitmus(text) {
         if (no >= 12 && no <= 14) r.classList.add("strófa-4");
 
         r.innerHTML = `<div>${no}</div>
-                       <div>
-                         <input type="text" class="line ${isFixed ? 'fixed' : ''}" ${isFixed ? 'readonly' : ''}>
-                         <div class="rhythm-container"></div>
-                       </div>
+                       <div><input type="text" class="line ${isFixed ? 'fixed' : ''}" ${isFixed ? 'readonly' : ''}></div>
                        <div class="center syllable-count">0</div>`;
         parent.appendChild(r);
         return r.querySelector("input");
@@ -161,7 +130,6 @@ function processLineRitmus(text) {
             const input = createRow(editor, x);
             input.oninput = () => { 
                 checkSyllables(input); 
-                if (x >= 9) input.parentNode.querySelector(".rhythm-container").innerHTML = processLineRitmus(input.value);
                 updatePreview(editor, textarea); 
                 updateMaster(); 
             };
@@ -170,7 +138,7 @@ function processLineRitmus(text) {
     }
 
     function mentes() { localStorage.setItem("szonettKoszoruData", JSON.stringify(Array.from(document.querySelectorAll("#others .line")).map(i => i.value))); alert("Sikeres mentés!"); }
- function betoltes() {
+    function betoltes() {
         const saved = JSON.parse(localStorage.getItem("szonettKoszoruData"));
         if (!saved) return alert("Nincs mentett adat!");
         
@@ -178,11 +146,6 @@ function processLineRitmus(text) {
         allInputs.forEach((input, i) => { 
             input.value = saved[i] || ""; 
             checkSyllables(input);
-            // Ritmus frissítése betöltéskor:
-            const rowNo = (i % 14) + 1; 
-            if (rowNo >= 9) {
-                input.parentNode.querySelector(".rhythm-container").innerHTML = processLineRitmus(input.value);
-            }
         });
         document.querySelectorAll("#others .editor-grid").forEach(ed => updatePreview(ed, ed.querySelector("textarea")));
         updateMaster();
@@ -195,4 +158,4 @@ function processLineRitmus(text) {
     updateStructure();
 </script>
 </body>
-</html>
+</html>   
