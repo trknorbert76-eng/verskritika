@@ -65,7 +65,7 @@
         const n = countSyllables(input.value);
         const box = input.parentNode.querySelector(".syllable-count");
         box.textContent = n;
-        box.className = "center syllable-count " + ((n >= 9 && n <= 12) ? "good" : "bad");
+       box.className = "center syllable-count " + ((n === 10 || n === 11) ? "good" : "bad");
     }
 
     function updatePreview(editor, textarea) {
