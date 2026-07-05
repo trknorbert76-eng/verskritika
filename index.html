@@ -61,20 +61,28 @@
         return (t.match(/[aáeéiíoóöőuúüű]/g) || []).length;
     }
 
-    function processLineRitmus(text) {
-        const words = text.split(/\s+/);
-        let htmlOutput = "";
-        let sylIdx = 0;
-        words.forEach(word => {
-            const parts = word.match(/[^aeiouáéíóöőúüű]*[aeiouáéíóöőúüű]+/gi) || [word];
-            parts.forEach(part => {
-                sylIdx++;
-                const className = (sylIdx % 2 === 0) ? "syl-good" : "syl-bad";
-                htmlOutput += `<span class="${className}">${part}</span> `;
-            });
+function processLineRitmus(text) {
+    // Ezzel a reguláris kifejezéssel bontjuk a szavakat szótagokra
+    // Magyar nyelvű egyszerűsített szótagoló
+    const syllableRegex = /[^aeiouáéíóöőúüű]*[aeiouáéíóöőúüű]+(?:[^aeiouáéíóöőúüű]*(?![aeiouáéíóöőúüű]))?/gi;
+    
+    const words = text.split(/\s+/);
+    let htmlOutput = "";
+    let sylIdx = 0;
+
+    words.forEach(word => {
+        const syllables = word.match(syllableRegex) || [word];
+        syllables.forEach(syl => {
+            sylIdx++;
+            // Jambus (páros hely = erős/zöld, páratlan hely = gyenge/piros)
+            // A színezés itt történik: a span a szótagot tartalmazza
+            const color = (sylIdx % 2 === 0) ? "#28a745" : "#d00000"; 
+            htmlOutput += `<span style="color: ${color}; font-weight: bold;">${syl}</span>`;
         });
-        return htmlOutput;
-    }
+        htmlOutput += " "; // Szóközi szóköz
+    });
+    return htmlOutput;
+}
 
     function checkSyllables(input) {
         const n = countSyllables(input.value);
