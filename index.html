@@ -79,12 +79,12 @@
         'f': 'v', 'v': 'f'
     };
 
-  function getRhymeKeys(text) {
+ function getRhymeKeys(text) {
     text = text.trim().split(/\s+/).pop();
     let clean = text.toLowerCase().replace(/[^a-zááééííóóöőúúüű]/g, "");
     if (clean.length < 2) return { raw: "", clean: "" };
 
-    // Magánhangzók és lágy hangok (tj / jt / j) egységesítése
+    // Magánhangzók és lágyító/hasonuló hangzócsoportok egységesítése
     let normalized = clean.replace(/á/g, "a")
                           .replace(/é/g, "e")
                           .replace(/í/g, "i")
@@ -93,12 +93,16 @@
                           .replace(/ly/g, "j")
                           .replace(/ty/g, "j")
                           .replace(/gy/g, "j")
-                          .replace(/tj/g, "jt")  // "tartja" -> "tarjta"
-                          .replace(/ja$/g, "jta"); // "vonja" -> "vonjta"
+                          .replace(/tj/g, "jt")
+                          .replace(/ja$/g, "jta");
+
+    // Az utolsó magánhangzótól induló rímfej kinyerése (pl. "ét", "jta", "este")
+    const match = normalized.match(/[aeiou][^aeiou]*$/);
+    let key = match ? match[0] : normalized.slice(-2);
 
     return {
-        raw: clean.slice(-3),       
-        clean: normalized.slice(-3) // 3 betűs rímfej összevetése
+        raw: clean.slice(-3),
+        clean: key
     };
 }
 
