@@ -69,31 +69,33 @@
     }
 
     // Egyszerűsített, tiszta hangzás alapú rímkulcs-képző
-    function getRhymeKeys(text) {
-        text = text.trim().split(/\s+/).pop();
-        let clean = text.toLowerCase().replace(/[^a-zááééííóóöőúúüű]/g, "");
-        if (clean.length < 2) return { primary: "", short: "" };
+   function getRhymeKeys(text) {
+    text = text.trim().split(/\s+/).pop();
+    let clean = text.toLowerCase().replace(/[^a-zááééííóóöőúúüű]/g, "");
+    if (clean.length < 2) return { primary: "", short: "" };
 
-        // Magánhangzók és alapvető zöngés/lágy hangok egységesítése
-        clean = clean.replace(/á/g, "a")
-                     .replace(/é/g, "e")
-                     .replace(/í/g, "i")
-                     .replace(/[óöő]/g, "o")
-                     .replace(/[úüű]/g, "u")
-                     .replace(/ly/g, "j")
-                     .replace(/ty/g, "j")
-                     .replace(/gy/g, "j")
-                     .replace(/d$/, "t")
-                     .replace(/b$/, "p")
-                     .replace(/g$/, "k")
-                     .replace(/z$/, "s")
-                     .replace(/v$/, "f");
+    // Magánhangzók és mássalhangzó-hasonulások (pl. tartja -> tarja, rajta -> raja)
+    clean = clean.replace(/á/g, "a")
+                 .replace(/é/g, "e")
+                 .replace(/í/g, "i")
+                 .replace(/[óöő]/g, "o")
+                 .replace(/[úüű]/g, "u")
+                 .replace(/ly/g, "j")
+                 .replace(/ty/g, "j")
+                 .replace(/gy/g, "j")
+                 .replace(/tj/g, "j")
+                 .replace(/jt/g, "j")
+                 .replace(/d$/, "t")
+                 .replace(/b$/, "p")
+                 .replace(/g$/, "k")
+                 .replace(/z$/, "s")
+                 .replace(/v$/, "f");
 
-        return {
-            primary: clean.slice(-3),
-            short: clean.slice(-2)
-        };
-    }
+    return {
+        primary: clean.slice(-3),
+        short: clean.slice(-2)
+    };
+}
 
     function getSimilarity(keysA, keysB) {
         if (!keysA.primary || !keysB.primary) return 0;
