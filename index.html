@@ -69,25 +69,30 @@
     }
 
     function getRhymeKeys(text) {
-         text = text.trim().split(/\s+/).pop();
+        text = text.trim().split(/\s+/).pop();
         let clean = text.toLowerCase().replace(/[^a-zááééííóóöőúúüű]/g, "");
         if (clean.length < 2) return { primary: "", secondary: "" };
 
-         clean = clean
-        .replace(/á/g, "a")
-        .replace(/é/g, "e")
-        .replace(/í/g, "i")
-        .replace(/[óöő]/g, "o")
-        .replace(/[úüű]/g, "u");
+        // 1. Magánhangzók egyszerűsítése
+        clean = clean.replace(/á/g, "a")
+                     .replace(/é/g, "e")
+                     .replace(/í/g, "i")
+                     .replace(/[óöő]/g, "o")
+                     .replace(/[úüű]/g, "u");
 
-
-      const matchLong = clean.match(/[aeiou][^aeiou]*[aeiou][^aeiou]*$/);
-const matchShort = clean.match(/[aeiou][^aeiou]*$/);
+        const matchLong = clean.match(/[aeiou][^aeiou]*[aeiou][^aeiou]*$/);
+        const matchShort = clean.match(/[aeiou][^aeiou]*$/);
 
         let primary = matchLong ? matchLong[0] : (matchShort ? matchShort[0] : clean.slice(-3));
         let secondary = matchShort ? matchShort[0] : clean.slice(-2);
 
-        const normalizeKey = (k) => k.replace(/d$/, "t")
+        // 2. Mássalhangzó-lágyítások és zöngétlenítés a rímkulcsok végén ($)
+        const normalizeKey = (k) => k.replace(/ly/g, "j")
+                                     .replace(/ty/g, "j")
+                                     .replace(/gy/g, "j")
+                                     .replace(/rtj/g, "jt")
+                                     .replace(/ndj/g, "nj")
+                                     .replace(/d$/, "t")
                                      .replace(/b$/, "p")
                                      .replace(/g$/, "k")
                                      .replace(/z$/, "s")
@@ -107,10 +112,17 @@ const matchShort = clean.match(/[aeiou][^aeiou]*$/);
         const pA = keysA.primary;
         const pB = keysB.primary;
 
+        // Utolsó magánhangzó-csoport egyezése
         if (keysA.secondary === keysB.secondary) {
-            score += 55;
+            score += 50;
         }
 
+        // BÓNUSZ: Kezdő magánhangzó megegyezése a rímfejben
+        if (pA[0] === pB[0]) {
+            score += 15;
+        }
+
+        // Karakteres egyezés visszafelé
         const minLen = Math.min(pA.length, pB.length);
         let matchCount = 0;
         for (let i = 1; i <= minLen; i++) {
@@ -121,7 +133,7 @@ const matchShort = clean.match(/[aeiou][^aeiou]*$/);
             }
         }
 
-        score += (matchCount / Math.max(pA.length, pB.length)) * 45;
+        score += (matchCount / Math.max(pA.length, pB.length)) * 35;
         return Math.min(score, 100);
     }
 
@@ -138,7 +150,7 @@ const matchShort = clean.match(/[aeiou][^aeiou]*$/);
 
         const assignedLetters = new Array(rows.length).fill("-");
         const visited = new Array(rows.length).fill(false);
-        const THRESHOLD = 75;
+        const THRESHOLD = 65; // Beállítva a finomított hasonlóságértékhez
 
         for (let i = 0; i < rows.length; i++) {
             if (!allKeys[i].primary || visited[i]) continue;
@@ -162,6 +174,7 @@ const matchShort = clean.match(/[aeiou][^aeiou]*$/);
                 }
             }
 
+            // Csak akkor oszt ki rímbetűt, ha legalább 2 sor összetartozik
             if (currentGroup.length > 1) {
                 const letter = alphabet[alphabetIdx % 26];
                 currentGroup.forEach(idx => {
@@ -171,11 +184,11 @@ const matchShort = clean.match(/[aeiou][^aeiou]*$/);
             }
         }
 
+        // Tiszta kiírás: Csak a rímbetűt jeleníti meg (vagy - jelet, ha egyedi)
         rows.forEach((row, idx) => {
             const rhymeBox = row.querySelector(".rhyme-tag");
             if (rhymeBox) {
-                rhymeBox.textContent =
-    assignedLetters[idx] + " " + allKeys[idx].primary;
+                rhymeBox.textContent = assignedLetters[idx];
             }
         });
     }
