@@ -58,8 +58,8 @@
 
 <script>
     function countSyllables(t) {
-        t = t.toLowerCase().replace(/[^a-záéíóöőúüű]/g, "");
-        return (t.match(/[aáeéiíoóöőuúüű]/g) || []).length;
+        t = t.toLowerCase().replace(/[^a-záàeéèiíìoóòöőuúùüű]/g, "");
+        return (t.match(/[aáàeéèiíìoóòöőuúùüű]/g) || []).length;
     }
 
     function checkSyllables(input) {
