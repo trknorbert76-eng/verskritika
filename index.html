@@ -69,6 +69,7 @@
     }
 
     function getRhymeKeys(text) {
+         text = text.trim().split(/\s+/).pop();
         let clean = text.toLowerCase().replace(/[^a-zááééííóóöőúúüű]/g, "");
         if (clean.length < 2) return { primary: "", secondary: "" };
 
