@@ -9,22 +9,22 @@
         .card { background: #fff; border-radius: 12px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,.12); margin-bottom: 18px; } 
         .controls { position: sticky; top: 0; background: #fff; padding: 15px; border-radius: 12px; z-index: 100; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; gap: 10px; }
         .editor-grid { display: grid; grid-template-columns: 1fr 250px; gap: 20px; align-items: start; margin-top: 10px; }
-        .header, .row { display: grid; grid-template-columns: 30px 1fr 60px; gap: 10px; align-items: center; }
-        .line { width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 5px; font-size: 14px; }
+        /* Módosított oszloposztás: #, Sor, Szótag, Rím */
+        .header, .row { display: grid; grid-template-columns: 25px 1fr 50px 40px; gap: 8px; align-items: center; }
+        .line { width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 5px; font-size: 14px; box-sizing: border-box; }
         .copy-area { width: 100%; height: 350px; font-family: monospace; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: #f9f9f9; resize: vertical; font-size: 12px; }
         .fixed { background: #f0f0f0; }
         .center { text-align: center; }
         .syllable-count { font-weight: bold; }
+        .rhyme-tag { font-weight: bold; color: #0056b3; background: #e9ecef; border-radius: 4px; padding: 2px 0; text-align: center; }
         .good { color: green; }
         .bad { color: #d00000; }
-        /* Új színek a strófákhoz */
         .strófa-3 { background-color: #e3f2fd; } /* Halványkék */
         .strófa-4 { background-color: #e8f5e9; } /* Halványzöld */
         button { padding: 8px 16px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; }
         details { margin-bottom: 15px; }
         summary { cursor: pointer; padding: 10px; background: #fff; border-radius: 8px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .structure-panel { position: sticky; top: 20px; background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.1); font-size: 12px; }
-        .stanza-group { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
     </style>
 </head>
 <body>
@@ -41,7 +41,7 @@
 
         <div class="card">
             <h2>15. Mesterszonett</h2>
-            <div class="header"><div>#</div><div>Sor</div><div class="center">Szótag</div></div>
+            <div class="header"><div>#</div><div>Sor</div><div class="center">Szótag</div><div class="center">Rím</div></div>
             <div id="master"></div>
         </div>
 
@@ -68,6 +68,119 @@
         box.textContent = n;
         box.className = "center syllable-count " + ((n === 10 || n === 11) ? "good" : "bad");
     }
+    box.className = "center syllable-count " + ((n === 10 || n === 11) ? "good" : "bad");
+}
+
+// 1. Rímkulcs-képző függvény (ez kezeli a rokon rímeket is)
+function getRhymeKey(text) {
+    let clean = text.toLowerCase().replace(/[^a-zááééííóóöőúúüű]/g, "");
+    if (clean.length < 2) return "";
+    
+    // Hosszú magánhangzók egyszerűsítése
+    clean = clean.replace(/á/g, "a").replace(/é/g, "e").replace(/í/g, "i")
+                 .replace(/ó/g, "o").replace(/ö/g, "o").replace(/ő/g, "o")
+                 .replace(/ú/g, "u").replace(/ü/g, "u").replace(/ű/g, "u");
+
+    // Rokon rímek (zöngés párok zöngétlenítése a szó végén)
+    clean = clean.replace(/d$/, "t")
+                 .replace(/b$/, "p")
+                 .replace(/g$/, "k")
+                 .replace(/z$/, "s");
+
+    // Utolsó magánhangzótól induló rímfantom kinyerése
+    const match = clean.match(/[aeiou][^aeiou]*$/);
+    return match ? match[0] : clean.slice(-3);
+}
+
+// 2. Rímek elemzése és betűzése szonettenként
+function analyzeRhymes(container) {
+    const rows = container.querySelectorAll(".row");
+    const rhymeKeys = [];
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    let alphabetIdx = 0;
+    const keyToLetter = {};
+
+    rows.forEach(row => {
+        const input = row.querySelector(".line");
+        const key = getRhymeKey(input.value);
+        rhymeKeys.push(key);
+    });
+
+    rows.forEach((row, idx) => {
+        const key = rhymeKeys[idx];
+        const rhymeBox = row.querySelector(".rhyme-tag");
+        if (!rhymeBox) return;
+        
+        if (!key) {
+            rhymeBox.textContent = "-";
+            return;
+        }
+
+        if (!keyToLetter[key]) {
+            const matches = rhymeKeys.filter(k => k === key).length;
+            if (matches > 1) {
+                keyToLetter[key] = alphabet[alphabetIdx % 26];
+                alphabetIdx++;
+            } else {
+                keyToLetter[key] = "-";
+            }
+        }
+        rhymeBox.textContent = keyToLetter[key];
+    });
+}
+    // Kinyeri a sor végéről a rímelés szempontjából lényeges hangcsoportot
+    function getRhymeKey(text) {
+        let clean = text.toLowerCase().replace(/[^a-zááééííóóöőúúüű]/g, "");
+        if (clean.length < 2) return "";
+        
+        // Hosszú magánhangzók egyszerűsítése a lazább rímegyezéshez
+        clean = clean.replace(/á/g, "a").replace(/é/g, "e").replace(/í/g, "i")
+                     .replace(/ó/g, "o").replace(/ö/g, "o").replace(/ő/g, "o")
+                     .replace(/ú/g, "u").replace(/ü/g, "u").replace(/ű/g, "u");
+
+        // Megkeressük az utolsó magánhangzó előtti résztől a sor végét
+        const match = clean.match(/[aeiou][^aeiou]*$/);
+        return match ? match[0] : clean.slice(-3);
+    }
+
+    // Végigmegy a szonett sorain, és ABC betűket rendel a rímelő végződésekhez
+    function analyzeRhymes(container) {
+        const rows = container.querySelectorAll(".row");
+        const rhymeKeys = [];
+        const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        let alphabetIdx = 0;
+        const keyToLetter = {};
+
+        // Első kör: kinyerjük a rímkulcsokat
+        rows.forEach(row => {
+            const input = row.querySelector(".line");
+            const key = getRhymeKey(input.value);
+            rhymeKeys.push(key);
+        });
+
+        // Második kör: kijelöljük a betűket
+        rows.forEach((row, idx) => {
+            const key = rhymeKeys[idx];
+            const rhymeBox = row.querySelector(".rhyme-tag");
+            
+            if (!key) {
+                rhymeBox.textContent = "-";
+                return;
+            }
+
+            if (!keyToLetter[key]) {
+                // Megnézzük, hogy ez a rímkulcs előfordul-e még valahol a szonettben
+                const matches = rhymeKeys.filter(k => k === key).length;
+                if (matches > 1) {
+                    keyToLetter[key] = alphabet[alphabetIdx % 26];
+                    alphabetIdx++;
+                } else {
+                    keyToLetter[key] = "-"; // Egyedi végződés (még nem rímel semmivel)
+                }
+            }
+            rhymeBox.textContent = keyToLetter[key];
+        });
+    }
 
     function updatePreview(editor, textarea) {
         const lines = editor.querySelectorAll(".line");
@@ -84,6 +197,7 @@
                 checkSyllables(masterInputs[index]);
             }
         });
+        analyzeRhymes(document.getElementById("master"));
         updateStructure();
     }
 
@@ -103,16 +217,17 @@
         container.innerHTML = `<div style="font-family: monospace; white-space: pre-wrap; line-height: 1.4; font-size: 11px;">${fullContent}</div>`;
     }
 
-    // Módosított függvény: osztályok hozzáadása a sorokhoz
     function createRow(parent, no, isFixed = false) {
         const r = document.createElement("div");
         r.className = "row";
         
-        // Strófa szerinti színezés a 9-14. soroknál
         if (no >= 9 && no <= 11) r.classList.add("strófa-3");
         if (no >= 12 && no <= 14) r.classList.add("strófa-4");
 
-        r.innerHTML = `<div>${no}</div><input type="text" class="line ${isFixed ? 'fixed' : ''}" ${isFixed ? 'readonly' : ''}><div class="center syllable-count">0</div>`;
+        r.innerHTML = `<div>${no}</div>
+                       <input type="text" class="line ${isFixed ? 'fixed' : ''}" ${isFixed ? 'readonly' : ''}>
+                       <div class="center syllable-count">0</div>
+                       <div class="center rhyme-tag">-</div>`;
         parent.appendChild(r);
         return r.querySelector("input");
     }
@@ -125,24 +240,40 @@
         const d = document.createElement("details");
         d.innerHTML = `<summary>${n}. Szonett szerkesztése</summary>
             <div class="card editor-grid">
-                <div class="editor"></div>
+                <div class="editor">
+                    <div class="header"><div>#</div><div>Sor</div><div class="center">Szótag</div><div class="center">Rím</div></div>
+                </div>
                 <div><label style="font-size:12px; color:#666;">Másolható szöveg:</label>
                 <textarea class="copy-area" readonly></textarea></div>
             </div>`;
         const editor = d.querySelector(".editor");
         const textarea = d.querySelector(".copy-area");
+        
         for (let x = 1; x <= 14; x++) {
             const input = createRow(editor, x);
+            
             input.onpaste = (e) => {
                 e.preventDefault();
                 const text = (e.clipboardData || window.clipboardData).getData('text');
                 const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
                 const allInputs = editor.querySelectorAll(".line");
-                lines.forEach((line, i) => { if (allInputs[i]) { allInputs[i].value = line.trim(); checkSyllables(allInputs[i]); } });
+                lines.forEach((line, i) => { 
+                    if (allInputs[i]) { 
+                        allInputs[i].value = line.trim(); 
+                        checkSyllables(allInputs[i]); 
+                    } 
+                });
+                analyzeRhymes(editor);
                 updatePreview(editor, textarea);
                 updateMaster();
             };
-            input.oninput = () => { checkSyllables(input); updatePreview(editor, textarea); updateMaster(); };
+            
+            input.oninput = () => { 
+                checkSyllables(input); 
+                analyzeRhymes(editor);
+                updatePreview(editor, textarea); 
+                updateMaster(); 
+            };
         }
         others.appendChild(d);
     }
@@ -152,7 +283,10 @@
         const saved = JSON.parse(localStorage.getItem("szonettKoszoruData"));
         if (!saved) return alert("Nincs mentett adat!");
         document.querySelectorAll("#others .line").forEach((input, i) => { input.value = saved[i] || ""; checkSyllables(input); });
-        document.querySelectorAll("#others .editor-grid").forEach(ed => updatePreview(ed, ed.querySelector("textarea")));
+        document.querySelectorAll("#others .editor-grid").forEach(ed => {
+            analyzeRhymes(ed.querySelector(".editor"));
+            updatePreview(ed.querySelector(".editor"), ed.querySelector("textarea"));
+        });
         updateMaster();
     }
     function exportalas() {
