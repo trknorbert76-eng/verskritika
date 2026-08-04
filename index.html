@@ -173,7 +173,8 @@ const matchShort = clean.match(/[aeiou][^aeiou]*$/);
         rows.forEach((row, idx) => {
             const rhymeBox = row.querySelector(".rhyme-tag");
             if (rhymeBox) {
-                rhymeBox.textContent = assignedLetters[idx];
+                rhymeBox.textContent =
+    assignedLetters[idx] + " " + allKeys[idx].primary;
             }
         });
     }
