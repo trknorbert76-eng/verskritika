@@ -71,7 +71,7 @@
     }
 
     // Rokonsági táblázat a mássalhangzókhoz (zöngés-zöngétlen párok)
-  const CONSONANT_PAIRS = {
+ const CONSONANT_PAIRS = {
     'p': 'b', 'b': 'p',
     't': 'd', 'd': 't',
     'k': 'g', 'g': 'k',
@@ -82,13 +82,13 @@
 function getRhymeKeys(text) {
     text = text.trim().split(/\s+/).pop();
     let clean = text.toLowerCase().replace(/[^a-zááééííóóöőúúüű]/g, "");
-    if (clean.length < 2) return { rawSyllable: "", normSyllable: "", vowel: "", lastConsonant: "" };
+    if (clean.length < 2) return { raw: "", clean: "", vowel: "", lastConsonant: "" };
 
-    // 1. Eredeti utolsó szótag (tiszta rímhez, pl. "nye" vs "ste")
-    const rawMatch = clean.match(/[^aeiouáéíóöőúüű]*[aeiouáéíóöőúüű][^aeiouáéíóöőúüű]*$/);
-    const rawSyllable = rawMatch ? rawMatch[0] : clean.slice(-3);
+    // Utolsó magánhangzótól kezdődő rímfej kinyerése (tiszta rímhez)
+    const rawMatch = clean.match(/[aeiouáéíóöőúüű][^aeiouáéíóöőúüű]*$/);
+    const rawTail = rawMatch ? rawMatch[0] : clean.slice(-2);
 
-    // 2. Normalizált változat az asszonánc vizsgálathoz
+    // Normalizált változat az asszonánc/összetett hangcsoportok vizsgálatához
     let normalized = clean.replace(/á/g, "a")
                           .replace(/é/g, "e")
                           .replace(/í/g, "i")
@@ -100,26 +100,26 @@ function getRhymeKeys(text) {
                           .replace(/tj/g, "jt")
                           .replace(/ja$/g, "jta");
 
-    const normMatch = normalized.match(/[^aeiou]*[aeiou][^aeiou]*$/);
-    const normSyllable = normMatch ? normMatch[0] : normalized.slice(-3);
+    const normMatch = normalized.match(/[aeiou][^aeiou]*$/);
+    const normTail = normMatch ? normMatch[0] : normalized.slice(-2);
 
     return {
-        rawSyllable: rawSyllable,                       // "nye" vs "ste" -> KÜLÖNVÁLIK (ABBA)
-        normSyllable: normSyllable,                     // "jta" -> ÖSSZEKÖTI a rajta/tartja/vonja szavakat
+        raw: rawTail,                                   // Pl. "ent", "ett", "ajta", "et"
+        clean: normTail,
         vowel: normalized.match(/[aeiou]/g)?.pop() || "",
         lastConsonant: normalized.slice(-1)
     };
 }
 
 function getSimilarity(keysA, keysB) {
-    if (!keysA.rawSyllable || !keysB.rawSyllable) return { score: 0, type: "none" };
+    if (!keysA.raw || !keysB.raw) return { score: 0, type: "none" };
 
-    // 1. Tiszta rím (Kék): az utolsó szótag pontosan megegyezik (fénye ↔ ténye, este ↔ teste, máshollét ↔ rét)
-    if (keysA.rawSyllable === keysB.rawSyllable || keysA.normSyllable === keysB.normSyllable) {
+    // 1. Tiszta rím (Kék): Az utolsó magánhangzótól induló végződés teljesen megegyezik
+    if (keysA.raw === keysB.raw || keysA.clean === keysB.clean) {
         return { score: 100, type: "tiszta" };
     }
 
-    // 2. Asszonánc rím (Narancssárga): a magánhangzó azonos, és a záró mássalhangzó zöngés-zöngétlen pár
+    // 2. Asszonánc rím (Narancssárga): Az utolsó magánhangzó azonos, a záró mássalhangzó zöngés-zöngétlen pár
     if (keysA.vowel === keysB.vowel && CONSONANT_PAIRS[keysA.lastConsonant] === keysB.lastConsonant) {
         return { score: 85, type: "asszonanc" };
     }
@@ -143,7 +143,7 @@ function analyzeRhymes(container) {
     const visited = new Array(rows.length).fill(false);
 
     for (let i = 0; i < rows.length; i++) {
-        if (!allKeys[i].rawSyllable || visited[i]) continue;
+        if (!allKeys[i].raw || visited[i]) continue;
 
         let queue = [i];
         let currentGroup = [];
@@ -155,7 +155,7 @@ function analyzeRhymes(container) {
             currentGroup.push(curr);
 
             for (let j = 0; j < rows.length; j++) {
-                if (!visited[j] && allKeys[j].rawSyllable) {
+                if (!visited[j] && allKeys[j].raw) {
                     const sim = getSimilarity(allKeys[curr], allKeys[j]);
                     if (sim.score >= 85) {
                         visited[j] = true;
