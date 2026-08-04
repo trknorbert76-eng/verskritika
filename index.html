@@ -79,26 +79,28 @@
         'f': 'v', 'v': 'f'
     };
 
-    function getRhymeKeys(text) {
-        text = text.trim().split(/\s+/).pop();
-        let clean = text.toLowerCase().replace(/[^a-zááééííóóöőúúüű]/g, "");
-        if (clean.length < 2) return { raw: "", clean: "" };
+  function getRhymeKeys(text) {
+    text = text.trim().split(/\s+/).pop();
+    let clean = text.toLowerCase().replace(/[^a-zááééííóóöőúúüű]/g, "");
+    if (clean.length < 2) return { raw: "", clean: "" };
 
-        // Magánhangzó-egyszerűsítés
-        let normalized = clean.replace(/á/g, "a")
-                              .replace(/é/g, "e")
-                              .replace(/í/g, "i")
-                              .replace(/[óöő]/g, "o")
-                              .replace(/[úüű]/g, "u")
-                              .replace(/ly/g, "j")
-                              .replace(/ty/g, "j")
-                              .replace(/gy/g, "j");
+    // Magánhangzók és lágy hangok (tj / jt / j) egységesítése
+    let normalized = clean.replace(/á/g, "a")
+                          .replace(/é/g, "e")
+                          .replace(/í/g, "i")
+                          .replace(/[óöő]/g, "o")
+                          .replace(/[úüű]/g, "u")
+                          .replace(/ly/g, "j")
+                          .replace(/ty/g, "j")
+                          .replace(/gy/g, "j")
+                          .replace(/tj/g, "jt")  // "tartja" -> "tarjta"
+                          .replace(/ja$/g, "jta"); // "vonja" -> "vonjta"
 
-        return {
-            raw: clean.slice(-3),       // Eredeti végződés (tiszta rímhez)
-            clean: normalized.slice(-2) // Normalizált utolsó 2 betű
-        };
-    }
+    return {
+        raw: clean.slice(-3),       
+        clean: normalized.slice(-3) // 3 betűs rímfej összevetése
+    };
+}
 
     function getSimilarity(keysA, keysB) {
         if (!keysA.clean || !keysB.clean) return { score: 0, type: "none" };
