@@ -9,7 +9,6 @@
         .card { background: #fff; border-radius: 12px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,.12); margin-bottom: 18px; } 
         .controls { position: sticky; top: 0; background: #fff; padding: 15px; border-radius: 12px; z-index: 100; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; gap: 10px; }
         .editor-grid { display: grid; grid-template-columns: 1fr 250px; gap: 20px; align-items: start; margin-top: 10px; }
-        /* Módosított oszloposztás: #, Sor, Szótag, Rím */
         .header, .row { display: grid; grid-template-columns: 25px 1fr 50px 40px; gap: 8px; align-items: center; }
         .line { width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 5px; font-size: 14px; box-sizing: border-box; }
         .copy-area { width: 100%; height: 350px; font-family: monospace; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: #f9f9f9; resize: vertical; font-size: 12px; }
@@ -19,8 +18,8 @@
         .rhyme-tag { font-weight: bold; color: #0056b3; background: #e9ecef; border-radius: 4px; padding: 2px 0; text-align: center; }
         .good { color: green; }
         .bad { color: #d00000; }
-        .strófa-3 { background-color: #e3f2fd; } /* Halványkék */
-        .strófa-4 { background-color: #e8f5e9; } /* Halványzöld */
+        .strófa-3 { background-color: #e3f2fd; }
+        .strófa-4 { background-color: #e8f5e9; }
         button { padding: 8px 16px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; }
         details { margin-bottom: 15px; }
         summary { cursor: pointer; padding: 10px; background: #fff; border-radius: 8px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -69,61 +68,113 @@
         box.className = "center syllable-count " + ((n === 10 || n === 11) ? "good" : "bad");
     }
 
-    // Rímkulcs kinyerése (kezelve a rokon rímeket és az asszonáncot)
-    function getRhymeKey(text) {
+    function getRhymeKeys(text) {
         let clean = text.toLowerCase().replace(/[^a-zááééííóóöőúúüű]/g, "");
-        if (clean.length < 2) return "";
-        
-        // 1. Hosszú magánhangzók egyszerűsítése
-        clean = clean.replace(/á/g, "a").replace(/é/g, "e").replace(/í/g, "i")
-                     .replace(/ó/g, "o").replace(/ö/g, "o").replace(/ő/g, "o")
-                     .replace(/ú/g, "u").replace(/ü/g, "u").replace(/ű/g, "u");
+        if (clean.length < 2) return { primary: "", secondary: "" };
 
-        // 2. Rokon rímek (zöngés mássalhangzók zöngétlenítése a szó végén)
-        clean = clean.replace(/d$/, "t")
-                     .replace(/b$/, "p")
-                     .replace(/g$/, "k")
-                     .replace(/z$/, "s");
+         clean = clean
+        .replace(/á/g, "a")
+        .replace(/é/g, "e")
+        .replace(/í/g, "i")
+        .replace(/[óöő]/g, "o")
+        .replace(/[úüű]/g, "u");
 
-        // 3. Utolsó magánhangzótól induló rímfantom kinyerése
-        const match = clean.match(/[aeiou][^aeiou]*$/);
-        return match ? match[0] : clean.slice(-3);
+
+      const matchLong = clean.match(/[aeiou][^aeiou]*[aeiou][^aeiou]*$/);
+const matchShort = clean.match(/[aeiou][^aeiou]*$/);
+
+        let primary = matchLong ? matchLong[0] : (matchShort ? matchShort[0] : clean.slice(-3));
+        let secondary = matchShort ? matchShort[0] : clean.slice(-2);
+
+        const normalizeKey = (k) => k.replace(/d$/, "t")
+                                     .replace(/b$/, "p")
+                                     .replace(/g$/, "k")
+                                     .replace(/z$/, "s")
+                                     .replace(/v$/, "f");
+
+        return {
+            primary: normalizeKey(primary),
+            secondary: normalizeKey(secondary)
+        };
     }
 
-    // Rímek elemzése és ABC betűk hozzárendelése szonettenként
+    function getSimilarity(keysA, keysB) {
+        if (!keysA.primary || !keysB.primary) return 0;
+        if (keysA.primary === keysB.primary) return 100;
+
+        let score = 0;
+        const pA = keysA.primary;
+        const pB = keysB.primary;
+
+        if (keysA.secondary === keysB.secondary) {
+            score += 55;
+        }
+
+        const minLen = Math.min(pA.length, pB.length);
+        let matchCount = 0;
+        for (let i = 1; i <= minLen; i++) {
+            if (pA[pA.length - i] === pB[pB.length - i]) {
+                matchCount++;
+            } else {
+                break;
+            }
+        }
+
+        score += (matchCount / Math.max(pA.length, pB.length)) * 45;
+        return Math.min(score, 100);
+    }
+
     function analyzeRhymes(container) {
         const rows = container.querySelectorAll(".row");
-        const rhymeKeys = [];
+        const allKeys = [];
         const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         let alphabetIdx = 0;
-        const keyToLetter = {};
 
         rows.forEach(row => {
             const input = row.querySelector(".line");
-            const key = getRhymeKey(input.value);
-            rhymeKeys.push(key);
+            allKeys.push(getRhymeKeys(input.value));
         });
 
-        rows.forEach((row, idx) => {
-            const key = rhymeKeys[idx];
-            const rhymeBox = row.querySelector(".rhyme-tag");
-            if (!rhymeBox) return;
-            
-            if (!key) {
-                rhymeBox.textContent = "-";
-                return;
-            }
+        const assignedLetters = new Array(rows.length).fill("-");
+        const visited = new Array(rows.length).fill(false);
+        const THRESHOLD = 75;
 
-            if (!keyToLetter[key]) {
-                const matches = rhymeKeys.filter(k => k === key).length;
-                if (matches > 1) {
-                    keyToLetter[key] = alphabet[alphabetIdx % 26];
-                    alphabetIdx++;
-                } else {
-                    keyToLetter[key] = "-";
+        for (let i = 0; i < rows.length; i++) {
+            if (!allKeys[i].primary || visited[i]) continue;
+
+            let queue = [i];
+            let currentGroup = [];
+            visited[i] = true;
+
+            while (queue.length > 0) {
+                let curr = queue.shift();
+                currentGroup.push(curr);
+
+                for (let j = 0; j < rows.length; j++) {
+                    if (!visited[j] && allKeys[j].primary) {
+                        const sim = getSimilarity(allKeys[curr], allKeys[j]);
+                        if (sim >= THRESHOLD) {
+                            visited[j] = true;
+                            queue.push(j);
+                        }
+                    }
                 }
             }
-            rhymeBox.textContent = keyToLetter[key];
+
+            if (currentGroup.length > 1) {
+                const letter = alphabet[alphabetIdx % 26];
+                currentGroup.forEach(idx => {
+                    assignedLetters[idx] = letter;
+                });
+                alphabetIdx++;
+            }
+        }
+
+        rows.forEach((row, idx) => {
+            const rhymeBox = row.querySelector(".rhyme-tag");
+            if (rhymeBox) {
+                rhymeBox.textContent = assignedLetters[idx];
+            }
         });
     }
 
