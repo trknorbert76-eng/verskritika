@@ -68,82 +68,29 @@
         box.textContent = n;
         box.className = "center syllable-count " + ((n === 10 || n === 11) ? "good" : "bad");
     }
-    box.className = "center syllable-count " + ((n === 10 || n === 11) ? "good" : "bad");
-}
 
-// 1. Rímkulcs-képző függvény (ez kezeli a rokon rímeket is)
-function getRhymeKey(text) {
-    let clean = text.toLowerCase().replace(/[^a-zááééííóóöőúúüű]/g, "");
-    if (clean.length < 2) return "";
-    
-    // Hosszú magánhangzók egyszerűsítése
-    clean = clean.replace(/á/g, "a").replace(/é/g, "e").replace(/í/g, "i")
-                 .replace(/ó/g, "o").replace(/ö/g, "o").replace(/ő/g, "o")
-                 .replace(/ú/g, "u").replace(/ü/g, "u").replace(/ű/g, "u");
-
-    // Rokon rímek (zöngés párok zöngétlenítése a szó végén)
-    clean = clean.replace(/d$/, "t")
-                 .replace(/b$/, "p")
-                 .replace(/g$/, "k")
-                 .replace(/z$/, "s");
-
-    // Utolsó magánhangzótól induló rímfantom kinyerése
-    const match = clean.match(/[aeiou][^aeiou]*$/);
-    return match ? match[0] : clean.slice(-3);
-}
-
-// 2. Rímek elemzése és betűzése szonettenként
-function analyzeRhymes(container) {
-    const rows = container.querySelectorAll(".row");
-    const rhymeKeys = [];
-    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    let alphabetIdx = 0;
-    const keyToLetter = {};
-
-    rows.forEach(row => {
-        const input = row.querySelector(".line");
-        const key = getRhymeKey(input.value);
-        rhymeKeys.push(key);
-    });
-
-    rows.forEach((row, idx) => {
-        const key = rhymeKeys[idx];
-        const rhymeBox = row.querySelector(".rhyme-tag");
-        if (!rhymeBox) return;
-        
-        if (!key) {
-            rhymeBox.textContent = "-";
-            return;
-        }
-
-        if (!keyToLetter[key]) {
-            const matches = rhymeKeys.filter(k => k === key).length;
-            if (matches > 1) {
-                keyToLetter[key] = alphabet[alphabetIdx % 26];
-                alphabetIdx++;
-            } else {
-                keyToLetter[key] = "-";
-            }
-        }
-        rhymeBox.textContent = keyToLetter[key];
-    });
-}
-    // Kinyeri a sor végéről a rímelés szempontjából lényeges hangcsoportot
+    // Rímkulcs kinyerése (kezelve a rokon rímeket és az asszonáncot)
     function getRhymeKey(text) {
         let clean = text.toLowerCase().replace(/[^a-zááééííóóöőúúüű]/g, "");
         if (clean.length < 2) return "";
         
-        // Hosszú magánhangzók egyszerűsítése a lazább rímegyezéshez
+        // 1. Hosszú magánhangzók egyszerűsítése
         clean = clean.replace(/á/g, "a").replace(/é/g, "e").replace(/í/g, "i")
                      .replace(/ó/g, "o").replace(/ö/g, "o").replace(/ő/g, "o")
                      .replace(/ú/g, "u").replace(/ü/g, "u").replace(/ű/g, "u");
 
-        // Megkeressük az utolsó magánhangzó előtti résztől a sor végét
+        // 2. Rokon rímek (zöngés mássalhangzók zöngétlenítése a szó végén)
+        clean = clean.replace(/d$/, "t")
+                     .replace(/b$/, "p")
+                     .replace(/g$/, "k")
+                     .replace(/z$/, "s");
+
+        // 3. Utolsó magánhangzótól induló rímfantom kinyerése
         const match = clean.match(/[aeiou][^aeiou]*$/);
         return match ? match[0] : clean.slice(-3);
     }
 
-    // Végigmegy a szonett sorain, és ABC betűket rendel a rímelő végződésekhez
+    // Rímek elemzése és ABC betűk hozzárendelése szonettenként
     function analyzeRhymes(container) {
         const rows = container.querySelectorAll(".row");
         const rhymeKeys = [];
@@ -151,17 +98,16 @@ function analyzeRhymes(container) {
         let alphabetIdx = 0;
         const keyToLetter = {};
 
-        // Első kör: kinyerjük a rímkulcsokat
         rows.forEach(row => {
             const input = row.querySelector(".line");
             const key = getRhymeKey(input.value);
             rhymeKeys.push(key);
         });
 
-        // Második kör: kijelöljük a betűket
         rows.forEach((row, idx) => {
             const key = rhymeKeys[idx];
             const rhymeBox = row.querySelector(".rhyme-tag");
+            if (!rhymeBox) return;
             
             if (!key) {
                 rhymeBox.textContent = "-";
@@ -169,13 +115,12 @@ function analyzeRhymes(container) {
             }
 
             if (!keyToLetter[key]) {
-                // Megnézzük, hogy ez a rímkulcs előfordul-e még valahol a szonettben
                 const matches = rhymeKeys.filter(k => k === key).length;
                 if (matches > 1) {
                     keyToLetter[key] = alphabet[alphabetIdx % 26];
                     alphabetIdx++;
                 } else {
-                    keyToLetter[key] = "-"; // Egyedi végződés (még nem rímel semmivel)
+                    keyToLetter[key] = "-";
                 }
             }
             rhymeBox.textContent = keyToLetter[key];
