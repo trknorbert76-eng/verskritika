@@ -68,73 +68,43 @@
         box.className = "center syllable-count " + ((n === 10 || n === 11) ? "good" : "bad");
     }
 
-  function getRhymeKeys(text) {
+    // Egyszerűsített, tiszta hangzás alapú rímkulcs-képző
+    function getRhymeKeys(text) {
         text = text.trim().split(/\s+/).pop();
         let clean = text.toLowerCase().replace(/[^a-zááééííóóöőúúüű]/g, "");
-        if (clean.length < 2) return { primary: "", secondary: "" };
+        if (clean.length < 2) return { primary: "", short: "" };
 
-        // 1. Magánhangzók egyszerűsítése
+        // Magánhangzók és alapvető zöngés/lágy hangok egységesítése
         clean = clean.replace(/á/g, "a")
                      .replace(/é/g, "e")
                      .replace(/í/g, "i")
                      .replace(/[óöő]/g, "o")
-                     .replace(/[úüű]/g, "u");
-
-        const matchLong = clean.match(/[aeiou][^aeiou]*[aeiou][^aeiou]*$/);
-        const matchShort = clean.match(/[aeiou][^aeiou]*$/);
-
-        let primary = matchLong ? matchLong[0] : (matchShort ? matchShort[0] : clean.slice(-3));
-        let secondary = matchShort ? matchShort[0] : clean.slice(-2);
-
-        // 2. Mássalhangzó-lágyítások és zöngétlenítés a rímkulcsok végén ($)
-        const normalizeKey = (k) => k.replace(/ly/g, "j")
-                                     .replace(/ty/g, "j")
-                                     .replace(/gy/g, "j")
-                                     .replace(/rtj/g, "jt")
-                                     .replace(/ndj/g, "nj")
-                                     .replace(/d$/, "t")
-                                     .replace(/b$/, "p")
-                                     .replace(/g$/, "k")
-                                     .replace(/z$/, "s")
-                                     .replace(/v$/, "f");
+                     .replace(/[úüű]/g, "u")
+                     .replace(/ly/g, "j")
+                     .replace(/ty/g, "j")
+                     .replace(/gy/g, "j")
+                     .replace(/d$/, "t")
+                     .replace(/b$/, "p")
+                     .replace(/g$/, "k")
+                     .replace(/z$/, "s")
+                     .replace(/v$/, "f");
 
         return {
-            primary: normalizeKey(primary),
-            secondary: normalizeKey(secondary)
+            primary: clean.slice(-3),
+            short: clean.slice(-2)
         };
     }
 
     function getSimilarity(keysA, keysB) {
         if (!keysA.primary || !keysB.primary) return 0;
+        
+        // Utolsó 3 betű egyezése -> 100%
         if (keysA.primary === keysB.primary) return 100;
+        
+        // Utolsó 2 betű egyezése -> 85%
+        if (keysA.short === keysB.short) return 85;
 
-        let score = 0;
-        const pA = keysA.primary;
-        const pB = keysB.primary;
-
-        // Utolsó magánhangzó-csoport egyezése
-        if (keysA.secondary === keysB.secondary) {
-            score += 50;
-        }
-
-        // BÓNUSZ: Kezdő magánhangzó megegyezése a rímfejben
-        if (pA[0] === pB[0]) {
-            score += 10;
-        }
-
-        // Karakteres egyezés visszafelé
-        const minLen = Math.min(pA.length, pB.length);
-        let matchCount = 0;
-        for (let i = 1; i <= minLen; i++) {
-            if (pA[pA.length - i] === pB[pB.length - i]) {
-                matchCount++;
-            } else {
-                break;
-            }
-        }
-
-        score += (matchCount / Math.max(pA.length, pB.length)) * 30;
-        return Math.min(score, 100);
+        return 0;
     }
 
     function analyzeRhymes(container) {
@@ -150,7 +120,7 @@
 
         const assignedLetters = new Array(rows.length).fill("-");
         const visited = new Array(rows.length).fill(false);
-        const THRESHOLD = 78;
+        const THRESHOLD = 80; // Utolsó 2-3 betű egyezése alapján csoportosít
 
         for (let i = 0; i < rows.length; i++) {
             if (!allKeys[i].primary || visited[i]) continue;
