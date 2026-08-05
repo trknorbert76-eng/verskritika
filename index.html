@@ -109,8 +109,8 @@ function getSimilarity(keysA, keysB) {
     if (keysA.primary === keysB.primary)
         return { score: 100, assonance: false };
 
-    //if (keysA.short === keysB.short)
-        //return { score: 85, assonance: false };
+    if (keysA.short === keysB.short)
+        return { score: 85, assonance: false };
 
     const list = assonancePairs[keysA.primary];
     if (list && list.includes(keysB.primary))
