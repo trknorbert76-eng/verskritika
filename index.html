@@ -16,8 +16,6 @@
         .center { text-align: center; }
         .syllable-count { font-weight: bold; }
         .rhyme-tag { font-weight: bold; color: #0056b3; background: #e9ecef; border-radius: 4px; padding: 2px 0; text-align: center; }
-        /* Narancssárga stílus az asszonánc rímekhez */
-        .rhyme-tag.asszonanc { background: #ffe8cc; color: #d9480f; }
         .good { color: green; }
         .bad { color: #d00000; }
         .strófa-3 { background-color: #e3f2fd; }
@@ -70,126 +68,98 @@
         box.className = "center syllable-count " + ((n === 10 || n === 11) ? "good" : "bad");
     }
 
-    // Rokonsági táblázat a mássalhangzókhoz (zöngés-zöngétlen párok)
- const CONSONANT_PAIRS = {
-    'p': 'b', 'b': 'p',
-    't': 'd', 'd': 't',
-    'k': 'g', 'g': 'k',
-    's': 'z', 'z': 's',
-    'f': 'v', 'v': 'f'
-};
+    // Egyszerűsített, tiszta hangzás alapú rímkulcs-képző
+    function getRhymeKeys(text) {
+        text = text.trim().split(/\s+/).pop();
+        let clean = text.toLowerCase().replace(/[^a-zááééííóóöőúúüű]/g, "");
+        if (clean.length < 2) return { primary: "", short: "" };
 
-function getRhymeKeys(text) {
-    text = text.trim().split(/\s+/).pop();
-    let clean = text.toLowerCase().replace(/[^a-zááééííóóöőúúüű]/g, "");
-    if (clean.length < 2) return { raw: "", clean: "", vowel: "", lastConsonant: "" };
+        // Magánhangzók és alapvető zöngés/lágy hangok egységesítése
+        clean = clean.replace(/á/g, "a")
+                     .replace(/é/g, "e")
+                     .replace(/í/g, "i")
+                     .replace(/[óöő]/g, "o")
+                     .replace(/[úüű]/g, "u")
+                     .replace(/ly/g, "j")
+                     .replace(/ty/g, "j")
+                     .replace(/gy/g, "j")
+                     .replace(/d$/, "t")
+                     .replace(/b$/, "p")
+                     .replace(/g$/, "k")
+                     .replace(/z$/, "s")
+                     .replace(/v$/, "f");
 
-    // Utolsó magánhangzótól kezdődő rímfej kinyerése (tiszta rímhez)
-    const rawMatch = clean.match(/[aeiouáéíóöőúüű][^aeiouáéíóöőúüű]*$/);
-    const rawTail = rawMatch ? rawMatch[0] : clean.slice(-2);
-
-    // Normalizált változat az asszonánc/összetett hangcsoportok vizsgálatához
-    let normalized = clean.replace(/á/g, "a")
-                          .replace(/é/g, "e")
-                          .replace(/í/g, "i")
-                          .replace(/[óöő]/g, "o")
-                          .replace(/[úüű]/g, "u")
-                          .replace(/ly/g, "j")
-                          .replace(/ty/g, "j")
-                          .replace(/gy/g, "j")
-                          .replace(/tj/g, "jt")
-                          .replace(/ja$/g, "jta");
-
-    const normMatch = normalized.match(/[aeiou][^aeiou]*$/);
-    const normTail = normMatch ? normMatch[0] : normalized.slice(-2);
-
-    return {
-        raw: rawTail,                                   // Pl. "ent", "ett", "ajta", "et"
-        clean: normTail,
-        vowel: normalized.match(/[aeiou]/g)?.pop() || "",
-        lastConsonant: normalized.slice(-1)
-    };
-}
-
-function getSimilarity(keysA, keysB) {
-    if (!keysA.raw || !keysB.raw) return { score: 0, type: "none" };
-
-    // 1. Tiszta rím (Kék): Az utolsó magánhangzótól induló végződés teljesen megegyezik
-    if (keysA.raw === keysB.raw || keysA.clean === keysB.clean) {
-        return { score: 100, type: "tiszta" };
+        return {
+            primary: clean.slice(-3),
+            short: clean.slice(-2)
+        };
     }
 
-    // 2. Asszonánc rím (Narancssárga): Az utolsó magánhangzó azonos, a záró mássalhangzó zöngés-zöngétlen pár
-    if (keysA.vowel === keysB.vowel && CONSONANT_PAIRS[keysA.lastConsonant] === keysB.lastConsonant) {
-        return { score: 85, type: "asszonanc" };
+    function getSimilarity(keysA, keysB) {
+        if (!keysA.primary || !keysB.primary) return 0;
+        
+        // Utolsó 3 betű egyezése -> 100%
+        if (keysA.primary === keysB.primary) return 100;
+        
+        // Utolsó 2 betű egyezése -> 85%
+        if (keysA.short === keysB.short) return 85;
+
+        return 0;
     }
 
-    return { score: 0, type: "none" };
-}
+    function analyzeRhymes(container) {
+        const rows = container.querySelectorAll(".row");
+        const allKeys = [];
+        const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        let alphabetIdx = 0;
 
-function analyzeRhymes(container) {
-    const rows = container.querySelectorAll(".row");
-    const allKeys = [];
-    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    let alphabetIdx = 0;
+        rows.forEach(row => {
+            const input = row.querySelector(".line");
+            allKeys.push(getRhymeKeys(input.value));
+        });
 
-    rows.forEach(row => {
-        const input = row.querySelector(".line");
-        allKeys.push(getRhymeKeys(input.value));
-    });
+        const assignedLetters = new Array(rows.length).fill("-");
+        const visited = new Array(rows.length).fill(false);
+        const THRESHOLD = 80; // Utolsó 2-3 betű egyezése alapján csoportosít
 
-    const assignedLetters = new Array(rows.length).fill("-");
-    const groupTypes = new Array(rows.length).fill("none");
-    const visited = new Array(rows.length).fill(false);
+        for (let i = 0; i < rows.length; i++) {
+            if (!allKeys[i].primary || visited[i]) continue;
 
-    for (let i = 0; i < rows.length; i++) {
-        if (!allKeys[i].raw || visited[i]) continue;
+            let queue = [i];
+            let currentGroup = [];
+            visited[i] = true;
 
-        let queue = [i];
-        let currentGroup = [];
-        let isAsszonancGroup = false;
-        visited[i] = true;
+            while (queue.length > 0) {
+                let curr = queue.shift();
+                currentGroup.push(curr);
 
-        while (queue.length > 0) {
-            let curr = queue.shift();
-            currentGroup.push(curr);
-
-            for (let j = 0; j < rows.length; j++) {
-                if (!visited[j] && allKeys[j].raw) {
-                    const sim = getSimilarity(allKeys[curr], allKeys[j]);
-                    if (sim.score >= 85) {
-                        visited[j] = true;
-                        queue.push(j);
-                        if (sim.type === "asszonanc") {
-                            isAsszonancGroup = true;
+                for (let j = 0; j < rows.length; j++) {
+                    if (!visited[j] && allKeys[j].primary) {
+                        const sim = getSimilarity(allKeys[curr], allKeys[j]);
+                        if (sim >= THRESHOLD) {
+                            visited[j] = true;
+                            queue.push(j);
                         }
                     }
                 }
             }
-        }
 
-        if (currentGroup.length > 1) {
-            const letter = alphabet[alphabetIdx % 26];
-            currentGroup.forEach(idx => {
-                assignedLetters[idx] = letter;
-                groupTypes[idx] = isAsszonancGroup ? "asszonanc" : "tiszta";
-            });
-            alphabetIdx++;
-        }
-    }
-
-    rows.forEach((row, idx) => {
-        const rhymeBox = row.querySelector(".rhyme-tag");
-        if (rhymeBox) {
-            rhymeBox.textContent = assignedLetters[idx];
-            if (groupTypes[idx] === "asszonanc") {
-                rhymeBox.className = "center rhyme-tag asszonanc";
-            } else {
-                rhymeBox.className = "center rhyme-tag";
+            if (currentGroup.length > 1) {
+                const letter = alphabet[alphabetIdx % 26];
+                currentGroup.forEach(idx => {
+                    assignedLetters[idx] = letter;
+                });
+                alphabetIdx++;
             }
         }
-    });
-}
+
+        rows.forEach((row, idx) => {
+            const rhymeBox = row.querySelector(".rhyme-tag");
+            if (rhymeBox) {
+                rhymeBox.textContent = assignedLetters[idx];
+            }
+        });
+    }
 
     function updatePreview(editor, textarea) {
         const lines = editor.querySelectorAll(".line");
