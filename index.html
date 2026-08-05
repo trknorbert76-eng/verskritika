@@ -5,7 +5,8 @@
     <title>Szonettkoszorú Szerkesztő</title> 
     <style>
         body { font-family: Segoe UI, Arial; background: #eef2f5; margin: 20px; }
-        .main-layout { display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; max-width: 1200px; margin: auto; } 
+        /* Kiszélesítettük a layout-ot, hogy elférjen a dupla jobb panel */
+        .main-layout { display: grid; grid-template-columns: 1fr 450px; gap: 20px; align-items: start; max-width: 1400px; margin: auto; } 
         .card { background: #fff; border-radius: 12px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,.12); margin-bottom: 18px; } 
         .controls { position: sticky; top: 0; background: #fff; padding: 15px; border-radius: 12px; z-index: 100; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; gap: 10px; }
         .editor-grid { display: grid; grid-template-columns: 1fr 250px; gap: 20px; align-items: start; margin-top: 10px; }
@@ -23,7 +24,16 @@
         button { padding: 8px 16px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; }
         details { margin-bottom: 15px; }
         summary { cursor: pointer; padding: 10px; background: #fff; border-radius: 8px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .structure-panel { position: sticky; top: 20px; background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.1); font-size: 12px; }
+        
+        /* Jobb oldali sticky panel új stílusai */
+        .structure-panel { 
+            position: sticky; top: 20px; background: #fff; padding: 15px; 
+            border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.1); font-size: 12px; 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
+            max-height: 85vh; overflow-y: auto; /* Görgethető, ha túl hosszú */
+        }
+        .structure-panel h3 { margin-top: 0; font-size: 14px; margin-bottom: 10px; }
+        .copy-content-box { font-family: monospace; white-space: pre-wrap; line-height: 1.4; font-size: 11px; padding: 5px; background: #f9f9f9; border: 1px solid #eee; border-radius: 4px;}
     </style>
 </head>
 <body>
@@ -47,11 +57,20 @@
         <div id="others"></div>
     </div>
 
+    <!-- MÓDOSÍTOTT OLDALSÓ PANEL -->
     <div class="structure-panel">
-        <h3>Szerkezet (4-4-3-3)</h3>
-        <button onclick="navigator.clipboard.writeText(document.getElementById('stanza-content').innerText)" 
-                style="margin-bottom:15px; width:100%; font-size:11px; background:#6c757d; color:white;">📋 Teljes szöveg másolása</button>
-        <div id="stanza-content"></div>
+        <div>
+            <h3>15. Mesterszonett</h3>
+            <button onclick="navigator.clipboard.writeText(document.getElementById('master-content').innerText)" 
+                    style="margin-bottom:10px; width:100%; font-size:11px; background:#17a2b8; color:white;">📋 Mester másolása</button>
+            <div id="master-content" class="copy-content-box"></div>
+        </div>
+        <div>
+            <h3>Teljes Szöveg</h3>
+            <button onclick="navigator.clipboard.writeText(document.getElementById('stanza-content').innerText)" 
+                    style="margin-bottom:10px; width:100%; font-size:11px; background:#6c757d; color:white;">📋 Teljes másolása</button>
+            <div id="stanza-content" class="copy-content-box"></div>
+        </div>
     </div>
 </div>
 
@@ -68,70 +87,47 @@
         box.className = "center syllable-count " + ((n === 10 || n === 11) ? "good" : "bad");
     }
 
-    // Egyszerűsített, tiszta hangzás alapú rímkulcs-képző
     function getRhymeKeys(text) {
         text = text.trim().split(/\s+/).pop();
         let clean = text.toLowerCase().replace(/[^a-zááééííóóöőúúüű]/g, "");
         if (clean.length < 2) return { primary: "", short: "" };
 
-        // Magánhangzók és alapvető zöngés/lágy hangok egységesítése
         clean = clean.replace(/á/g, "a")
                      .replace(/é/g, "e")
                      .replace(/í/g, "i")
                      .replace(/[óöő]/g, "o")
                      .replace(/[úüű]/g, "u")
                      .replace(/ly/g, "j")
-                    
                      .replace(/d$/, "t")
                      .replace(/b$/, "p")
                      .replace(/g$/, "k")
                      .replace(/z$/, "s")
                      .replace(/v$/, "f");
-console.log(text, clean, clean.slice(-3), clean.slice(-2));
         return {
             primary: clean.slice(-3),
             short: clean.slice(-2)
         };
     }
-// Asszonánc párok
-const assonancePairs = {
-    "jta": ["tja"],
-    "tja": ["jta"],
-    "enye": ["egye"],
-    "egye": ["enye"],
-     "nat": ["adt"],
-     "adt": ["nat"],
-     "enn": ["ten"],
-     "ten": ["enn"],
-    "gam": ["van"],
-    "van": ["gam"],
-    "kem": ["ken"],
-"ken": ["kem"],
-"ard": ["sat"],
-"sat": ["ard"],
-    "zen": ["kem"],
-"kem": ["zen"],
-    "sok": ["suk"],
-"suk": ["sok"],
 
-    // ide jönnek majd a továbbiak
-};
-function getSimilarity(keysA, keysB) {
-    if (!keysA.primary || !keysB.primary)
+    const assonancePairs = {
+        "jta": ["tja"], "tja": ["jta"],
+        "enye": ["egye"], "egye": ["enye"],
+        "nat": ["adt"], "adt": ["nat"],
+        "enn": ["ten"], "ten": ["enn"],
+        "gam": ["van"], "van": ["gam"],
+        "kem": ["ken", "zen"], "ken": ["kem"], "zen": ["kem"],
+        "ard": ["sat"], "sat": ["ard"],
+        "sok": ["suk"], "suk": ["sok"]
+    };
+
+    function getSimilarity(keysA, keysB) {
+        if (!keysA.primary || !keysB.primary) return { score: 0, assonance: false };
+        if (keysA.primary === keysB.primary) return { score: 100, assonance: false };
+        if (keysA.short === keysB.short) return { score: 85, assonance: false };
+        const list = assonancePairs[keysA.primary];
+        if (list && list.includes(keysB.primary)) return { score: 85, assonance: true };
         return { score: 0, assonance: false };
-
-    if (keysA.primary === keysB.primary)
-        return { score: 100, assonance: false };
-
-    if (keysA.short === keysB.short)
-        return { score: 85, assonance: false };
-
-    const list = assonancePairs[keysA.primary];
-    if (list && list.includes(keysB.primary))
-        return { score: 85, assonance: true };
-
-    return { score: 0, assonance: false };
-}
+    }
 
     function analyzeRhymes(container) {
         const rows = container.querySelectorAll(".row");
@@ -147,7 +143,7 @@ function getSimilarity(keysA, keysB) {
         const assignedLetters = new Array(rows.length).fill("-");
         const isAssonance = new Array(rows.length).fill(false);
         const visited = new Array(rows.length).fill(false);
-        const THRESHOLD = 80; // Utolsó 2-3 betű egyezése alapján csoportosít
+        const THRESHOLD = 80; 
 
         for (let i = 0; i < rows.length; i++) {
             if (!allKeys[i].primary || visited[i]) continue;
@@ -163,12 +159,11 @@ function getSimilarity(keysA, keysB) {
                 for (let j = 0; j < rows.length; j++) {
                     if (!visited[j] && allKeys[j].primary) {
                         const sim = getSimilarity(allKeys[curr], allKeys[j]);
-
-                    if (sim.score >= THRESHOLD) {
-                    if (sim.assonance) {
-                     isAssonance[curr] = true;
-                     isAssonance[j] = true;
-              }
+                        if (sim.score >= THRESHOLD) {
+                            if (sim.assonance) {
+                                isAssonance[curr] = true;
+                                isAssonance[j] = true;
+                            }
                             visited[j] = true;
                             queue.push(j);
                         }
@@ -178,9 +173,7 @@ function getSimilarity(keysA, keysB) {
 
             if (currentGroup.length > 1) {
                 const letter = alphabet[alphabetIdx % 26];
-                currentGroup.forEach(idx => {
-                    assignedLetters[idx] = letter;
-                });
+                currentGroup.forEach(idx => { assignedLetters[idx] = letter; });
                 alphabetIdx++;
             }
         }
@@ -189,11 +182,7 @@ function getSimilarity(keysA, keysB) {
             const rhymeBox = row.querySelector(".rhyme-tag");
             if (rhymeBox) {
                 rhymeBox.textContent = assignedLetters[idx];
-                if (isAssonance[idx]) {
-    rhymeBox.style.color = "darkorange";
-} else {
-    rhymeBox.style.color = "";
-}
+                rhymeBox.style.color = isAssonance[idx] ? "darkorange" : "";
             }
         });
     }
@@ -217,29 +206,40 @@ function getSimilarity(keysA, keysB) {
         updateStructure();
     }
 
+    // ÚJ: A Mesterszonett és a Teljes Szöveg panelt is itt frissítjük
     function updateStructure() {
         const container = document.getElementById("stanza-content");
+        const masterContainer = document.getElementById("master-content");
+        
+        // 1. Teljes szöveg legenerálása
         const allSzonettEditors = document.querySelectorAll("#others .editor");
         let fullContent = "";
         allSzonettEditors.forEach((editor, szonettIdx) => {
             const lines = Array.from(editor.querySelectorAll(".line")).map(i => i.value);
-            fullContent += `\n--- ${szonettIdx + 1}. SZONETT ---\n`;
+            fullContent += `--- ${szonettIdx + 1}. SZONETT ---\n`;
             lines.forEach((line, index) => {
                 fullContent += line + "\n";
                 if (index === 3 || index === 7 || index === 10) fullContent += "\n";
             });
             fullContent += "\n";
         });
-        container.innerHTML = `<div style="font-family: monospace; white-space: pre-wrap; line-height: 1.4; font-size: 11px;">${fullContent}</div>`;
+        container.innerHTML = fullContent.trim();
+
+        // 2. Mesterszonett legenerálása (strófákra bontva: 4-4-3-3)
+        const masterLines = Array.from(document.querySelectorAll("#master .line")).map(i => i.value);
+        let masterContent = "";
+        masterLines.forEach((line, index) => {
+            masterContent += line + "\n";
+            if (index === 3 || index === 7 || index === 10) masterContent += "\n";
+        });
+        masterContainer.innerHTML = masterContent.trim();
     }
 
     function createRow(parent, no, isFixed = false) {
         const r = document.createElement("div");
         r.className = "row";
-        
         if (no >= 9 && no <= 11) r.classList.add("strófa-3");
         if (no >= 12 && no <= 14) r.classList.add("strófa-4");
-
         r.innerHTML = `<div>${no}</div>
                        <input type="text" class="line ${isFixed ? 'fixed' : ''}" ${isFixed ? 'readonly' : ''}>
                        <div class="center syllable-count">0</div>
@@ -306,7 +306,7 @@ function getSimilarity(keysA, keysB) {
         updateMaster();
     }
     function exportalas() {
-        let txt = "MESTERSZONETT:\n" + Array.from(document.querySelectorAll("#master .line")).map(i=>i.value).join("\n");
+        let txt = "MESTERSZONETT:\n" + document.getElementById('master-content').innerText;
         document.querySelectorAll("#others details").forEach((d, idx) => { txt += `\n\n--- ${idx+1}. SZONETT ---\n` + d.querySelector("textarea").value; });
         const a = document.createElement("a"); a.href = "data:text/plain;charset=utf-8," + encodeURIComponent(txt); a.download = "szonettkoszoru.txt"; a.click();
     }
