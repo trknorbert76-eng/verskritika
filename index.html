@@ -101,20 +101,21 @@ const assonancePairs = {
 
     // ide jönnek majd a továbbiak
 };
-    function getSimilarity(keysA, keysB) {
-    if (!keysA.primary || !keysB.primary) return 0;
+function getSimilarity(keysA, keysB) {
+    if (!keysA.primary || !keysB.primary)
+        return { score: 0, assonance: false };
 
-    // Teljes egyezés
-    if (keysA.primary === keysB.primary) return 100;
+    if (keysA.primary === keysB.primary)
+        return { score: 100, assonance: false };
 
-    // Utolsó 2 betű egyezése
-    if (keysA.short === keysB.short) return 85;
+    if (keysA.short === keysB.short)
+        return { score: 85, assonance: false };
 
-    // Asszonánc lista
     const list = assonancePairs[keysA.primary];
-    if (list && list.includes(keysB.primary)) return 85;
+    if (list && list.includes(keysB.primary))
+        return { score: 85, assonance: true };
 
-    return 0;
+    return { score: 0, assonance: false };
 }
 
     function analyzeRhymes(container) {
@@ -129,6 +130,7 @@ const assonancePairs = {
         });
 
         const assignedLetters = new Array(rows.length).fill("-");
+        const isAssonance = new Array(rows.length).fill(false);
         const visited = new Array(rows.length).fill(false);
         const THRESHOLD = 80; // Utolsó 2-3 betű egyezése alapján csoportosít
 
@@ -146,7 +148,12 @@ const assonancePairs = {
                 for (let j = 0; j < rows.length; j++) {
                     if (!visited[j] && allKeys[j].primary) {
                         const sim = getSimilarity(allKeys[curr], allKeys[j]);
-                        if (sim >= THRESHOLD) {
+
+                    if (sim.score >= THRESHOLD) {
+                    if (sim.assonance) {
+                     isAssonance[curr] = true;
+                     isAssonance[j] = true;
+              }
                             visited[j] = true;
                             queue.push(j);
                         }
@@ -167,6 +174,11 @@ const assonancePairs = {
             const rhymeBox = row.querySelector(".rhyme-tag");
             if (rhymeBox) {
                 rhymeBox.textContent = assignedLetters[idx];
+                if (isAssonance[idx]) {
+    rhymeBox.style.color = "darkorange";
+} else {
+    rhymeBox.style.color = "";
+}
             }
         });
     }
