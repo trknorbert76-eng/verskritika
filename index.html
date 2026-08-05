@@ -5,7 +5,7 @@
     <title>Szonettkoszorú Szerkesztő</title> 
     <style>
         body { font-family: Segoe UI, Arial; background: #eef2f5; margin: 20px; }
-        .main-layout { display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; max-width: 1200px; margin: auto; }
+        .main-layout { display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; max-width: 1200px; margin: auto; } 
         .card { background: #fff; border-radius: 12px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,.12); margin-bottom: 18px; } 
         .controls { position: sticky; top: 0; background: #fff; padding: 15px; border-radius: 12px; z-index: 100; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; gap: 10px; }
         .editor-grid { display: grid; grid-template-columns: 1fr 250px; gap: 20px; align-items: start; margin-top: 10px; }
@@ -102,16 +102,20 @@ const assonancePairs = {
     // ide jönnek majd a továbbiak
 };
     function getSimilarity(keysA, keysB) {
-        if (!keysA.primary || !keysB.primary) return 0;
-        
-        // Utolsó 3 betű egyezése -> 100%
-        if (keysA.primary === keysB.primary) return 100;
-        
-        // Utolsó 2 betű egyezése -> 85%
-        if (keysA.short === keysB.short) return 85;
+    if (!keysA.primary || !keysB.primary) return 0;
 
-        return 0;
-    }
+    // Teljes egyezés
+    if (keysA.primary === keysB.primary) return 100;
+
+    // Utolsó 2 betű egyezése
+    if (keysA.short === keysB.short) return 85;
+
+    // Asszonánc lista
+    const list = assonancePairs[keysA.primary];
+    if (list && list.includes(keysB.primary)) return 85;
+
+    return 0;
+}
 
     function analyzeRhymes(container) {
         const rows = container.querySelectorAll(".row");
