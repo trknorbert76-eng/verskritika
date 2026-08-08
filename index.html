@@ -115,7 +115,7 @@
 
 <script>
     // Cloudflare Worker URL-ed helye
-  const WORKER_URL = "https://szonett-ai-worker.trknorbert76.workers.dev";
+    const WORKER_URL = "https://szonett-ai-worker.trknorbert76.workers.dev";
 
     function countSyllables(t) {
         t = t.toLowerCase().replace(/[^a-záàeéèiíìoóòöőuúùüű]/g, "");
@@ -319,62 +319,81 @@
         masterContainer.innerHTML = masterContent.trim();
     }
 
-    // AI HÍVÁS LOGIKÁJA
-  async function runAI(mode) {
-    const target = document.getElementById("ai-target").value;
-    const outputBox = document.getElementById("ai-output");
-    
-    let textToSend = "";
-    let targetLabel = "";
+    // AI HÍVÁS LOGIKÁJA - HÁTTÉRBEN HÁZASÍTOTT SZÓTAG ÉS RÍM ADATOKKAL
+    async function runAI(mode) {
+        const target = document.getElementById("ai-target").value;
+        const outputBox = document.getElementById("ai-output");
+        
+        let textToSend = "";
+        let targetLabel = "";
 
-    if (target === "all") {
-        textToSend = document.getElementById("stanza-content").innerText;
-        targetLabel = "A teljes szonettkoszorú";
-    } else if (target === "master") {
-        textToSend = document.getElementById("master-content").innerText;
-        targetLabel = "15. Mesterszonett";
-    } else {
-        const idx = parseInt(target) - 1;
-        const editors = document.querySelectorAll("#others .editor");
-        if (editors[idx]) {
-            const lines = Array.from(editors[idx].querySelectorAll(".line")).map(i => i.value);
-            textToSend = lines.join("\n");
+        // Adatkinyerés a háttérben: a sorok elé odailleszti a szótagszámot és a rímjelölést
+        function extractWithData(editorElement) {
+            const rows = editorElement.querySelectorAll(".row");
+            let result = [];
+            rows.forEach(row => {
+                const line = row.querySelector(".line").value;
+                const syllables = row.querySelector(".syllable-count").textContent;
+                const rhyme = row.querySelector(".rhyme-tag").textContent;
+                if (line.trim() !== "") {
+                    result.push(`[${syllables} szótag | Rím: ${rhyme}] ${line}`);
+                }
+            });
+            return result.join("\n");
         }
-        targetLabel = `${target}. Szonett`;
-    }
 
-    if (!textToSend.trim()) {
-        outputBox.textContent = "⚠️ A kiválasztott szonett még üres!";
-        return;
-    }
-
-    outputBox.textContent = "⏳ Elemzés folyamatban...";
-
-    try {
-        const response = await fetch(WORKER_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                text: textToSend,
-                targetLabel: targetLabel,
-                mode: mode
-            })
-        });
-
-        const data = await response.json();
-
-        if (data.result) {
-            outputBox.textContent = data.result;
-        } else if (data.error) {
-            // Megjelenítjük a pontos hibaüzenetet
-            outputBox.textContent = "❌ Hiba a Worker-ből: " + data.error;
+        if (target === "all") {
+            const editors = document.querySelectorAll("#others .editor");
+            let fullList = [];
+            editors.forEach((ed, idx) => {
+                fullList.push(`--- ${idx + 1}. SZONETT ---`);
+                fullList.push(extractWithData(ed));
+            });
+            textToSend = fullList.join("\n\n");
+            targetLabel = "A teljes szonettkoszorú";
+        } else if (target === "master") {
+            textToSend = extractWithData(document.getElementById("master"));
+            targetLabel = "15. Mesterszonett";
         } else {
-            outputBox.textContent = "❌ Ismeretlen hiba történt a válasz feldolgozásakor.";
+            const idx = parseInt(target) - 1;
+            const editors = document.querySelectorAll("#others .editor");
+            if (editors[idx]) {
+                textToSend = extractWithData(editors[idx]);
+            }
+            targetLabel = `${target}. Szonett`;
         }
-    } catch (e) {
-        outputBox.textContent = "❌ Hiba a kapcsolatban!\n" + e.message;
+
+        if (!textToSend.trim()) {
+            outputBox.textContent = "⚠️ A kiválasztott szonett még üres!";
+            return;
+        }
+
+        outputBox.textContent = "⏳ Elemzés folyamatban...";
+
+        try {
+            const response = await fetch(WORKER_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    text: textToSend,
+                    targetLabel: targetLabel,
+                    mode: mode
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.result) {
+                outputBox.textContent = data.result;
+            } else if (data.error) {
+                outputBox.textContent = "❌ Hiba a Worker-ből: " + data.error;
+            } else {
+                outputBox.textContent = "❌ Ismeretlen hiba történt a válasz feldolgozásakor.";
+            }
+        } catch (e) {
+            outputBox.textContent = "❌ Hiba a kapcsolatban!\n" + e.message;
+        }
     }
-}
 
     function createRow(parent, no, isFixed = false) {
         const r = document.createElement("div");
