@@ -320,57 +320,61 @@
     }
 
     // AI HÍVÁS LOGIKÁJA
-    async function runAI(mode) {
-        const target = document.getElementById("ai-target").value;
-        const outputBox = document.getElementById("ai-output");
-        
-        let textToSend = "";
-        let targetLabel = "";
+  async function runAI(mode) {
+    const target = document.getElementById("ai-target").value;
+    const outputBox = document.getElementById("ai-output");
+    
+    let textToSend = "";
+    let targetLabel = "";
 
-        if (target === "all") {
-            textToSend = document.getElementById("stanza-content").innerText;
-            targetLabel = "A teljes szonettkoszorú";
-        } else if (target === "master") {
-            textToSend = document.getElementById("master-content").innerText;
-            targetLabel = "15. Mesterszonett";
-        } else {
-            const idx = parseInt(target) - 1;
-            const editors = document.querySelectorAll("#others .editor");
-            if (editors[idx]) {
-                const lines = Array.from(editors[idx].querySelectorAll(".line")).map(i => i.value);
-                textToSend = lines.join("\n");
-            }
-            targetLabel = `${target}. Szonett`;
+    if (target === "all") {
+        textToSend = document.getElementById("stanza-content").innerText;
+        targetLabel = "A teljes szonettkoszorú";
+    } else if (target === "master") {
+        textToSend = document.getElementById("master-content").innerText;
+        targetLabel = "15. Mesterszonett";
+    } else {
+        const idx = parseInt(target) - 1;
+        const editors = document.querySelectorAll("#others .editor");
+        if (editors[idx]) {
+            const lines = Array.from(editors[idx].querySelectorAll(".line")).map(i => i.value);
+            textToSend = lines.join("\n");
         }
-
-        if (!textToSend.trim()) {
-            outputBox.textContent = "⚠️ A kiválasztott szonett még üres!";
-            return;
-        }
-
-        outputBox.textContent = "⏳ Elemzés folyamatban...";
-
-        try {
-            const response = await fetch(WORKER_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    text: textToSend,
-                    targetLabel: targetLabel,
-                    mode: mode
-                })
-            });
-
-            const data = await response.json();
-            if (data.result) {
-                outputBox.textContent = data.result;
-            } else {
-                outputBox.textContent = "❌ Hiba történt a válasz feldolgozásakor.";
-            }
-        } catch (e) {
-            outputBox.textContent = "❌ Hiba a kapcsolatban! Ellenőrizd a Worker URL-t.\n" + e.message;
-        }
+        targetLabel = `${target}. Szonett`;
     }
+
+    if (!textToSend.trim()) {
+        outputBox.textContent = "⚠️ A kiválasztott szonett még üres!";
+        return;
+    }
+
+    outputBox.textContent = "⏳ Elemzés folyamatban...";
+
+    try {
+        const response = await fetch(WORKER_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                text: textToSend,
+                targetLabel: targetLabel,
+                mode: mode
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.result) {
+            outputBox.textContent = data.result;
+        } else if (data.error) {
+            // Megjelenítjük a pontos hibaüzenetet
+            outputBox.textContent = "❌ Hiba a Worker-ből: " + data.error;
+        } else {
+            outputBox.textContent = "❌ Ismeretlen hiba történt a válasz feldolgozásakor.";
+        }
+    } catch (e) {
+        outputBox.textContent = "❌ Hiba a kapcsolatban!\n" + e.message;
+    }
+}
 
     function createRow(parent, no, isFixed = false) {
         const r = document.createElement("div");
