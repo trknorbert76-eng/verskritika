@@ -7,7 +7,7 @@
         body { font-family: Segoe UI, Arial; background: #eef2f5; margin: 20px; }
         .main-layout { display: grid; grid-template-columns: 1fr 450px; gap: 20px; align-items: start; max-width: 1400px; margin: auto; } 
         .card { background: #fff; border-radius: 12px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,.12); margin-bottom: 18px; } 
-        .controls { position: sticky; top: 0; background: #fff; padding: 15px; border-radius: 12px; z-index: 100; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; gap: 10px; }
+        .controls { position: sticky; top: 0; background: #fff; padding: 15px; border-radius: 12px; z-index: 100; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .editor-grid { display: grid; grid-template-columns: 1fr 250px; gap: 20px; align-items: start; margin-top: 10px; }
         .header, .row { display: grid; grid-template-columns: 25px 1fr 50px 40px; gap: 8px; align-items: center; }
         .line { width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 5px; font-size: 14px; box-sizing: border-box; }
@@ -19,7 +19,6 @@
         .good { color: green; }
         .bad { color: #d00000; }
         
-        /* Lánc státusz osztályok az első/utolsó sorok színezéséhez */
         .chain-ok { color: darkgreen !important; font-weight: bold; border-color: darkgreen; }
         .chain-error { color: #d00000 !important; font-weight: bold; border-color: #d00000; }
 
@@ -32,11 +31,16 @@
         .structure-panel { 
             position: sticky; top: 20px; background: #fff; padding: 15px; 
             border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.1); font-size: 12px; 
-            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
+            display: flex; flex-direction: column; gap: 15px;
             max-height: 85vh; overflow-y: auto;
         }
         .structure-panel h3 { margin-top: 0; font-size: 14px; margin-bottom: 10px; }
-        .copy-content-box { font-family: monospace; white-space: pre-wrap; line-height: 1.4; font-size: 11px; padding: 5px; background: #f9f9f9; border: 1px solid #eee; border-radius: 4px;}
+        .copy-content-box { font-family: monospace; white-space: pre-wrap; line-height: 1.4; font-size: 11px; padding: 5px; background: #f9f9f9; border: 1px solid #eee; border-radius: 4px; max-height: 180px; overflow-y: auto; }
+        
+        /* AI Panel Stílusok */
+        .ai-card { background: #f0f4f9; border: 1px solid #d0dbe5; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+        .ai-response-box { background: #fff; border: 1px solid #ccc; border-radius: 6px; padding: 10px; font-size: 12px; line-height: 1.5; max-height: 250px; overflow-y: auto; white-space: pre-wrap; margin-top: 10px; }
+        select { padding: 6px 10px; border-radius: 6px; border: 1px solid #ccc; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -60,7 +64,40 @@
         <div id="others"></div>
     </div>
 
+    <!-- JOBB OLDALI PANEL AI ELEMZŐVEL -->
     <div class="structure-panel">
+        
+        <!-- AI SEGÉD DOBOZ -->
+        <div class="ai-card">
+            <h3>🤖 AI Költészeti Segéd</h3>
+            <label style="font-size: 11px; font-weight: bold; display: block; margin-bottom: 4px;">Célpont kiválasztása:</label>
+            <select id="ai-target" style="width: 100%; margin-bottom: 10px;">
+                <option value="all">🌐 Teljes Szonettkoszorú (Egyben)</option>
+                <option value="master">15. Mesterszonett</option>
+                <option value="1">1. Szonett</option>
+                <option value="2">2. Szonett</option>
+                <option value="3">3. Szonett</option>
+                <option value="4">4. Szonett</option>
+                <option value="5">5. Szonett</option>
+                <option value="6">6. Szonett</option>
+                <option value="7">7. Szonett</option>
+                <option value="8">8. Szonett</option>
+                <option value="9">9. Szonett</option>
+                <option value="10">10. Szonett</option>
+                <option value="11">11. Szonett</option>
+                <option value="12">12. Szonett</option>
+                <option value="13">13. Szonett</option>
+                <option value="14">14. Szonett</option>
+            </select>
+            
+            <div style="display: flex; gap: 5px;">
+                <button onclick="runAI('fix')" style="flex: 1; background: #6f42c1; color: white; font-size: 11px;">✍️ Javítás</button>
+                <button onclick="runAI('analyze')" style="flex: 1; background: #fd7e14; color: white; font-size: 11px;">💡 Értelmezés</button>
+            </div>
+            
+            <div id="ai-output" class="ai-response-box">Itt jelenik majd meg az AI elemzése vagy javítási javaslata...</div>
+        </div>
+
         <div>
             <h3>15. Mesterszonett</h3>
             <button onclick="navigator.clipboard.writeText(document.getElementById('master-content').innerText)" 
@@ -77,6 +114,9 @@
 </div>
 
 <script>
+    // Cloudflare Worker URL-ed helye
+    const WORKER_URL = "https://a-te-worker-neved.workers.dev";
+
     function countSyllables(t) {
         t = t.toLowerCase().replace(/[^a-záàeéèiíìoóòöőuúùüű]/g, "");
         return (t.match(/[aáàeéèiíìoóòöőuúùüű]/g) || []).length;
@@ -89,7 +129,6 @@
         box.className = "center syllable-count " + ((n === 10 || n === 11) ? "good" : "bad");
     }
 
-    // Szöveg tisztítása az összehasonlításhoz (csak betűk és számok maradnak)
     function cleanForComparison(text) {
         return text.toLowerCase().replace(/[^a-zááééííóóöőúúüűa-z0-9]/g, "");
     }
@@ -200,25 +239,23 @@
         textarea.value = Array.from(lines).map(l => l.value).join("\n");
     }
 
-    // ÚJ: Láncolat ellenőrzése és színezése
     function checkChain() {
         const editors = document.querySelectorAll("#others .editor");
         if (editors.length === 0) return;
 
         for (let i = 0; i < 14; i++) {
             const currentEditor = editors[i];
-            const nextEditor = editors[(i + 1) % 14]; // A 14. szonett után az 1. jön
+            const nextEditor = editors[(i + 1) % 14];
 
             const currentLines = currentEditor.querySelectorAll(".line");
             const nextLines = nextEditor.querySelectorAll(".line");
 
-            const lastLineInput = currentLines[13]; // 14. sor (0-indexelt 13)
-            const firstLineInput = nextLines[0];   // 1. sor (0-indexelt 0)
+            const lastLineInput = currentLines[13]; 
+            const firstLineInput = nextLines[0];   
 
             const cleanLast = cleanForComparison(lastLineInput.value);
             const cleanFirst = cleanForComparison(firstLineInput.value);
 
-            // Ha bármelyik üres, eltávolítjuk a lánc stílust
             if (cleanLast === "" || cleanFirst === "") {
                 lastLineInput.classList.remove("chain-ok", "chain-error");
                 firstLineInput.classList.remove("chain-ok", "chain-error");
@@ -226,14 +263,12 @@
             }
 
             if (cleanLast === cleanFirst) {
-                // Egyezés esetén sötétzöld
                 lastLineInput.classList.add("chain-ok");
                 lastLineInput.classList.remove("chain-error");
 
                 firstLineInput.classList.add("chain-ok");
                 firstLineInput.classList.remove("chain-error");
             } else {
-                // Eltérés esetén piros
                 lastLineInput.classList.add("chain-error");
                 lastLineInput.classList.remove("chain-ok");
 
@@ -255,7 +290,7 @@
         });
         analyzeRhymes(document.getElementById("master"));
         updateStructure();
-        checkChain(); // Lánc ellenőrzés futtatása
+        checkChain();
     }
 
     function updateStructure() {
@@ -282,6 +317,59 @@
             if (index === 3 || index === 7 || index === 10) masterContent += "\n";
         });
         masterContainer.innerHTML = masterContent.trim();
+    }
+
+    // AI HÍVÁS LOGIKÁJA
+    async function runAI(mode) {
+        const target = document.getElementById("ai-target").value;
+        const outputBox = document.getElementById("ai-output");
+        
+        let textToSend = "";
+        let targetLabel = "";
+
+        if (target === "all") {
+            textToSend = document.getElementById("stanza-content").innerText;
+            targetLabel = "A teljes szonettkoszorú";
+        } else if (target === "master") {
+            textToSend = document.getElementById("master-content").innerText;
+            targetLabel = "15. Mesterszonett";
+        } else {
+            const idx = parseInt(target) - 1;
+            const editors = document.querySelectorAll("#others .editor");
+            if (editors[idx]) {
+                const lines = Array.from(editors[idx].querySelectorAll(".line")).map(i => i.value);
+                textToSend = lines.join("\n");
+            }
+            targetLabel = `${target}. Szonett`;
+        }
+
+        if (!textToSend.trim()) {
+            outputBox.textContent = "⚠️ A kiválasztott szonett még üres!";
+            return;
+        }
+
+        outputBox.textContent = "⏳ Elemzés folyamatban...";
+
+        try {
+            const response = await fetch(WORKER_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    text: textToSend,
+                    targetLabel: targetLabel,
+                    mode: mode
+                })
+            });
+
+            const data = await response.json();
+            if (data.result) {
+                outputBox.textContent = data.result;
+            } else {
+                outputBox.textContent = "❌ Hiba történt a válasz feldolgozásakor.";
+            }
+        } catch (e) {
+            outputBox.textContent = "❌ Hiba a kapcsolatban! Ellenőrizd a Worker URL-t.\n" + e.message;
+        }
     }
 
     function createRow(parent, no, isFixed = false) {
