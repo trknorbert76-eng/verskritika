@@ -5,7 +5,6 @@
     <title>Szonettkoszorú Szerkesztő</title> 
     <style>
         body { font-family: Segoe UI, Arial; background: #eef2f5; margin: 20px; }
-        /* Kiszélesítettük a layout-ot, hogy elférjen a dupla jobb panel */
         .main-layout { display: grid; grid-template-columns: 1fr 450px; gap: 20px; align-items: start; max-width: 1400px; margin: auto; } 
         .card { background: #fff; border-radius: 12px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,.12); margin-bottom: 18px; } 
         .controls { position: sticky; top: 0; background: #fff; padding: 15px; border-radius: 12px; z-index: 100; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; gap: 10px; }
@@ -19,18 +18,22 @@
         .rhyme-tag { font-weight: bold; color: #0056b3; background: #e9ecef; border-radius: 4px; padding: 2px 0; text-align: center; }
         .good { color: green; }
         .bad { color: #d00000; }
+        
+        /* Lánc státusz osztályok az első/utolsó sorok színezéséhez */
+        .chain-ok { color: darkgreen !important; font-weight: bold; border-color: darkgreen; }
+        .chain-error { color: #d00000 !important; font-weight: bold; border-color: #d00000; }
+
         .strófa-3 { background-color: #e3f2fd; }
         .strófa-4 { background-color: #e8f5e9; }
         button { padding: 8px 16px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; }
         details { margin-bottom: 15px; }
         summary { cursor: pointer; padding: 10px; background: #fff; border-radius: 8px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         
-        /* Jobb oldali sticky panel új stílusai */
         .structure-panel { 
             position: sticky; top: 20px; background: #fff; padding: 15px; 
             border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.1); font-size: 12px; 
             display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
-            max-height: 85vh; overflow-y: auto; /* Görgethető, ha túl hosszú */
+            max-height: 85vh; overflow-y: auto;
         }
         .structure-panel h3 { margin-top: 0; font-size: 14px; margin-bottom: 10px; }
         .copy-content-box { font-family: monospace; white-space: pre-wrap; line-height: 1.4; font-size: 11px; padding: 5px; background: #f9f9f9; border: 1px solid #eee; border-radius: 4px;}
@@ -57,7 +60,6 @@
         <div id="others"></div>
     </div>
 
-    <!-- MÓDOSÍTOTT OLDALSÓ PANEL -->
     <div class="structure-panel">
         <div>
             <h3>15. Mesterszonett</h3>
@@ -85,6 +87,11 @@
         const box = input.parentNode.querySelector(".syllable-count");
         box.textContent = n;
         box.className = "center syllable-count " + ((n === 10 || n === 11) ? "good" : "bad");
+    }
+
+    // Szöveg tisztítása az összehasonlításhoz (csak betűk és számok maradnak)
+    function cleanForComparison(text) {
+        return text.toLowerCase().replace(/[^a-zááééííóóöőúúüűa-z0-9]/g, "");
     }
 
     function getRhymeKeys(text) {
@@ -193,6 +200,49 @@
         textarea.value = Array.from(lines).map(l => l.value).join("\n");
     }
 
+    // ÚJ: Láncolat ellenőrzése és színezése
+    function checkChain() {
+        const editors = document.querySelectorAll("#others .editor");
+        if (editors.length === 0) return;
+
+        for (let i = 0; i < 14; i++) {
+            const currentEditor = editors[i];
+            const nextEditor = editors[(i + 1) % 14]; // A 14. szonett után az 1. jön
+
+            const currentLines = currentEditor.querySelectorAll(".line");
+            const nextLines = nextEditor.querySelectorAll(".line");
+
+            const lastLineInput = currentLines[13]; // 14. sor (0-indexelt 13)
+            const firstLineInput = nextLines[0];   // 1. sor (0-indexelt 0)
+
+            const cleanLast = cleanForComparison(lastLineInput.value);
+            const cleanFirst = cleanForComparison(firstLineInput.value);
+
+            // Ha bármelyik üres, eltávolítjuk a lánc stílust
+            if (cleanLast === "" || cleanFirst === "") {
+                lastLineInput.classList.remove("chain-ok", "chain-error");
+                firstLineInput.classList.remove("chain-ok", "chain-error");
+                continue;
+            }
+
+            if (cleanLast === cleanFirst) {
+                // Egyezés esetén sötétzöld
+                lastLineInput.classList.add("chain-ok");
+                lastLineInput.classList.remove("chain-error");
+
+                firstLineInput.classList.add("chain-ok");
+                firstLineInput.classList.remove("chain-error");
+            } else {
+                // Eltérés esetén piros
+                lastLineInput.classList.add("chain-error");
+                lastLineInput.classList.remove("chain-ok");
+
+                firstLineInput.classList.add("chain-error");
+                firstLineInput.classList.remove("chain-ok");
+            }
+        }
+    }
+
     function updateMaster() {
         const szonettEditors = document.querySelectorAll("#others .editor");
         const masterInputs = document.querySelectorAll("#master .line");
@@ -205,14 +255,13 @@
         });
         analyzeRhymes(document.getElementById("master"));
         updateStructure();
+        checkChain(); // Lánc ellenőrzés futtatása
     }
 
-    // ÚJ: A Mesterszonett és a Teljes Szöveg panelt is itt frissítjük
     function updateStructure() {
         const container = document.getElementById("stanza-content");
         const masterContainer = document.getElementById("master-content");
         
-        // 1. Teljes szöveg legenerálása
         const allSzonettEditors = document.querySelectorAll("#others .editor");
         let fullContent = "";
         allSzonettEditors.forEach((editor, szonettIdx) => {
@@ -226,7 +275,6 @@
         });
         container.innerHTML = fullContent.trim();
 
-        // 2. Mesterszonett legenerálása (strófákra bontva: 4-4-3-3)
         const masterLines = Array.from(document.querySelectorAll("#master .line")).map(i => i.value);
         let masterContent = "";
         masterLines.forEach((line, index) => {
