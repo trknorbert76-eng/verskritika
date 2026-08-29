@@ -281,25 +281,192 @@
     line-height: 1.55;
   }
 
+  .editor-loading {
+    display: none;
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: #fff3cd;
+    border: 1px solid #ffe69c;
+    border-radius: 8px;
+    line-height: 1.5;
+  }
+
+  .field-read {
+    margin-top: 16px;
+    padding: 14px;
+    background: #f7f7f8;
+    border-left: 4px solid #6f42c1;
+    border-radius: 6px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+
   .experts {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin-top: 14px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 16px;
   }
 
   .expert {
     border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 10px;
+    border-radius: 10px;
+    padding: 14px;
     background: #fafafa;
+    font-size: .92rem;
+    line-height: 1.5;
+    min-width: 0;
+  }
+
+  .expert-name {
+    font-size: 1rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+
+  .expert-overall {
+    white-space: pre-wrap;
+    margin-bottom: 12px;
+  }
+
+  .expert-effect {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #ddd;
     font-size: .88rem;
+    color: #555;
+  }
+
+  .expert-comment {
+    margin-top: 9px;
+    padding: 9px 10px;
+    border: 1px solid #e1e1e1;
+    background: #fff;
+    border-radius: 7px;
+  }
+
+  .comment-top {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .tag {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 3px 8px;
+    font-size: .74rem;
+    font-weight: 800;
+    background: #e9ecef;
+    color: #333;
+  }
+
+  .tag.high {
+    background: #f8d7da;
+    color: #842029;
+  }
+
+  .tag.medium {
+    background: #fff3cd;
+    color: #664d03;
+  }
+
+  .tag.keep {
+    background: #d4edda;
+    color: #155724;
+  }
+
+  .consensus-box {
+    margin-top: 18px;
+    border-top: 2px solid #e5e5e5;
+    padding-top: 16px;
+  }
+
+  .potential-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 12px 0 16px;
+  }
+
+  .potential-item {
+    background: #f7f7f8;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 11px;
+  }
+
+  .potential-item strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: .83rem;
+    color: #555;
+  }
+
+  .potential-value {
+    font-size: 1.2rem;
+    font-weight: 800;
+  }
+
+  .work-list {
+    margin: 8px 0 0;
+    padding-left: 21px;
+  }
+
+  .work-list li {
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+
+  .line-table {
+    margin-top: 14px;
+    border: 1px solid #ddd;
+    border-radius: 9px;
+    overflow: hidden;
+  }
+
+  .line-row {
+    display: grid;
+    grid-template-columns: 52px minmax(180px, .8fr) 180px 95px minmax(240px, 1.4fr);
+    border-bottom: 1px solid #e5e5e5;
+    background: #fff;
+  }
+
+  .line-row:last-child {
+    border-bottom: 0;
+  }
+
+  .line-row.header {
+    background: #f0f0f0;
+    font-weight: 800;
+    font-size: .82rem;
+  }
+
+  .line-cell {
+    padding: 9px 10px;
+    min-width: 0;
+    overflow-wrap: anywhere;
     line-height: 1.45;
   }
 
-  .expert strong {
-    display: block;
-    margin-bottom: 5px;
+  .line-number {
+    text-align: center;
+    font-weight: 800;
+  }
+
+  .line-text {
+    font-family: Georgia, serif;
+  }
+
+  .final-note {
+    margin-top: 16px;
+    padding: 14px;
+    background: #eef2f5;
+    border-radius: 8px;
+    line-height: 1.6;
+    white-space: pre-wrap;
   }
 
   @media (max-width: 900px) {
@@ -308,8 +475,17 @@
     }
 
     .two-col,
-    .experts {
+    .experts,
+    .potential-grid {
       grid-template-columns: 1fr;
+    }
+
+    .line-table {
+      overflow-x: auto;
+    }
+
+    .line-row {
+      min-width: 900px;
     }
 
     textarea {
@@ -395,8 +571,6 @@
         <div class="result-grid">
           <div class="result-label">Pontszám</div>
           <div id="targetScore" class="result-value">—</div>
-         <div class="result-label">Helyezés a mezőnyben</div>
-<div id="targetOverallPlace" class="result-value">—</div>
 
           <div class="result-label">Versenyeredmény</div>
           <div id="targetResult" class="result-value">—</div>
@@ -413,38 +587,59 @@
       </section>
 
       <section class="card editor-placeholder" id="editorArea">
-        <h2>Szerkesztői műhely</h2>
+        <h2>Pályázati szerkesztői műhely</h2>
 
         <div class="editor-intro">
-          Itt jelenik majd meg a vers saját belső törvénye, a soronkénti elemzés,
-          a versszakok értékelése és a közös műhelydöntés.
+          A négy szerkesztő ugyanazt a verset és ugyanazt a pályázati eredményt látja,
+          de más szakmai nézőpontból keresi, hol lehet valódi pontokat visszaszerezni
+          a szerző saját hangjának megőrzésével.
         </div>
 
-        <div class="experts">
-          <div class="expert">
-            <strong>RADNÓTI</strong>
-            Formafegyelem, ritmus, tiszta kép, fölösleges szó.
-          </div>
-
-          <div class="expert">
-            <strong>JÓZSEF ATTILA</strong>
-            Gondolati szerkezet, belső logika, pszichológiai mélység, pontos szó.
-          </div>
-
-          <div class="expert">
-            <strong>ADY</strong>
-            Saját hang, merész kép, szimbólum, nyelvi egyediség védelme.
-          </div>
-
-          <div class="expert">
-            <strong>PILINSZKY</strong>
-            Tömörség, csend, kihagyás, kimondatlan jelentés, túlmagyarázás.
-          </div>
+        <div id="editorLoading" class="editor-loading">
+          Ady, József Attila, Radnóti és Pilinszky szerkesztői nézőpontja dolgozik...
         </div>
 
-        <p class="hint" style="margin-top:14px;">
-          A szerkesztői Worker még nincs bekötve. Ezt a következő lépésben építjük hozzá.
-        </p>
+        <div id="editorContent" style="display:none;">
+          <h3 style="margin-top:18px;">Mezőnyolvasat</h3>
+          <div id="fieldRead" class="field-read"></div>
+
+          <div id="expertsGrid" class="experts"></div>
+
+          <div class="consensus-box">
+            <h3>Műhelydöntés</h3>
+
+            <div class="potential-grid">
+              <div class="potential-item">
+                <strong>Kisebb javítással</strong>
+                <div id="minorPotential" class="potential-value">—</div>
+              </div>
+
+              <div class="potential-item">
+                <strong>Komoly hangőrző szerkesztéssel</strong>
+                <div id="deepPotential" class="potential-value">—</div>
+              </div>
+
+              <div class="potential-item">
+                <strong>Becsült plafon</strong>
+                <div id="ceilingPotential" class="potential-value">—</div>
+              </div>
+            </div>
+
+            <h3>Fő pontvesztések</h3>
+            <ul id="lossList" class="work-list"></ul>
+
+            <h3>Védendő részek</h3>
+            <ul id="protectList" class="work-list"></ul>
+
+            <h3>Javítási sorrend</h3>
+            <ol id="priorityList" class="work-list"></ol>
+
+            <h3>Soronkénti műhelydöntés</h3>
+            <div id="lineDecisions" class="line-table"></div>
+
+            <div id="finalNote" class="final-note"></div>
+          </div>
+        </div>
       </section>
     </main>
 
@@ -532,13 +727,23 @@ const resultArea = document.getElementById("resultArea");
 const podiumArea = document.getElementById("podiumArea");
 const targetStatus = document.getElementById("targetStatus");
 const targetScore = document.getElementById("targetScore");
- const targetOverallPlace =
-  document.getElementById("targetOverallPlace");
 const targetResult = document.getElementById("targetResult");
 const targetReason = document.getElementById("targetReason");
 const podiumGrid = document.getElementById("podiumGrid");
 
 const editorArea = document.getElementById("editorArea");
+const editorLoading = document.getElementById("editorLoading");
+const editorContent = document.getElementById("editorContent");
+const fieldRead = document.getElementById("fieldRead");
+const expertsGrid = document.getElementById("expertsGrid");
+const minorPotential = document.getElementById("minorPotential");
+const deepPotential = document.getElementById("deepPotential");
+const ceilingPotential = document.getElementById("ceilingPotential");
+const lossList = document.getElementById("lossList");
+const protectList = document.getElementById("protectList");
+const priorityList = document.getElementById("priorityList");
+const lineDecisions = document.getElementById("lineDecisions");
+const finalNote = document.getElementById("finalNote");
 
 let progressTimer = null;
 let countdownTimer = null;
@@ -729,12 +934,6 @@ function renderResult(data) {
       ? `${target.score} / 100`
       : "Nincs adat";
 
- targetOverallPlace.textContent =
-  target.overall_place !== null &&
-  target.overall_place !== undefined
-    ? `${target.overall_place}. hely / 20`
-    : "Nincs adat";
-
   targetReason.textContent =
     target.reason || "Nincs külön indoklás.";
 
@@ -787,7 +986,12 @@ startBtn.addEventListener("click", async () => {
   }
 
   startBtn.disabled = true;
+
+  sessionStorage.removeItem("muhely_editorial");
   editorArea.style.display = "none";
+  editorContent.style.display = "none";
+  editorLoading.style.display = "none";
+
   resultArea.style.display = "none";
   podiumArea.style.display = "none";
   successBox.style.display = "none";
@@ -864,15 +1068,270 @@ startBtn.addEventListener("click", async () => {
   }
 });
 
-editorBtn.addEventListener("click", () => {
-  editorArea.style.display =
-    editorArea.style.display === "block" ? "none" : "block";
+function priorityClass(priority) {
+  if (priority === "magas") return "high";
+  if (priority === "közepes") return "medium";
+  return "";
+}
 
-  if (editorArea.style.display === "block") {
-    editorArea.scrollIntoView({
-      behavior: "smooth",
-      block: "start"
+function verdictClass(verdict) {
+  return verdict && verdict.includes("HAGYD MEG")
+    ? "keep"
+    : "";
+}
+
+function renderEditorial(data) {
+  const editorial = data?.editorial || {};
+  const consensus = editorial.consensus || {};
+
+  fieldRead.textContent =
+    editorial.field_read || "Nincs külön mezőnyolvasat.";
+
+  expertsGrid.innerHTML = "";
+
+  const experts =
+    Array.isArray(editorial.experts)
+      ? editorial.experts
+      : [];
+
+  experts.forEach(expert => {
+    const card = document.createElement("div");
+    card.className = "expert";
+
+    const name = document.createElement("div");
+    name.className = "expert-name";
+    name.textContent = expert.name || "SZERKESZTŐ";
+
+    const overall = document.createElement("div");
+    overall.className = "expert-overall";
+    overall.textContent = expert.overall || "";
+
+    card.append(name, overall);
+
+    const comments =
+      Array.isArray(expert.comments)
+        ? expert.comments
+        : [];
+
+    comments.forEach(item => {
+      if (item.verdict === "NINCS ÉRDEMI MEGJEGYZÉSEM") {
+        return;
+      }
+
+      const box = document.createElement("div");
+      box.className = "expert-comment";
+
+      const top = document.createElement("div");
+      top.className = "comment-top";
+
+      const lines = document.createElement("span");
+      lines.className = "tag";
+      lines.textContent = item.lines || "Egész vers";
+
+      const verdict = document.createElement("span");
+      verdict.className =
+        `tag ${verdictClass(item.verdict)}`.trim();
+      verdict.textContent = item.verdict || "";
+
+      const priority = document.createElement("span");
+      priority.className =
+        `tag ${priorityClass(item.priority)}`.trim();
+      priority.textContent =
+        `prioritás: ${item.priority || "nincs"}`;
+
+      const text = document.createElement("div");
+      text.textContent = item.comment || "";
+
+      top.append(lines, verdict, priority);
+      box.append(top, text);
+      card.appendChild(box);
     });
+
+    const effect = document.createElement("div");
+    effect.className = "expert-effect";
+    effect.textContent =
+      expert.contest_effect
+        ? `Pályázati hatás: ${expert.contest_effect}`
+        : "";
+
+    card.appendChild(effect);
+    expertsGrid.appendChild(card);
+  });
+
+  minorPotential.textContent =
+    `${consensus.minor_edit_min ?? "—"}–${consensus.minor_edit_max ?? "—"} / 100`;
+
+  deepPotential.textContent =
+    `${consensus.deep_edit_min ?? "—"}–${consensus.deep_edit_max ?? "—"} / 100`;
+
+  ceilingPotential.textContent =
+    consensus.estimated_ceiling !== undefined
+      ? `${consensus.estimated_ceiling} / 100`
+      : "—";
+
+  lossList.innerHTML = "";
+  (consensus.main_losses || []).forEach(item => {
+    const li = document.createElement("li");
+    li.textContent =
+      `${item.area}: ${item.estimated_points}. ${item.reason}`;
+    lossList.appendChild(li);
+  });
+
+  protectList.innerHTML = "";
+  (consensus.protect || []).forEach(item => {
+    const li = document.createElement("li");
+    li.textContent =
+      `${item.lines}: ${item.reason}`;
+    protectList.appendChild(li);
+  });
+
+  priorityList.innerHTML = "";
+  [...(consensus.priority_plan || [])]
+    .sort((a, b) => (a.order || 0) - (b.order || 0))
+    .forEach(item => {
+      const li = document.createElement("li");
+      li.textContent =
+        `${item.lines} — ${item.action}. ${item.reason}`;
+      priorityList.appendChild(li);
+    });
+
+  lineDecisions.innerHTML = `
+    <div class="line-row header">
+      <div class="line-cell">#</div>
+      <div class="line-cell">Sor</div>
+      <div class="line-cell">Döntés</div>
+      <div class="line-cell">Prioritás</div>
+      <div class="line-cell">Miért?</div>
+    </div>
+  `;
+
+  (consensus.line_decisions || []).forEach(item => {
+    const row = document.createElement("div");
+    row.className = "line-row";
+
+    const c1 = document.createElement("div");
+    c1.className = "line-cell line-number";
+    c1.textContent = item.line_number ?? "";
+
+    const c2 = document.createElement("div");
+    c2.className = "line-cell line-text";
+    c2.textContent = item.text || "";
+
+    const c3 = document.createElement("div");
+    c3.className = "line-cell";
+    c3.textContent = item.decision || "";
+
+    const c4 = document.createElement("div");
+    c4.className = "line-cell";
+    c4.textContent = item.priority || "";
+
+    const c5 = document.createElement("div");
+    c5.className = "line-cell";
+    c5.textContent = item.reason || "";
+
+    row.append(c1, c2, c3, c4, c5);
+    lineDecisions.appendChild(row);
+  });
+
+  finalNote.textContent =
+    consensus.final_note || "";
+
+  editorContent.style.display = "block";
+}
+
+editorBtn.addEventListener("click", async () => {
+  const contestRaw =
+    sessionStorage.getItem("muhely_contest");
+
+  if (!contestRaw) {
+    alert("Előbb futtasd le a pályázati felmérést.");
+    return;
+  }
+
+  let contest;
+
+  try {
+    contest = JSON.parse(contestRaw);
+  } catch (err) {
+    alert("A korábbi zsűrieredmény nem olvasható.");
+    return;
+  }
+
+  const savedEditorialRaw =
+    sessionStorage.getItem("muhely_editorial");
+
+  if (savedEditorialRaw) {
+    try {
+      const savedEditorial =
+        JSON.parse(savedEditorialRaw);
+
+      editorArea.style.display = "block";
+      renderEditorial(savedEditorial);
+
+      editorArea.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+
+      return;
+    } catch (err) {
+      sessionStorage.removeItem("muhely_editorial");
+    }
+  }
+
+  editorBtn.disabled = true;
+  editorArea.style.display = "block";
+  editorContent.style.display = "none";
+  editorLoading.style.display = "block";
+  editorLoading.textContent =
+    "Ady, József Attila, Radnóti és Pilinszky szerkesztői nézőpontja dolgozik...";
+
+  editorArea.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+
+  try {
+    const response = await fetch(CONTEST_WORKER_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        action: "editorial",
+        title: titleInput.value.trim() || "Cím nélkül",
+        poem: poemInput.value,
+        form: formInput.value.trim() || "Nem megadott",
+        type: typeInput.value.trim() || "Nem megadott",
+        strictness: Number(strictnessSelect.value) || 5,
+        contest
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+      throw new Error(
+        data.error || "A szerkesztői műhely hibával leállt."
+      );
+    }
+
+    sessionStorage.setItem(
+      "muhely_editorial",
+      JSON.stringify(data)
+    );
+
+    renderEditorial(data);
+
+  } catch (err) {
+    editorContent.style.display = "none";
+    errorBox.textContent =
+      err.message || "A szerkesztői műhely hibával leállt.";
+    errorBox.style.display = "block";
+
+  } finally {
+    editorLoading.style.display = "none";
+    editorBtn.disabled = false;
   }
 });
 
@@ -922,6 +1381,26 @@ if (savedContestRaw) {
     console.error("A korábbi műhelyeredmény nem tölthető vissza:", err);
   }
 }
+
+const savedEditorialRaw =
+  sessionStorage.getItem("muhely_editorial");
+
+if (savedEditorialRaw) {
+  try {
+    const savedEditorial =
+      JSON.parse(savedEditorialRaw);
+
+    editorArea.style.display = "block";
+    renderEditorial(savedEditorial);
+
+  } catch (err) {
+    console.error(
+      "A korábbi szerkesztői műhelyeredmény nem tölthető vissza:",
+      err
+    );
+  }
+}
+
 </script>
 
 </body>
