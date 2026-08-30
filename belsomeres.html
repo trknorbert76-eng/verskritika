@@ -280,16 +280,23 @@
     color: #555;
     line-height: 1.55;
   }
+.editor-loading {
+  display: none;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid #ffe69c;
+  border-radius: 8px;
+  line-height: 1.5;
 
-  .editor-loading {
-    display: none;
-    margin-top: 14px;
-    padding: 12px 14px;
-    background: #fff3cd;
-    border: 1px solid #ffe69c;
-    border-radius: 8px;
-    line-height: 1.5;
-  }
+  background:
+    linear-gradient(
+      to right,
+      #d4edda 0%,
+      #d4edda var(--editor-progress, 0%),
+      #fff3cd var(--editor-progress, 0%),
+      #fff3cd 100%
+    );
+}
 
   .field-read {
     margin-top: 16px;
@@ -754,6 +761,41 @@ const finalNote = document.getElementById("finalNote");
 
 let progressTimer = null;
 let countdownTimer = null;
+
+ let editorProgressTimer = null;
+
+function startEditorProgress() {
+  if (editorProgressTimer) {
+    clearInterval(editorProgressTimer);
+  }
+
+  const startedAt = performance.now();
+  const duration = 130000; // 2:10
+
+  editorLoading.style.setProperty("--editor-progress", "0%");
+
+  editorProgressTimer = setInterval(() => {
+    const elapsed = performance.now() - startedAt;
+
+    // 2:10 alatt 95%-ig csordogál
+    const percent = Math.min(95, (elapsed / duration) * 95);
+
+    editorLoading.style.setProperty(
+      "--editor-progress",
+      `${percent}%`
+    );
+  }, 250);
+}
+
+function finishEditorProgress() {
+  if (editorProgressTimer) {
+    clearInterval(editorProgressTimer);
+    editorProgressTimer = null;
+  }
+
+  // Ha elkészült, rögtön teljesen zöld
+  editorLoading.style.setProperty("--editor-progress", "100%");
+}
 
 function formatContestTime(ms) {
   ms = Math.max(0, ms);
@@ -1345,6 +1387,8 @@ editorBtn.addEventListener("click", async () => {
   editorLoading.textContent =
     "Ady, József Attila, Radnóti és Pilinszky szerkesztői nézőpontja dolgozik...";
 
+ startEditorProgress();
+
   editorArea.scrollIntoView({
     behavior: "smooth",
     block: "start"
@@ -1380,7 +1424,8 @@ editorBtn.addEventListener("click", async () => {
       JSON.stringify(data)
     );
 
-    renderEditorial(data);
+   finishEditorProgress();
+renderEditorial(data);
 
   } catch (err) {
     editorContent.style.display = "none";
