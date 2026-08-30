@@ -467,6 +467,31 @@
     font-family: Georgia, serif;
   }
 
+ .line-edit-row {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px 10px 62px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.line-edit-label {
+  font-size: .82rem;
+  font-weight: 800;
+  color: #6f42c1;
+}
+
+.line-revision-input {
+  width: 100%;
+  border: 1px solid #b9b9b9;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-family: Georgia, serif;
+  background: #fff;
+}
+
   .final-note {
     margin-top: 16px;
     padding: 14px;
@@ -1183,7 +1208,14 @@ function verdictClass(verdict) {
     ? "keep"
     : "";
 }
+function updateRevisionButtonState() {
+  const inputs = document.querySelectorAll(".line-revision-input");
 
+  const hasRevision =
+    [...inputs].some(input => input.value.trim() !== "");
+
+  revisionBtn.disabled = !hasRevision;
+}
 function renderEditorial(data) {
   const editorial = data?.editorial || {};
   const consensus = editorial.consensus || {};
@@ -1309,36 +1341,56 @@ function renderEditorial(data) {
     </div>
   `;
 
-  (consensus.line_decisions || []).forEach(item => {
-    const row = document.createElement("div");
-    row.className = "line-row";
+ (consensus.line_decisions || []).forEach(item => {
+  const row = document.createElement("div");
+  row.className = "line-row";
 
-    const c1 = document.createElement("div");
-    c1.className = "line-cell line-number";
-    c1.textContent = item.line_number ?? "";
+  const c1 = document.createElement("div");
+  c1.className = "line-cell line-number";
+  c1.textContent = item.line_number ?? "";
 
-    const c2 = document.createElement("div");
-    c2.className = "line-cell line-text";
-    c2.textContent = item.text || "";
+  const c2 = document.createElement("div");
+  c2.className = "line-cell line-text";
+  c2.textContent = item.text || "";
 
-    const c3 = document.createElement("div");
-    c3.className = "line-cell";
-    c3.textContent = item.decision || "";
+  const c3 = document.createElement("div");
+  c3.className = "line-cell";
+  c3.textContent = item.decision || "";
 
-    const c4 = document.createElement("div");
-    c4.className = "line-cell";
-    c4.textContent = item.priority || "";
+  const c4 = document.createElement("div");
+  c4.className = "line-cell";
+  c4.textContent = item.priority || "";
 
-    const c5 = document.createElement("div");
-    c5.className = "line-cell";
-    c5.textContent = item.reason || "";
+  const c5 = document.createElement("div");
+  c5.className = "line-cell";
+  c5.textContent = item.reason || "";
 
-    row.append(c1, c2, c3, c4, c5);
-    lineDecisions.appendChild(row);
-  });
+  row.append(c1, c2, c3, c4, c5);
+  lineDecisions.appendChild(row);
+
+  const editRow = document.createElement("div");
+  editRow.className = "line-edit-row";
+
+  const editLabel = document.createElement("div");
+  editLabel.className = "line-edit-label";
+  editLabel.textContent = "Próbasor:";
+
+  const editInput = document.createElement("input");
+  editInput.type = "text";
+  editInput.className = "line-revision-input";
+  editInput.dataset.lineNumber = item.line_number ?? "";
+  editInput.dataset.originalText = item.text || "";
+  editInput.placeholder = "Ide írd a javított sort...";
+  editInput.addEventListener("input", updateRevisionButtonState);
+
+  editRow.append(editLabel, editInput);
+  lineDecisions.appendChild(editRow);
+});
 
   finalNote.textContent =
     consensus.final_note || "";
+
+ updateRevisionButtonState();
 
   editorContent.style.display = "block";
 }
