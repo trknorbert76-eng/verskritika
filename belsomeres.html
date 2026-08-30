@@ -572,6 +572,9 @@
           <div class="result-label">Pontszám</div>
           <div id="targetScore" class="result-value">—</div>
 
+         <div class="result-label">Helyezés a mezőnyben</div>
+          <div id="targetFieldPlace" class="result-value">—</div>
+
           <div class="result-label">Versenyeredmény</div>
           <div id="targetResult" class="result-value">—</div>
 
@@ -730,6 +733,7 @@ const resultArea = document.getElementById("resultArea");
 const podiumArea = document.getElementById("podiumArea");
 const targetStatus = document.getElementById("targetStatus");
 const targetScore = document.getElementById("targetScore");
+ const targetFieldPlace = document.getElementById("targetFieldPlace");
 const targetResult = document.getElementById("targetResult");
 const targetReason = document.getElementById("targetReason");
 const podiumGrid = document.getElementById("podiumGrid");
@@ -936,6 +940,11 @@ function renderResult(data) {
     target.score !== null && target.score !== undefined
       ? `${target.score} / 100`
       : "Nincs adat";
+
+ targetFieldPlace.textContent =
+  target.field_place
+    ? `${target.field_place}. / 20`
+    : "Nincs adat";
 
   targetReason.textContent =
     target.reason || "Nincs külön indoklás.";
