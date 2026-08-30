@@ -529,8 +529,9 @@
 
     <div id="contestTimer" class="timer">03:05,00</div>
 
-    <button class="btn-secondary" id="backBtn">← Vissza</button>
-    <button class="btn-start" id="startBtn">Felmérés indítása</button>
+  <button class="btn-secondary" id="backBtn">← Vissza</button>
+<button class="btn-start" id="startBtn">Felmérés indítása</button>
+<button class="btn-editor" id="revisionBtn" disabled>Javítási próba</button>
   </div>
 
   <div id="loadingBox" class="message loading"></div>
@@ -723,6 +724,7 @@ const CONTEST_ESTIMATE_MS = 185000; // 3:05
 
 const backBtn = document.getElementById("backBtn");
 const startBtn = document.getElementById("startBtn");
+const revisionBtn = document.getElementById("revisionBtn");
 const editorBtn = document.getElementById("editorBtn");
 
 const titleInput = document.getElementById("titleInput");
