@@ -1047,7 +1047,7 @@ startBtn.addEventListener("click", async () => {
   const title = titleInput.value.trim();
   const poem = poemInput.value.trim();
   const form = formInput.value.trim() || "Nem megadott";
- let type = typeInput.value.trim();
+ let type = "";
   const strictness = Number(strictnessSelect.value) || 5;
 
   if (!title) {
@@ -1064,28 +1064,29 @@ startBtn.addEventListener("click", async () => {
 
   startBtn.disabled = true;
 
- if (!type) {
-  try {
-    typeInput.value = "Felismerés...";
-    typeInput.disabled = true;
+ let type = "";
 
-    type = await recognizeMainType(poem);
+try {
+  typeInput.value = "Felismerés...";
+  typeInput.disabled = true;
 
-    typeInput.value = type;
-  } catch (err) {
-    typeInput.value = "";
-    typeInput.disabled = false;
-    startBtn.disabled = false;
+  type = await recognizeMainType(poem);
 
-    alert(
-      "A fő típus felismerése nem sikerült: " +
-      (err.message || "ismeretlen hiba")
-    );
-
-    return;
-  }
-
+  typeInput.value = type;
+} catch (err) {
+  typeInput.value = "";
   typeInput.disabled = false;
+  startBtn.disabled = false;
+
+  alert(
+    "A fő típus felismerése nem sikerült: " +
+    (err.message || "ismeretlen hiba")
+  );
+
+  return;
+}
+
+typeInput.disabled = false;
 }
 
   sessionStorage.removeItem("muhely_editorial");
