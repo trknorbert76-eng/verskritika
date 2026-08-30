@@ -1512,11 +1512,73 @@ renderEditorial(data);
     return;
   }
 
-  console.log("Javítási próba:", revisions);
+ const originalPoem = poemInput.value;
+
+const originalLines = originalPoem
+  .split(/\r?\n/);
+
+const revisedLines = [...originalLines];
+
+revisions.forEach(item => {
+  const index = item.line_number - 1;
+
+  if (
+    index >= 0 &&
+    index < revisedLines.length
+  ) {
+    revisedLines[index] = item.revised;
+  }
+});
+
+const revisedPoem =
+  revisedLines.join("\n");
+
+revisionBtn.disabled = true;
+
+try {
+  const response = await fetch(CONTEST_WORKER_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      action: "revision_test",
+      title: titleInput.value.trim() || "Cím nélkül",
+      poem: originalPoem,
+      revised_poem: revisedPoem,
+      form: formInput.value.trim() || "Nem megadott",
+      type: typeInput.value.trim() || "Nem megadott",
+      revisions
+    })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok || !data.ok) {
+    throw new Error(
+      data.error || "A javítási próba hibával leállt."
+    );
+  }
+
+  console.log(
+    "Javítási próba válasz:",
+    data.revision_test
+  );
 
   alert(
-    `${revisions.length} módosított sort találtam.`
+    data.revision_test?.overall_reason ||
+    "A javítási próba lefutott."
   );
+
+} catch (err) {
+  alert(
+    err.message ||
+    "A javítási próba hibával leállt."
+  );
+
+} finally {
+  updateRevisionButtonState();
+}
 });
 
 backBtn.addEventListener("click", () => {
