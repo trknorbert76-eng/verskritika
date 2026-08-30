@@ -1494,6 +1494,31 @@ renderEditorial(data);
   }
 });
 
+ revisionBtn.addEventListener("click", async () => {
+  const inputs =
+    document.querySelectorAll(".line-revision-input");
+
+  const revisions = [...inputs]
+    .map(input => ({
+      line_number: Number(input.dataset.lineNumber),
+      original: input.dataset.originalText || "",
+      revised: input.value.trim()
+    }))
+    .filter(item => item.revised !== "");
+
+  if (!revisions.length) {
+    alert("Írj be legalább egy javított sort.");
+    updateRevisionButtonState();
+    return;
+  }
+
+  console.log("Javítási próba:", revisions);
+
+  alert(
+    `${revisions.length} módosított sort találtam.`
+  );
+});
+
 backBtn.addEventListener("click", () => {
   history.back();
 });
