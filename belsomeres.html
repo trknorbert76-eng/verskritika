@@ -706,6 +706,9 @@
 const CONTEST_WORKER_URL =
   "https://versmuhely.trknorbert76.workers.dev";
 
+ const RECOGNITION_WORKER_URL =
+  "https://verskritika-public.trknorbert76.workers.dev";
+
 const CONTEST_ESTIMATE_MS = 185000; // 3:05
 
 const backBtn = document.getElementById("backBtn");
@@ -965,12 +968,35 @@ function renderResult(data) {
     podiumGrid.appendChild(card);
   });
 }
+async function recognizeMainType(poem) {
+  const response = await fetch(RECOGNITION_WORKER_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      poem,
+      step: "kind",
+      previous: {}
+    })
+  });
 
+  const data = await response.json();
+
+  if (!response.ok || !data.ok) {
+    throw new Error(
+      data.error || "A fő típus felismerése sikertelen."
+    );
+  }
+
+  return data.result?.main_type || "Nem azonosítható";
+}
+ 
 startBtn.addEventListener("click", async () => {
   const title = titleInput.value.trim();
   const poem = poemInput.value.trim();
   const form = formInput.value.trim() || "Nem megadott";
-  const type = typeInput.value.trim() || "Nem megadott";
+ let type = typeInput.value.trim();
   const strictness = Number(strictnessSelect.value) || 5;
 
   if (!title) {
@@ -986,6 +1012,30 @@ startBtn.addEventListener("click", async () => {
   }
 
   startBtn.disabled = true;
+
+ if (!type) {
+  try {
+    typeInput.value = "Felismerés...";
+    typeInput.disabled = true;
+
+    type = await recognizeMainType(poem);
+
+    typeInput.value = type;
+  } catch (err) {
+    typeInput.value = "";
+    typeInput.disabled = false;
+    startBtn.disabled = false;
+
+    alert(
+      "A fő típus felismerése nem sikerült: " +
+      (err.message || "ismeretlen hiba")
+    );
+
+    return;
+  }
+
+  typeInput.disabled = false;
+}
 
   sessionStorage.removeItem("muhely_editorial");
   editorArea.style.display = "none";
