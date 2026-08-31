@@ -1046,6 +1046,569 @@ function renderResult(data) {
     podiumGrid.appendChild(card);
   });
 }
+function countSyllables(text) {
+  const cleaned = text
+    .toLowerCase()
+    .replace(/[^a-záàeéèiíìoóòöőuúùüű]/g, "");
+
+  return (
+    cleaned.match(/[aáàeéèiíìoóòöőuúùüű]/g) || []
+  ).length;
+}
+
+
+function normalizeLine(text) {
+  return text
+    .toLowerCase()
+    .trim()
+
+    // Rossz irányú ékezetek egységesítése
+    .replace(/à/g, "á")
+    .replace(/è/g, "é")
+    .replace(/ì/g, "í")
+    .replace(/ò/g, "ó")
+    .replace(/ù/g, "ú")
+
+    // Írásjelek figyelmen kívül hagyása
+    .replace(/[.,!?;:"„”'’()\-–—]/g, "")
+
+    // Többszörös szóközök egységesítése
+    .replace(/\s+/g, " ");
+}
+
+  function detectSectionHeader(line) {
+  const raw = line.trim();
+
+  const t = raw
+    .toLowerCase()
+    .replace(/[–—_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // Szonettszámozások felismerése:
+  // 1. SZONETT
+  // 1 SZONETT
+  // SZONETT 1
+  // --- 1. SZONETT ---
+  // --- SZONETT 1 ---
+
+  if (
+    /^\d{1,2}\.?\s*szonett$/.test(t) ||
+    /^szonett\s*\d{1,2}\.?$/.test(t)
+  ) {
+    const m = t.match(/\d{1,2}/);
+
+    return {
+      type: "sonnet",
+      number: m ? Number(m[0]) : null,
+      original: raw
+    };
+  }
+
+  // MESTERSZONETT / MESTER SZONETT
+
+  if (/^mester\s*szonett$/.test(t)) {
+    return {
+      type: "master",
+      number: null,
+      original: raw
+    };
+  }
+
+   if (
+  t === "szonettkoszorú" ||
+  t === "mesterszonett" ||
+  t === "mester szonett" ||
+  t === "bevezető" ||
+  t === "befejezés" ||
+  t === "utószó"
+) {
+  return {
+    type: "section",
+    number: null,
+    original: raw
+  };
+} 
+
+  return null;
+function splitIntoStanzas(text) {
+  return text
+    .trim()
+    .split(/\n\s*\n/)
+    .map(block =>
+      block
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(Boolean)
+        .filter(line => !detectSectionHeader(line))
+    )
+    .filter(block => block.length);
+}
+
+
+function flattenLines(stanzas) {
+  return stanzas.flat();
+}
+
+
+function findRepeatedLines(lines) {
+  const map = new Map();
+
+  lines.forEach((line, index) => {
+    const key = normalizeLine(line);
+
+    if (!key) return;
+
+    if (!map.has(key)) {
+      map.set(key, {
+        text: line.trim(),
+        positions: []
+      });
+    }
+
+    map.get(key).positions.push(index + 1);
+  });
+
+  return Array.from(map.values())
+    .filter(item => item.positions.length > 1);
+}
+
+
+function getRhymeKey(text) {
+  const words = text.trim().split(/\s+/);
+  if (!words.length) return "";
+
+  let word = words[words.length - 1]
+    .toLowerCase()
+    .replace(/[^a-záéíóöőúüű]/g, "");
+
+  word = word
+    .replace(/á/g, "a")
+    .replace(/é/g, "e")
+    .replace(/í/g, "i")
+    .replace(/[óöő]/g, "o")
+    .replace(/[úüű]/g, "u")
+    .replace(/ly/g, "j");
+
+  return word.slice(-3);
+}
+
+
+function analyzeText(text) {
+
+  const stanzas = splitIntoStanzas(text);
+  const lines = flattenLines(stanzas);
+
+  const syllables = lines.map(line => countSyllables(line));
+
+  const repeatedLines = findRepeatedLines(lines);
+
+  const rhymeKeys = lines.map((line, index) => ({
+    line: index + 1,
+    key: getRhymeKey(line),
+    text: line
+  }));
+
+  return {
+    total_lines: lines.length,
+    stanza_count: stanzas.length,
+    stanza_line_counts: stanzas.map(s => s.length),
+    syllables,
+    repeated_lines: repeatedLines,
+    rhyme_keys: rhymeKeys
+  };
+}
+
+
+function detectKnownForms(data) {
+  const forms = [];
+
+  const {
+    total_lines,
+    stanza_count,
+    stanza_line_counts,
+    syllables,
+    repeated_lines
+  } = data;
+
+  // HAIKU
+  if (
+    total_lines === 3 &&
+    syllables.length === 3 &&
+    syllables[0] === 5 &&
+    syllables[1] === 7 &&
+    syllables[2] === 5
+  ) {
+    forms.push({
+      form: "haiku",
+      confidence: 100
+    });
+  }
+
+  // HAIKUCiklus
+  if (
+    stanza_count >= 2 &&
+    stanza_line_counts.every(n => n === 3)
+  ) {
+    let allHaiku = true;
+
+    let idx = 0;
+
+    for (const stanzaSize of stanza_line_counts) {
+      const pattern = syllables.slice(idx, idx + stanzaSize);
+      idx += stanzaSize;
+
+      if (
+        pattern.length !== 3 ||
+        pattern[0] !== 5 ||
+        pattern[1] !== 7 ||
+        pattern[2] !== 5
+      ) {
+        allHaiku = false;
+        break;
+      }
+    }
+
+    if (allHaiku) {
+      forms.push({
+        form: "haikuciklus",
+        confidence: 100
+      });
+    }
+  }
+
+// SZONETT / SZONETTJELÖLT
+// 14 sor önmagában NEM elég.
+// Minden sornak 10, 11 vagy 12 szótagosnak kell lennie.
+if (
+  total_lines === 14 &&
+  syllables.length === 14 &&
+  syllables.every(n => n === 10 || n === 11 || n === 12)
+) {
+
+  let confidence = 80;
+
+  // Klasszikus 4–4–3–3 strófatagolás
+  if (
+    JSON.stringify(stanza_line_counts) ===
+    JSON.stringify([4,4,3,3])
+  ) {
+    confidence += 10;
+  }
+
+  forms.push({
+    form: "szonettjelölt",
+    confidence: Math.min(confidence, 95)
+  });
+}
+
+  // SZONETTKOSZORÚ
+if (total_lines === 210) {
+
+  const acceptedSyllables = syllables.filter(
+    n => n === 10 || n === 11 || n === 12
+  ).length;
+
+  const repeated = repeated_lines.map(item => ({
+    text: normalizeLine(item.text),
+    positions: item.positions
+  }));
+
+  // 14 láncsor várható:
+  // 1. szonett utolsó sora = 2. első sora
+  // ...
+  // 14. utolsó sora = 1. első sora
+  //
+  // A mesterszonett miatt ezek a vezérsorok
+  // összesen legalább 3-szor jelenhetnek meg.
+
+  const strongRepeatedLines = repeated.filter(
+    item => item.positions.length >= 3
+  );
+
+  let confidence = 60;
+
+  // Szótagfegyelem
+  if (acceptedSyllables >= 200) {
+    confidence += 15;
+  } else if (acceptedSyllables >= 185) {
+    confidence += 10;
+  } else if (acceptedSyllables >= 170) {
+    confidence += 5;
+  }
+
+  // Ismétlődő vezérsorok
+  if (strongRepeatedLines.length >= 14) {
+    confidence += 25;
+  } else if (strongRepeatedLines.length >= 12) {
+    confidence += 20;
+  } else if (strongRepeatedLines.length >= 10) {
+    confidence += 10;
+  }
+
+  forms.push({
+    form: "szonettkoszorú",
+    confidence: Math.min(confidence, 100)
+  });
+}
+
+  // VILLANELLA
+  if (
+    total_lines === 19 &&
+    stanza_count === 6 &&
+    JSON.stringify(stanza_line_counts) ===
+      JSON.stringify([3,3,3,3,3,4])
+  ) {
+
+    const rep = repeated_lines.map(x => x.positions.join(","));
+
+    const hasA1 = rep.includes("1,6,12,18");
+    const hasA2 = rep.includes("3,9,15,19");
+
+    if (hasA1 && hasA2) {
+      forms.push({
+        form: "villanella",
+        confidence: 100
+      });
+    } else {
+      forms.push({
+        form: "villanellajelölt",
+        confidence: 80
+      });
+    }
+  }
+
+
+
+  // ===== TOVÁBBI, RÍMFÜGGETLEN FORMAFELISMERÉSEK =====
+  // A fenti, már tesztelt felismerések változatlanul maradtak.
+  const lineTexts = (data.rhyme_keys || []).map(x => x.text);
+  const normalizedLines = lineTexts.map(normalizeLine);
+
+  function sameLine(a, b) {
+    return normalizedLines[a - 1] &&
+           normalizedLines[a - 1] === normalizedLines[b - 1];
+  }
+
+  function endWord(line) {
+    const words = normalizeLine(line).split(/\s+/).filter(Boolean);
+    return words.length ? words[words.length - 1] : "";
+  }
+
+  // TANKA — 5–7–5–7–7
+  if (
+    total_lines === 5 &&
+    JSON.stringify(syllables) === JSON.stringify([5,7,5,7,7])
+  ) {
+    forms.push({ form: "tanka", confidence: 100 });
+  }
+
+  // TANKACIKLUS
+  if (stanza_count >= 2 && stanza_line_counts.every(n => n === 5)) {
+    let ok = true, i = 0;
+    for (const size of stanza_line_counts) {
+      const p = syllables.slice(i, i + size); i += size;
+      if (JSON.stringify(p) !== JSON.stringify([5,7,5,7,7])) { ok = false; break; }
+    }
+    if (ok) forms.push({ form: "tankaciklus", confidence: 100 });
+  }
+
+  // SEDÓKA — 5–7–7 / 5–7–7
+  if (
+    total_lines === 6 &&
+    JSON.stringify(syllables) === JSON.stringify([5,7,7,5,7,7])
+  ) {
+    forms.push({ form: "sedóka", confidence: 100 });
+  }
+
+  // SEDÓKACIKLUS
+  if (stanza_count >= 2 && stanza_line_counts.every(n => n === 6)) {
+    let ok = true, i = 0;
+    for (const size of stanza_line_counts) {
+      const p = syllables.slice(i, i + size); i += size;
+      if (JSON.stringify(p) !== JSON.stringify([5,7,7,5,7,7])) { ok = false; break; }
+    }
+    if (ok) forms.push({ form: "sedókaciklus", confidence: 100 });
+  }
+
+  // TRIOLET — 8 sor; 1=4=7 és 2=8
+  if (total_lines === 8) {
+    if (sameLine(1,4) && sameLine(1,7) && sameLine(2,8)) {
+      forms.push({ form: "triolet", confidence: 98 });
+    }
+  }
+
+  // PANTUM / PANTOUM — négysoros strófák; az előző 2. és 4. sora
+  // a következő strófa 1. és 3. soraként tér vissza.
+  if (stanza_count >= 3 && stanza_line_counts.every(n => n === 4)) {
+    let links = 0;
+    for (let st = 0; st < stanza_count - 1; st++) {
+      const a = st * 4;
+      const b = (st + 1) * 4;
+      if (normalizedLines[a + 1] === normalizedLines[b]) links++;
+      if (normalizedLines[a + 3] === normalizedLines[b + 2]) links++;
+    }
+    const expected = (stanza_count - 1) * 2;
+    if (links === expected) {
+      forms.push({ form: "pantum", confidence: 98 });
+    } else if (links >= Math.max(4, Math.ceil(expected * 0.75))) {
+      forms.push({ form: "pantumjelölt", confidence: 82 });
+    }
+  }
+
+ // SESTINA — 6×6 sor + 3 soros envoi; hat végszó szabályos rotációja.
+if (
+  total_lines === 39 &&
+  stanza_count === 7 &&
+  JSON.stringify(stanza_line_counts) === JSON.stringify([6,6,6,6,6,6,3])
+) {
+  const first = lineTexts.slice(0,6).map(endWord);
+
+  const patterns = [
+    [0,1,2,3,4,5],
+    [5,0,4,1,3,2],
+    [2,5,3,0,1,4],
+    [4,2,1,5,0,3],
+    [3,4,0,2,5,1],
+    [1,3,5,4,2,0]
+  ];
+
+  let matches = 0;
+  const errors = [];
+
+  for (let st = 0; st < 6; st++) {
+    const actual = lineTexts
+      .slice(st * 6, st * 6 + 6)
+      .map(endWord);
+
+    const expected = patterns[st].map(i => first[i]);
+
+    for (let j = 0; j < 6; j++) {
+      if (actual[j] === expected[j]) {
+        matches++;
+      } else {
+        errors.push({
+          stanza: st + 1,
+          stanzaLine: j + 1,
+          line: st * 6 + j + 1,
+          expected: expected[j],
+          actual: actual[j]
+        });
+      }
+    }
+  }
+
+  if (matches === 36) {
+    forms.push({
+      form: "sestina",
+      confidence: 100
+    });
+  } else if (matches >= 30) {
+    forms.push({
+      form: "sestinajelölt",
+      confidence: 88,
+      errors: errors
+    });
+  }
+}
+
+  // RONDEAU-JELÖLT — 15 sor, 3 strófa (5–4–6), rövid visszatérő refrénnel.
+  // Rím nélkül csak jelöltként nevezzük meg.
+  if (
+    total_lines === 15 && stanza_count === 3 &&
+    JSON.stringify(stanza_line_counts) === JSON.stringify([5,4,6])
+  ) {
+    forms.push({ form: "rondeau-jelölt", confidence: 68 });
+  }
+
+  // RONDEL-JELÖLT — 13 vagy 14 sor, tipikus 4–4–5 / 4–4–6 tagolással,
+  // és visszatérő teljes sorral.
+  if (
+    (total_lines === 13 || total_lines === 14) &&
+    stanza_count === 3 &&
+    ((total_lines === 13 && JSON.stringify(stanza_line_counts) === JSON.stringify([4,4,5])) ||
+     (total_lines === 14 && JSON.stringify(stanza_line_counts) === JSON.stringify([4,4,6]))) &&
+    repeated_lines.length >= 1
+  ) {
+    forms.push({ form: "rondel-jelölt", confidence: 72 });
+  }
+
+  // ÁLTALÁNOS REFÉNES VERS — legalább 3 strófa és egy teljes sor legalább 3-szor ismétlődik.
+  if (
+    stanza_count >= 3 &&
+    repeated_lines.some(x => x.positions.length >= 3)
+  ) {
+    forms.push({ form: "refrénes vers", confidence: 55 });
+  }
+
+  // KERETES VERS — az első és az utolsó teljes sor azonos.
+  if (total_lines >= 4 && sameLine(1, total_lines)) {
+    forms.push({ form: "keretes vers", confidence: 58 });
+  }
+
+  // SZABÁLYOS STRÓFAVERS — azonos hosszúságú strófák.
+  // Csak általános szerkezeti besorolás, ezért alacsonyabb bizonyosság.
+  if (
+    stanza_count >= 2 &&
+    stanza_line_counts.every(n => n === stanza_line_counts[0])
+  ) {
+    const n = stanza_line_counts[0];
+    const names = {2:"kétsoros",3:"tercinás",4:"négysoros",5:"ötsoros",6:"hatsoros",7:"hétsoros",8:"nyolcsoros"};
+    if (names[n]) forms.push({ form: `${names[n]} strófavers`, confidence: 45 });
+  }
+
+  // EGYENLETES SZÓTAGSZÁMÚ VERS — legalább 6 sor, a sorok legalább 90%-a azonos szótagszámú.
+  if (total_lines >= 6 && syllables.length) {
+    const freq = {};
+    syllables.forEach(n => freq[n] = (freq[n] || 0) + 1);
+    const best = Object.entries(freq).sort((a,b) => b[1]-a[1])[0];
+    if (best && best[1] / total_lines >= 0.90) {
+      forms.push({ form: `egyenletes ${best[0]} szótagos vers`, confidence: 52 });
+    }
+  }
+
+  // VÁLTAKOZÓ SZÓTAGSÉMA — legalább 6 sor; ABAB... jellegű kétértékű minta.
+  if (total_lines >= 6) {
+    const a = syllables[0], b = syllables[1];
+    if (a !== b) {
+      let ok = true;
+      for (let i=0; i<syllables.length; i++) {
+        if (syllables[i] !== (i % 2 === 0 ? a : b)) { ok = false; break; }
+      }
+      if (ok) forms.push({ form: `váltakozó ${a}–${b} szótagos vers`, confidence: 60 });
+    }
+  }
+
+  return forms;
+}\n\nfunction recognizeForm(poem) {
+  const withData = analyzeText(poem);
+
+  // A szonettkoszorú speciális felismerése ugyanazt a logikát követi,
+  // mint a Formai előelemző.
+  const strongRepeatedLines = withData.repeated_lines.filter(
+    item => item.positions.length >= 3
+  );
+
+  if (strongRepeatedLines.length >= 14) {
+    const leaderLines = strongRepeatedLines.slice(0, 14);
+    const accepted = leaderLines.filter(item => {
+      const n = countSyllables(item.text);
+      return n === 10 || n === 11 || n === 12;
+    }).length;
+
+    if (accepted >= 10) {
+      return withData.total_lines > 210
+        ? "szonettkoszorú keretező szakaszokkal"
+        : "szonettkoszorú";
+    }
+  }
+
+  const forms = detectKnownForms(withData)
+    .sort((a, b) => b.confidence - a.confidence);
+
+  return forms[0]?.form || "szabad vers";
+}
+
 async function recognizeMainType(poem) {
   const response = await fetch(RECOGNITION_WORKER_URL, {
     method: "POST",
@@ -1073,8 +1636,8 @@ async function recognizeMainType(poem) {
 startBtn.addEventListener("click", async () => {
   const title = titleInput.value.trim();
   const poem = poemInput.value.trim();
-  const form = formInput.value.trim() || "Nem megadott";
- let type = "";
+  let form = "";
+  let type = "";
   const strictness = Number(strictnessSelect.value) || 5;
 
   if (!title) {
@@ -1094,25 +1657,32 @@ startBtn.addEventListener("click", async () => {
 
 
 try {
+  formInput.value = "Felismerés...";
   typeInput.value = "Felismerés...";
+  formInput.disabled = true;
   typeInput.disabled = true;
 
+  form = recognizeForm(poem);
   type = await recognizeMainType(poem);
 
+  formInput.value = form;
   typeInput.value = type;
 } catch (err) {
+  formInput.value = "";
   typeInput.value = "";
+  formInput.disabled = false;
   typeInput.disabled = false;
   startBtn.disabled = false;
 
   alert(
-    "A fő típus felismerése nem sikerült: " +
+    "A forma vagy a fő típus felismerése nem sikerült: " +
     (err.message || "ismeretlen hiba")
   );
 
   return;
 }
 
+formInput.disabled = false;
 typeInput.disabled = false;
 
 
