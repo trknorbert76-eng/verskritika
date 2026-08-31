@@ -1298,10 +1298,10 @@ if (
     confidence += 10;
   }
 
-  forms.push({
-    form: "szonettjelölt",
-    confidence: Math.min(confidence, 95)
-  });
+forms.push({
+  form: confidence >= 90 ? "szonett" : "szonettjelölt",
+  confidence: Math.min(confidence, 95)
+});
 }
 
   // SZONETTKOSZORÚ
