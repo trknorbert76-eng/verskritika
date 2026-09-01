@@ -1692,8 +1692,8 @@ async function recognizeMainType(poem) {
 startBtn.addEventListener("click", async () => {
   const title = titleInput.value.trim();
   const poem = poemInput.value.trim();
-  let form = "";
-  let type = "";
+  const form = formInput.value.trim();
+  const type = typeInput.value.trim();
   const strictness = Number(strictnessSelect.value) || 5;
 
   if (!title) {
@@ -1708,39 +1708,19 @@ startBtn.addEventListener("click", async () => {
     return;
   }
 
+  if (!form) {
+    alert("Nincs megadva versforma.");
+    formInput.focus();
+    return;
+  }
+
+  if (!type) {
+    alert("Nincs megadva fő típus.");
+    typeInput.focus();
+    return;
+  }
+
   startBtn.disabled = true;
-
-
-
-try {
-  formInput.value = "Felismerés...";
-  typeInput.value = "Felismerés...";
-  formInput.disabled = true;
-  typeInput.disabled = true;
-
-  form = recognizeForm(poem);
-  type = await recognizeMainType(poem);
-
-  formInput.value = form;
-  typeInput.value = type;
-} catch (err) {
-  formInput.value = "";
-  typeInput.value = "";
-  formInput.disabled = false;
-  typeInput.disabled = false;
-  startBtn.disabled = false;
-
-  alert(
-    "A forma vagy a fő típus felismerése nem sikerült: " +
-    (err.message || "ismeretlen hiba")
-  );
-
-  return;
-}
-
-formInput.disabled = false;
-typeInput.disabled = false;
-
 
   sessionStorage.removeItem("muhely_editorial");
   editorArea.style.display = "none";
