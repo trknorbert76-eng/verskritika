@@ -555,7 +555,8 @@
     <div id="contestTimer" class="timer">03:05,00</div>
 
   <button class="btn-secondary" id="backBtn">← Vissza</button>
-<button class="btn-start" id="startBtn">Felmérés indítása</button>
+<button class="btn-start" id="recognizeBtn">Felismerés indítása</button>
+<button class="btn-start" id="startBtn" disabled>Zsűrizés indítása</button>
 <button class="btn-editor" id="revisionBtn" disabled>Javítási próba</button>
   </div>
 
@@ -748,6 +749,7 @@ const CONTEST_WORKER_URL =
 const CONTEST_ESTIMATE_MS = 185000; // 3:05
 
 const backBtn = document.getElementById("backBtn");
+const recognizeBtn = document.getElementById("recognizeBtn");
 const startBtn = document.getElementById("startBtn");
 const revisionBtn = document.getElementById("revisionBtn");
 const editorBtn = document.getElementById("editorBtn");
@@ -1636,6 +1638,56 @@ async function recognizeMainType(poem) {
 
   return data.result?.main_type || "Nem azonosítható";
 }
+
+ recognizeBtn.addEventListener("click", async () => {
+  const title = titleInput.value.trim();
+  const poem = poemInput.value.trim();
+
+  if (!title) {
+    alert("Írd be előbb a vers címét.");
+    titleInput.focus();
+    return;
+  }
+
+  if (!poem || poem.length < 20) {
+    alert("Másold be a vers szövegét.");
+    poemInput.focus();
+    return;
+  }
+
+  recognizeBtn.disabled = true;
+  startBtn.disabled = true;
+
+  try {
+    formInput.value = "Felismerés...";
+    typeInput.value = "Felismerés...";
+
+    const form = recognizeForm(poem);
+    const type = await recognizeMainType(poem);
+
+    formInput.value = form;
+    typeInput.value = type;
+
+    // Felismerés után szerkeszthető
+    formInput.disabled = false;
+    typeInput.disabled = false;
+
+    // Mostantól indulhat a zsűrizés
+    startBtn.disabled = false;
+
+  } catch (err) {
+    formInput.value = "";
+    typeInput.value = "";
+
+    alert(
+      "A forma vagy a fő típus felismerése nem sikerült: " +
+      (err.message || "ismeretlen hiba")
+    );
+
+  } finally {
+    recognizeBtn.disabled = false;
+  }
+});
  
 startBtn.addEventListener("click", async () => {
   const title = titleInput.value.trim();
