@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vers AI-detektor</title>
+<title>AI Versnyomozó</title>
 
 <style>
 * {
@@ -225,6 +225,55 @@ button:hover {
   text-align: center;
 }
 
+
+.dictionary-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 12px 35px rgba(0,0,0,.08);
+  margin-bottom: 22px;
+  overflow: hidden;
+}
+.dictionary-card summary {
+  cursor: pointer;
+  padding: 18px 25px;
+  font-weight: 700;
+  font-size: 17px;
+  user-select: none;
+}
+.dictionary-body {
+  padding: 0 25px 25px;
+}
+.dictionary-help {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+.dictionary-editor {
+  width: 100%;
+  min-height: 190px;
+  font-family: Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.dictionary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+.dictionary-status {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #166534;
+  min-height: 18px;
+}
+.matched-pairs {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #475569;
+}
+
 @media (max-width: 650px) {
   .stats {
     grid-template-columns: repeat(2, 1fr);
@@ -246,8 +295,8 @@ button:hover {
 <div class="page">
 
   <div class="header">
-    <h1>Vers AI-detektor</h1>
-    <p>Helyi, szabályalapú kísérleti elemző · nincs API · nincs internet</p>
+    <h1>AI Versnyomozó</h1>
+    <p>Stilometriai vizsgálat · API nélkül · helyi szótárral</p>
   </div>
 
   <div class="card">
@@ -258,6 +307,28 @@ button:hover {
       <button class="clear" onclick="clearAll()">Törlés</button>
     </div>
   </div>
+
+  <details class="dictionary-card">
+    <summary>⚙ AI-szótár szerkesztése</summary>
+    <div class="dictionary-body">
+      <div class="dictionary-help">
+        Egy sor = egy szókapcsolat. A két szót <b>|</b> jellel válaszd el,
+        például: <code>szem | fény</code>. A felismerő közelítő szókezdést is használ,
+        ezért a „szem” a „szemed”, a „fény” a „fénye” alakot is megfoghatja.
+        A saját lista ebben a böngészőben megmarad.
+      </div>
+      <textarea id="dictionaryEditor" class="dictionary-editor"
+        placeholder="szem | fény&#10;kéz | meleg&#10;emlék | örök"></textarea>
+      <div class="dictionary-actions">
+        <button class="analyse" onclick="saveDictionary()">Szótár mentése</button>
+        <button class="clear" onclick="resetDictionary()">Alapszótár visszaállítása</button>
+        <button class="clear" onclick="exportDictionary()">Export</button>
+        <button class="clear" onclick="document.getElementById('dictImport').click()">Import</button>
+        <input id="dictImport" type="file" accept=".txt,.json" style="display:none" onchange="importDictionary(event)">
+      </div>
+      <div class="dictionary-status" id="dictionaryStatus"></div>
+    </div>
+  </details>
 
   <div class="card results" id="results">
 
@@ -356,6 +427,151 @@ function addSignal(name, points, maxPoints, description) {
   document.getElementById("signals")
     .insertAdjacentHTML("beforeend", html);
 }
+
+
+// ---------------------------------------------------------
+// BŐVÍTHETŐ HELYI AI-SZÓTÁR
+// ---------------------------------------------------------
+
+const DEFAULT_POETIC_PAIRS = [
+  ["szem", "fény"],
+  ["kéz", "meleg"],
+  ["szív", "út"],
+  ["emlék", "örök"],
+  ["csillag", "ég"],
+  ["éj", "sötét"],
+  ["szó", "szél"],
+  ["lélek", "csend"],
+  ["csend", "éj"],
+  ["hajnal", "fény"],
+  ["hold", "éj"],
+  ["szív", "egymás"]
+];
+
+const DICT_STORAGE_KEY = "aiVersnyomozoPoeticPairsV1";
+
+function normalizeStem(s) {
+  return cleanWord(s)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .slice(0, Math.max(3, Math.min(cleanWord(s).length, 5)));
+}
+
+function stemMatches(word, root) {
+  const w = cleanWord(word).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const r = normalizeStem(root);
+  return r.length >= 3 && w.startsWith(r);
+}
+
+function pairsToText(pairs) {
+  return pairs.map(p => p[0] + " | " + p[1]).join("\n");
+}
+
+function parsePairs(raw) {
+  const seen = new Set();
+  const out = [];
+  raw.split(/\r?\n/).forEach(line => {
+    const parts = line.split("|").map(s => s.trim()).filter(Boolean);
+    if (parts.length !== 2) return;
+    const key = parts[0].toLowerCase() + "|" + parts[1].toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      out.push([parts[0], parts[1]]);
+    }
+  });
+  return out;
+}
+
+function getDictionaryPairs() {
+  try {
+    const saved = localStorage.getItem(DICT_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length) return parsed;
+    }
+  } catch (e) {}
+  return DEFAULT_POETIC_PAIRS.slice();
+}
+
+function loadDictionaryEditor() {
+  const el = document.getElementById("dictionaryEditor");
+  if (el) el.value = pairsToText(getDictionaryPairs());
+}
+
+function setDictStatus(msg) {
+  const el = document.getElementById("dictionaryStatus");
+  if (el) el.textContent = msg;
+}
+
+function saveDictionary() {
+  const pairs = parsePairs(document.getElementById("dictionaryEditor").value);
+  localStorage.setItem(DICT_STORAGE_KEY, JSON.stringify(pairs));
+  document.getElementById("dictionaryEditor").value = pairsToText(pairs);
+  setDictStatus("Mentve: " + pairs.length + " szókapcsolat.");
+}
+
+function resetDictionary() {
+  localStorage.removeItem(DICT_STORAGE_KEY);
+  document.getElementById("dictionaryEditor").value = pairsToText(DEFAULT_POETIC_PAIRS);
+  setDictStatus("Az alapszótár visszaállítva.");
+}
+
+function exportDictionary() {
+  const pairs = parsePairs(document.getElementById("dictionaryEditor").value);
+  const blob = new Blob([pairsToText(pairs)], {type:"text/plain;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "ai-versnyomozo-szotar.txt";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+function importDictionary(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    let pairs = [];
+    try {
+      const parsed = JSON.parse(reader.result);
+      if (Array.isArray(parsed)) pairs = parsed;
+    } catch (e) {
+      pairs = parsePairs(String(reader.result));
+    }
+    if (!pairs.length) {
+      setDictStatus("Az importált fájlban nem találtam használható szókapcsolatot.");
+      return;
+    }
+    localStorage.setItem(DICT_STORAGE_KEY, JSON.stringify(pairs));
+    document.getElementById("dictionaryEditor").value = pairsToText(pairs);
+    setDictStatus("Importálva: " + pairs.length + " szókapcsolat.");
+    event.target.value = "";
+  };
+  reader.readAsText(file, "utf-8");
+}
+
+function findPoeticPairs(words, pairs, windowSize = 7) {
+  const hits = [];
+  for (const [a,b] of pairs) {
+    let found = false;
+    for (let i = 0; i < words.length && !found; i++) {
+      if (!stemMatches(words[i], a)) continue;
+      const from = Math.max(0, i - windowSize);
+      const to = Math.min(words.length - 1, i + windowSize);
+      for (let j = from; j <= to; j++) {
+        if (i !== j && stemMatches(words[j], b)) {
+          hits.push(a + " ↔ " + b);
+          found = true;
+          break;
+        }
+      }
+    }
+  }
+  return [...new Set(hits)];
+}
+
+document.addEventListener("DOMContentLoaded", loadDictionaryEditor);
+
 
 function analysePoem() {
 
@@ -746,6 +962,106 @@ function analysePoem() {
     5,
     "Mondathossz szórása: " +
     sentenceDeviation.toFixed(2)
+  );
+
+
+  // ----------------------------------------
+  // 11. Bővíthető szókapcsolati háló
+  // ----------------------------------------
+
+  const dictionaryPairs = getDictionaryPairs();
+  const pairHits = findPoeticPairs(words, dictionaryPairs, 7);
+
+  points = 0;
+  if (pairHits.length >= 6) points = 18;
+  else if (pairHits.length >= 4) points = 14;
+  else if (pairHits.length >= 3) points = 10;
+  else if (pairHits.length >= 2) points = 6;
+  else if (pairHits.length >= 1) points = 2;
+
+  score += points;
+
+  addSignal(
+    "Közhelyes szókapcsolati háló",
+    points,
+    18,
+    pairHits.length
+      ? pairHits.length + " kapcsolat: " + pairHits.join(", ")
+      : "Nem talált ismert szókapcsolatot."
+  );
+
+  // ----------------------------------------
+  // 12. Rövid szöveg túl magas lexikai tisztasága
+  // ----------------------------------------
+
+  points = 0;
+  if (words.length <= 90 && uniqueWordRatio >= 0.90) points = 8;
+  else if (words.length <= 90 && uniqueWordRatio >= 0.85) points = 5;
+  else if (words.length <= 120 && uniqueWordRatio >= 0.82) points = 2;
+
+  score += points;
+
+  addSignal(
+    "Lexikai tisztaság rövid versnél",
+    points,
+    8,
+    "Egyedi szavak aránya: " + Math.round(uniqueWordRatio * 100) +
+    "%, terjedelem: " + words.length + " szó."
+  );
+
+  // ----------------------------------------
+  // 13. Teljes, egyenletes verssorok dominanciája
+  // ----------------------------------------
+
+  const mediumFullLines = lineWordCounts.filter(n => n >= 6 && n <= 11).length;
+  const mediumFullRatio = mediumFullLines / lines.length;
+
+  points = 0;
+  if (lines.length >= 6 && mediumFullRatio >= 0.90 && deviation < 1.8) points = 8;
+  else if (lines.length >= 6 && mediumFullRatio >= 0.75 && deviation < 2.2) points = 5;
+  else if (lines.length >= 6 && mediumFullRatio >= 0.65) points = 2;
+
+  score += points;
+
+  addSignal(
+    "Egyenletes teljes sorok",
+    points,
+    8,
+    Math.round(mediumFullRatio * 100) +
+    "% 6–11 szavas sor; szórás: " + deviation.toFixed(2) + "."
+  );
+
+  // ----------------------------------------
+  // 14. Absztrakt/érzelmi mező sűrűsége
+  // Nem egyetlen szó büntet: halmozódást keres.
+  // ----------------------------------------
+
+  const abstractRoots = [
+    "szív","lélek","emlék","örök","álom","vágy","csend","fény",
+    "árny","éj","hajnal","szere","hiány","idő","perc","sors",
+    "fáj","boldog","könny","csók"
+  ];
+
+  let abstractCount = 0;
+  words.forEach(w => {
+    if (abstractRoots.some(r => stemMatches(w, r))) abstractCount++;
+  });
+
+  const abstractRatio = abstractCount / words.length;
+
+  points = 0;
+  if (abstractCount >= 8 && abstractRatio >= 0.13) points = 10;
+  else if (abstractCount >= 6 && abstractRatio >= 0.10) points = 7;
+  else if (abstractCount >= 4 && abstractRatio >= 0.07) points = 3;
+
+  score += points;
+
+  addSignal(
+    "Absztrakt-érzelmi halmozás",
+    points,
+    10,
+    abstractCount + " találat, a szöveg " +
+    Math.round(abstractRatio * 100) + "%-a."
   );
 
   // ----------------------------------------
