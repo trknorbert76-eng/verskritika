@@ -1555,7 +1555,66 @@ function analysePoem() {
     " · Mondathossz CV: " + (sentenceCv * 100).toFixed(1) + "%" +
     " · TESZTÜZEM: +0 pont."
   );
+  // ----------------------------------------
+  // 20/B. Szerkezeti útvonal — TESZT
+  // Csak osztályoz, NEM ad AI-pontot.
+  // ----------------------------------------
 
+  let structuralRoute = "? – nem besorolható / kevert profil";
+  let structuralRouteReason = "";
+
+  // H1: többszintű homogenizálás
+  // A sorok ÉS a mondatok is feltűnően egyenletesek.
+  const routeH1 =
+    sentenceLineSpans.length >= 4 &&
+    sentenceLineModeRatio >= 0.75 &&
+    sentenceLineEntropy <= 1.10 &&
+    punctuatedLineEndRatio >= 0.85 &&
+    lineCv <= 0.26 &&
+    sentenceCv <= 0.50;
+
+  // H2: lezárásos / szabálytalanságot imitáló út
+  // Nem homogén, de a mondat- és sorlezárások extrémen tiszták.
+  const routeH2 =
+    sentenceLineSpans.length >= 4 &&
+    !routeH1 &&
+    sentenceEndLineAlignment >= 0.99 &&
+    punctuatedLineEndRatio >= 0.99;
+
+  // E: emberi jellegű szerkezeti szétkapcsolódás
+  // A mondatszerkezet lényegesen szabadabban mozog.
+  const routeE =
+    sentenceLineSpans.length >= 4 &&
+    !routeH1 &&
+    !routeH2 &&
+    (
+      sentenceLineModeRatio <= 0.50 ||
+      sentenceLineEntropy >= 1.40 ||
+      sentenceCv >= 0.45
+    );
+
+  if (routeH1) {
+    structuralRoute = "H1 – homogenizáló profil";
+    structuralRouteReason =
+      "Magas sor/mondat-dominancia, alacsony entrópia, erős sorvégi lezárás és alacsony szerkezeti változatosság.";
+  } else if (routeH2) {
+    structuralRoute = "H2 – lezárásos / imitált szabálytalanság";
+    structuralRouteReason =
+      "A szerkezet nem teljesen homogén, de a mondatvégek és a sorvégi írásjelek közel teljesen lezártak.";
+  } else if (routeE) {
+    structuralRoute = "E – emberi jellegű szétkapcsolódás";
+    structuralRouteReason =
+      "A sor- és mondatszerkezet nem ugyanazon a szabályossági szinten mozog.";
+  }
+
+  addSignal(
+    "Szerkezeti útvonal — TESZT",
+    0,
+    0,
+    structuralRoute + " · " +
+    structuralRouteReason +
+    " · TESZTÜZEM: +0 pont."
+  );
   // ----------------------------------------
   // SCORE
   // ----------------------------------------
