@@ -1409,8 +1409,8 @@ function analysePoem() {
   );
 
   // ----------------------------------------
-  // 19. Stilometriai együttállás — TESZTJEL
-  // Egyelőre NEM számít bele az AI-pontba.
+  // 19. Stilometriai együttállás
+  // Bekötve az AI-pontba, óvatos 12 / 7 / 3 súlyozással.
   // ----------------------------------------
   const avgLineWords = average(lineWordCounts);
   const styleConditions = [
@@ -1422,15 +1422,16 @@ function analysePoem() {
   ];
   const styleConditionHits = styleConditions.filter(x => x.ok);
   let styleTestPoints = 0;
-  if (styleConditionHits.length === 5) styleTestPoints = 18;
-  else if (styleConditionHits.length === 4) styleTestPoints = 10;
-  else if (styleConditionHits.length === 3) styleTestPoints = 5;
+  if (styleConditionHits.length === 5) styleTestPoints = 12;
+  else if (styleConditionHits.length === 4) styleTestPoints = 7;
+  else if (styleConditionHits.length === 3) styleTestPoints = 3;
 
-  // NINCS score += styleTestPoints; — ez most csak megfigyelési jel.
+  score += styleTestPoints;
+
   addSignal(
-    "Stilometriai együttállás — TESZT, nem számít bele",
+    "Stilometriai együttállás",
     styleTestPoints,
-    18,
+    12,
     styleConditionHits.length + "/5 feltétel teljesül: " +
     (styleConditionHits.length ? styleConditionHits.map(x=>x.label).join("; ") : "egyik sem") +
     " · Nyers értékek: egyedi szó " + Math.round(uniqueWordRatio*100) +
