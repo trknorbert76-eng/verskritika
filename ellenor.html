@@ -274,6 +274,16 @@ button:hover {
   color: #475569;
 }
 
+.dictionary-subtitle {
+  margin: 22px 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #334155;
+}
+.dictionary-editor.small {
+  min-height: 150px;
+}
+
 @media (max-width: 650px) {
   .stats {
     grid-template-columns: repeat(2, 1fr);
@@ -327,6 +337,39 @@ button:hover {
         <input id="dictImport" type="file" accept=".txt,.json" style="display:none" onchange="importDictionary(event)">
       </div>
       <div class="dictionary-status" id="dictionaryStatus"></div>
+
+      <div class="dictionary-subtitle">Tematikus repertoárok</div>
+      <div class="dictionary-help">
+        Formátum: <code>TÉMA: szó, szó, szó...</code>. Egy-egy szó önmagában nem pontoz;
+        a program az egy témán belüli különböző találatok sűrűségét figyeli.
+      </div>
+      <textarea id="repertoireEditor" class="dictionary-editor small"></textarea>
+      <div class="dictionary-actions">
+        <button class="analyse" onclick="saveRepertoires()">Repertoárok mentése</button>
+        <button class="clear" onclick="resetRepertoires()">Alap visszaállítása</button>
+      </div>
+
+      <div class="dictionary-subtitle">Predikciós / képi kapcsolatok</div>
+      <div class="dictionary-help">
+        Egy sor = egy kapcsolat, például: <code>szem | fény</code>.
+        A két elemnek ugyanabban vagy közeli verssorban kell megjelennie.
+      </div>
+      <textarea id="predictionEditor" class="dictionary-editor small"></textarea>
+      <div class="dictionary-actions">
+        <button class="analyse" onclick="savePredictionPairs()">Kapcsolatok mentése</button>
+        <button class="clear" onclick="resetPredictionPairs()">Alap visszaállítása</button>
+      </div>
+
+      <div class="dictionary-subtitle">Generatív szerkezeti minták</div>
+      <div class="dictionary-help">
+        Ezek a Gemini által megadott gyakori szerkezeti családok. A felismerés
+        kulcsszavas/regexes közelítés, nem szó szerinti X–Y behelyettesítés.
+      </div>
+      <textarea id="structureEditor" class="dictionary-editor small"></textarea>
+      <div class="dictionary-actions">
+        <button class="analyse" onclick="saveStructurePatterns()">Minták mentése</button>
+        <button class="clear" onclick="resetStructurePatterns()">Alap visszaállítása</button>
+      </div>
     </div>
   </details>
 
@@ -570,7 +613,219 @@ function findPoeticPairs(words, pairs, windowSize = 7) {
   return [...new Set(hits)];
 }
 
-document.addEventListener("DOMContentLoaded", loadDictionaryEditor);
+
+// ---------------------------------------------------------
+// 2. RÉTEG: TEMATIKUS REPERTOÁROK
+// ---------------------------------------------------------
+const DEFAULT_REPERTOIRES = {
+  "Szerelem": ["láng","vágy","ölelés","tekintet","suttogás","érintés","szív","lélek","hajnal","meleg","örök","fény","mosoly","távol","közel","simogatás","illat","áradás","csók","szorítás"],
+  "Ősz / Melankólia": ["avar","pára","hűvös","árnyék","bágyadt","nyirkos","köd","levelek","szél","csend","rozsda","elmúlás","sötét","kopasz","kabát","este","zápor","szürke","pillanat","nehéz"],
+  "Halál / Gyász": ["csend","hűvös","föld","sír","elcsendesülés","árnyék","sötétség","hiány","fekete","harang","kapu","kapocs","végső","emlék","lélek","elkerülhetetlen","fagy","kő","sóhaj","mély"],
+  "Természet": ["fák","patak","erdő","rét","szél","ég","csillag","szikla","virág","zöld","folyó","hajnal","tenger","napsugár","felhő","mező","táj","gyökér","ág","szellő"],
+  "Magány": ["csend","falak","éjszaka","üresség","léptek","visszhang","távol","hideg","sötét","árnyék","szoba","egyedül","meg nem értett","ablak","magány","elszigetelt","lassan","elhagyott","nehéz","sóhaj"],
+  "Háború": ["por","vér","acél","dörgés","füst","rom","tűz","csata","harc","kiáltás","sebesült","zászló","föld","sötétség","fegyver","árnyék","megsemmisülés","katona","veszteség","jaj"],
+  "Hit / Isten": ["fény","kegyelem","ima","csend","áldás","lélek","szent","békesség","magasság","fohász","kéz","remény","csillag","bölcsesség","jelenlét","végtelen","oltár","elhívás","irgalom","belső"],
+  "Emlékezés": ["múlt","arc","hang","nyom","fotó","fiók","por","fakó","elfeledett","pillanat","rezdülés","mosoly","árnyék","terek","idő","visszatérő","régi","lábnyom","kísért","suttogás"]
+};
+const REPERTOIRE_STORAGE_KEY = "aiVersnyomozoRepertoiresV1";
+
+function repertoiresToText(obj) {
+  return Object.entries(obj).map(([name, arr]) => name + ": " + arr.join(", ")).join("\n");
+}
+function parseRepertoires(raw) {
+  const out = {};
+  raw.split(/\r?\n/).forEach(line => {
+    const idx = line.indexOf(":");
+    if (idx < 1) return;
+    const name = line.slice(0, idx).trim();
+    const vals = line.slice(idx + 1).split(",").map(x => x.trim()).filter(Boolean);
+    if (name && vals.length) out[name] = [...new Set(vals)];
+  });
+  return out;
+}
+function getRepertoires() {
+  try {
+    const saved = localStorage.getItem(REPERTOIRE_STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_REPERTOIRES));
+}
+function saveRepertoires() {
+  const obj = parseRepertoires(document.getElementById("repertoireEditor").value);
+  localStorage.setItem(REPERTOIRE_STORAGE_KEY, JSON.stringify(obj));
+  document.getElementById("repertoireEditor").value = repertoiresToText(obj);
+  setDictStatus("Tematikus repertoárok mentve: " + Object.keys(obj).length + " téma.");
+}
+function resetRepertoires() {
+  localStorage.removeItem(REPERTOIRE_STORAGE_KEY);
+  document.getElementById("repertoireEditor").value = repertoiresToText(DEFAULT_REPERTOIRES);
+  setDictStatus("Az alap tematikus repertoárok visszaállítva.");
+}
+function analyseRepertoires(words) {
+  const reps = getRepertoires();
+  let best = {name:"", hits:[], ratio:0};
+  for (const [name, roots] of Object.entries(reps)) {
+    const hits = roots.filter(root => words.some(w => stemMatches(w, root)));
+    const ratio = roots.length ? hits.length / roots.length : 0;
+    if (hits.length > best.hits.length || (hits.length === best.hits.length && ratio > best.ratio)) {
+      best = {name, hits, ratio};
+    }
+  }
+  return best;
+}
+
+// ---------------------------------------------------------
+// 3. RÉTEG: PREDIKCIÓS / KÉPI KAPCSOLATOK
+// ---------------------------------------------------------
+const DEFAULT_PREDICTION_PAIRS = [
+["szem","fény"],["idő","folyó"],["szív","láng"],["csend","fal"],["emlék","árnyék"],
+["éjszaka","fátyol"],["vágy","tűz"],["szél","sóhaj"],["lélek","tükör"],["avar","szőnyeg"],
+["remény","csillag"],["hallgatás","nehéz"],["múlt","por"],["sötét","borul"],["hiány","fojt"],
+["tekintet","éget"],["szomorúság","szürke"],["hajnal","ébred"],["magány","üres"],["léptek","kong"],
+["szavak","hull"],["pillanat","megáll"],["magány","fagyos"],["távol","dereng"],["bánat","súly"],
+["suttogás","halk"],["ősz","elcsendesedik"],["levelek","örvény"],["fájdalom","hasít"],["érintés","lágy"],
+["ölelés","forró"],["gyász","fekete"],["rom","hever"],["füst","gomolyog"],["acél","hideg"],
+["vér","átitat"],["ima","elhal"],["kegyelem","árad"],["fohász","felszáll"],["jövő","ködös"],
+["arc","dereng"],["mosoly","elhalványul"],["évek","elszáll"],["szomorúság","ránehezedik"],["elme","kalitka"],
+["csend","megroppan"],["emlékezet","elhalványul"],["sors","kő"],["élet","rezdülés"],["tavasz","újjászületik"]
+];
+const PREDICTION_STORAGE_KEY = "aiVersnyomozoPredictionPairsV1";
+function getPredictionPairs() {
+  try {
+    const saved = localStorage.getItem(PREDICTION_STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return DEFAULT_PREDICTION_PAIRS.slice();
+}
+function savePredictionPairs() {
+  const pairs = parsePairs(document.getElementById("predictionEditor").value);
+  localStorage.setItem(PREDICTION_STORAGE_KEY, JSON.stringify(pairs));
+  document.getElementById("predictionEditor").value = pairsToText(pairs);
+  setDictStatus("Predikciós kapcsolatok mentve: " + pairs.length + ".");
+}
+function resetPredictionPairs() {
+  localStorage.removeItem(PREDICTION_STORAGE_KEY);
+  document.getElementById("predictionEditor").value = pairsToText(DEFAULT_PREDICTION_PAIRS);
+  setDictStatus("Az 50 alap predikciós kapcsolat visszaállítva.");
+}
+function findPredictionPairs(lines, pairs, lineDistance = 1) {
+  const tokenLines = lines.map(line => line.split(/\s+/).map(cleanWord).filter(Boolean));
+  const hits = [];
+  for (const [a,b] of pairs) {
+    let found = false;
+    for (let i=0; i<tokenLines.length && !found; i++) {
+      if (!tokenLines[i].some(w => stemMatches(w,a))) continue;
+      const from = Math.max(0, i-lineDistance), to = Math.min(tokenLines.length-1, i+lineDistance);
+      for (let j=from; j<=to && !found; j++) {
+        if (tokenLines[j].some(w => stemMatches(w,b))) {
+          hits.push(a + " → " + b);
+          found = true;
+        }
+      }
+    }
+  }
+  return [...new Set(hits)];
+}
+
+// ---------------------------------------------------------
+// 4. RÉTEG: GENERATÍV SZERKEZETI CSALÁDOK
+// ---------------------------------------------------------
+const DEFAULT_STRUCTURE_LABELS = [
+"Mintha X lenne Y","Nem azért X, hanem Y","Ha majd X, akkor Y","X marad utánad",
+"Ahogyan X, úgy Y","Ott, ahol X, most Y","Már nem X, csak Y","X között Y keresi Z-t",
+"Lassan X-szé válik az Y","Mielőtt X, még Y","X nélkül Y sem létezik","Úgy X, mintha Y lenne",
+"Amíg X, addig Y","X felett Y lebeg","Ahol X volt, ott most Y","Nem X, csak Y árnyéka",
+"X-ből Y születik","Néha X, máskor Y","X mögött ott van Y","Mikor X, Y elcsendesedik",
+"Mint mikor X, úgy Y","X helyett csak Y maradt","Ha X-re gondolok, Y-t látom","X után Y következik",
+"Még X, de már Y","Egyik kezemben X, a másikban Y","X-en át Y tekint ránk","Sem X, sem Y nem segít",
+"Amikor X, a csend Y-ná válik","X alatt Y lapul","Csak X tudja, mi az Y","X-et keresve Y-ra találtam",
+"Ahogy X elhal, úgy Y ébred","X voltál, most Y vagy","Még Y előtt eljön a X","X és Y között feszül a Z",
+"Minden X egy újabb Y","X helyén Y tátong","Ha X elhagy, Y marad velem","X-szel kezdetét veszi az Y"
+];
+const STRUCTURE_STORAGE_KEY = "aiVersnyomozoStructurePatternsV1";
+
+function getStructureLabels() {
+  try {
+    const saved = localStorage.getItem(STRUCTURE_STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return DEFAULT_STRUCTURE_LABELS.slice();
+}
+function saveStructurePatterns() {
+  const vals = document.getElementById("structureEditor").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  localStorage.setItem(STRUCTURE_STORAGE_KEY, JSON.stringify(vals));
+  document.getElementById("structureEditor").value = vals.join("\n");
+  setDictStatus("Szerkezeti minták mentve: " + vals.length + ".");
+}
+function resetStructurePatterns() {
+  localStorage.removeItem(STRUCTURE_STORAGE_KEY);
+  document.getElementById("structureEditor").value = DEFAULT_STRUCTURE_LABELS.join("\n");
+  setDictStatus("A 40 alap szerkezeti minta visszaállítva.");
+}
+
+const STRUCTURE_DETECTORS = [
+[/\bmintha\b.*\b(lenn|voln|lenne|volna)\w*/i,0],
+[/\bnem azért\b.*\bhanem\b/i,1],
+[/\bha majd\b/i,2],
+[/\bmarad\w*\b.*\butánad\b/i,3],
+[/\bahogy(an)?\b.*\búgy\b/i,4],
+[/\bott\b.*\bahol\b.*\bmost\b/i,5],
+[/\bmár nem\b.*\bcsak\b/i,6],
+[/\bközött\b.*\bkeres\w*/i,7],
+[/\blassan\b.*\bvál\w*/i,8],
+[/\bmielőtt\b.*\bmég\b/i,9],
+[/\bnélkül\b.*\bsem\b/i,10],
+[/\búgy\b.*\bmintha\b/i,11],
+[/\bamíg\b.*\baddig\b/i,12],
+[/\bfelett\b.*\blebeg\w*/i,13],
+[/\bahol\b.*\bvolt\b.*\bmost\b/i,14],
+[/\bnem\b.*\bcsak\b.*\bárny/i,15],
+[/\bből\b.*\bszület\w*|\bből\b.*\bszületik/i,16],
+[/\bnéha\b.*\bmáskor\b/i,17],
+[/\bmögött\b.*\bott\b.*\bvan\b/i,18],
+[/\bmikor\b.*\belcsendesed\w*/i,19],
+[/\bmint mikor\b.*\búgy\b/i,20],
+[/\bhelyett\b.*\bcsak\b.*\bmarad/i,21],
+[/\bha\b.*\bgondol\w*\b.*\blát\w*/i,22],
+[/\bután\b.*\bkövetkez\w*/i,23],
+[/\bmég\b.*\bde már\b/i,24],
+[/\begyik kez\w*\b.*\bmásik\w*\b/i,25],
+[/\ben át\b.*\btekint\w*/i,26],
+[/\bsem\b.*\bsem\b/i,27],
+[/\bamikor\b.*\bcsend\b.*\bvál\w*/i,28],
+[/\balatt\b.*\blapul\w*/i,29],
+[/\bcsak\b.*\btudja\b.*\bmi\b/i,30],
+[/\bkeres\w*\b.*\btalál\w*/i,31],
+[/\bahogy\b.*\belhal\w*\b.*\búgy\b.*\bébred\w*/i,32],
+[/\bvoltál\b.*\bmost\b.*\bvagy\b/i,33],
+[/\belőtt\b.*\beljön\b/i,34],
+[/\bés\b.*\bközött\b.*\bfeszül\w*/i,35],
+[/\bminden\b.*\begy újabb\b/i,36],
+[/\bhelyén\b.*\btátong\w*/i,37],
+[/\bha\b.*\belhagy\w*\b.*\bmarad\w*\b.*\bvelem\b/i,38],
+[/\bkezdetét veszi\b/i,39]
+];
+
+function findStructureHits(text) {
+  const labels = getStructureLabels();
+  const hits = [];
+  STRUCTURE_DETECTORS.forEach(([rx, idx]) => {
+    if (idx < labels.length && rx.test(text)) hits.push(labels[idx]);
+  });
+  return [...new Set(hits)];
+}
+
+function loadAdvancedEditors() {
+  document.getElementById("repertoireEditor").value = repertoiresToText(getRepertoires());
+  document.getElementById("predictionEditor").value = pairsToText(getPredictionPairs());
+  document.getElementById("structureEditor").value = getStructureLabels().join("\n");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadDictionaryEditor();
+  loadAdvancedEditors();
+});
+
 
 
 function analysePoem() {
@@ -1062,6 +1317,95 @@ function analysePoem() {
     10,
     abstractCount + " találat, a szöveg " +
     Math.round(abstractRatio * 100) + "%-a."
+  );
+
+  // ----------------------------------------
+  // 15. Tematikus repertoár-koncentráció
+  // ----------------------------------------
+  const repertoire = analyseRepertoires(words);
+  points = 0;
+  if (repertoire.hits.length >= 11) points = 16;
+  else if (repertoire.hits.length >= 9) points = 12;
+  else if (repertoire.hits.length >= 7) points = 7;
+  else if (repertoire.hits.length >= 5) points = 3;
+
+  score += points;
+  const repertoirePoints = points;
+
+  addSignal(
+    "Tematikus repertoár-koncentráció",
+    points,
+    16,
+    repertoire.hits.length
+      ? repertoire.name + ": " + repertoire.hits.length + "/20 különböző jel — " + repertoire.hits.join(", ")
+      : "Nem alakult ki domináns tematikus repertoár."
+  );
+
+  // ----------------------------------------
+  // 16. Predikciós / képi kapcsolatok
+  // ----------------------------------------
+  const predictionHits = findPredictionPairs(lines, getPredictionPairs(), 1);
+  points = 0;
+  if (predictionHits.length >= 7) points = 14;
+  else if (predictionHits.length >= 5) points = 10;
+  else if (predictionHits.length >= 3) points = 6;
+  else if (predictionHits.length >= 2) points = 3;
+  else if (predictionHits.length >= 1) points = 1;
+
+  score += points;
+  const predictionPoints = points;
+
+  addSignal(
+    "Predikciós / képi kapcsolatok",
+    points,
+    14,
+    predictionHits.length
+      ? predictionHits.length + " kapcsolat: " + predictionHits.join(", ")
+      : "Nem talált ismert predikciós kapcsolatot."
+  );
+
+  // ----------------------------------------
+  // 17. Generatív szerkezeti családok
+  // ----------------------------------------
+  const structureHits = findStructureHits(text);
+  points = 0;
+  if (structureHits.length >= 6) points = 14;
+  else if (structureHits.length >= 4) points = 10;
+  else if (structureHits.length >= 3) points = 7;
+  else if (structureHits.length >= 2) points = 4;
+  else if (structureHits.length >= 1) points = 2;
+
+  score += points;
+  const structurePoints = points;
+
+  addSignal(
+    "Generatív szerkezeti minták",
+    points,
+    14,
+    structureHits.length
+      ? structureHits.length + " szerkezeti család: " + structureHits.join("; ")
+      : "Nem talált ismert generatív szerkezeti családot."
+  );
+
+  // ----------------------------------------
+  // 18. Kombinált jel: csak több réteg együttes jelenlétére
+  // ----------------------------------------
+  const activeAdvancedLayers =
+    (repertoirePoints >= 7 ? 1 : 0) +
+    (predictionPoints >= 6 ? 1 : 0) +
+    (structurePoints >= 4 ? 1 : 0);
+
+  points = 0;
+  if (activeAdvancedLayers === 3) points = 12;
+  else if (activeAdvancedLayers === 2) points = 6;
+
+  score += points;
+
+  addSignal(
+    "Kombinált AI-mintázat",
+    points,
+    12,
+    activeAdvancedLayers + " erős új réteg aktív. Ez a jel csak több, egymástól eltérő mintázat együttes jelenlétére ad pontot."
   );
 
   // ----------------------------------------
