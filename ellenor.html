@@ -306,7 +306,7 @@ button:hover {
 
   <div class="header">
     <h1>AI Versnyomozó</h1>
-    <p>Stilometriai vizsgálat · API nélkül · helyi szótárral</p>
+    <p>Stilometriai vizsgálat · API nélkül · helyi szótárral · 20. jel TESZT</p>
   </div>
 
   <div class="card">
@@ -1439,6 +1439,121 @@ function analysePoem() {
     "; 6–11 szavas sor " + Math.round(mediumFullRatio*100) +
     "%; átlag " + avgLineWords.toFixed(1) +
     " szó/sor; mondathossz-szórás " + sentenceDeviation.toFixed(2) + "."
+  );
+
+
+  // ----------------------------------------
+  // 20. Mondat–sortörés szerkezeti együttállás — TESZT
+  // Egyelőre NEM számít bele az AI-pontba.
+  // A sor/mondat modalitást, a mondatvég–sorvég illeszkedést,
+  // a sorvégi írásjeleket és a variációs együtthatókat méri.
+  // ----------------------------------------
+
+  function getSentenceLineSpans(poemLines) {
+    const spans = [];
+    let currentSpan = 0;
+
+    poemLines.forEach(line => {
+      const parts = line.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [];
+      let countedThisLineForCurrentSentence = false;
+
+      parts.forEach(part => {
+        const content = part.replace(/[.!?]+/g, "").trim();
+        if (!content) return;
+
+        if (!countedThisLineForCurrentSentence) {
+          currentSpan++;
+          countedThisLineForCurrentSentence = true;
+        }
+
+        if (/[.!?]+[\s"'”’)\]]*$/.test(part)) {
+          spans.push(currentSpan);
+          currentSpan = 0;
+          countedThisLineForCurrentSentence = false;
+        }
+      });
+    });
+
+    if (currentSpan > 0) spans.push(currentSpan);
+    return spans;
+  }
+
+  const sentenceLineSpans = getSentenceLineSpans(lines);
+
+  const spanCounts = {};
+  sentenceLineSpans.forEach(n => {
+    spanCounts[n] = (spanCounts[n] || 0) + 1;
+  });
+
+  let modalSentenceLines = 0;
+  let modalSentenceLineCount = 0;
+
+  Object.entries(spanCounts).forEach(([span, count]) => {
+    const n = Number(span);
+    if (
+      count > modalSentenceLineCount ||
+      (count === modalSentenceLineCount && (modalSentenceLines === 0 || n < modalSentenceLines))
+    ) {
+      modalSentenceLines = n;
+      modalSentenceLineCount = count;
+    }
+  });
+
+  const sentenceLineModeRatio = sentenceLineSpans.length
+    ? modalSentenceLineCount / sentenceLineSpans.length
+    : 0;
+
+  let sentenceLineEntropy = 0;
+  if (sentenceLineSpans.length) {
+    Object.values(spanCounts).forEach(count => {
+      const p = count / sentenceLineSpans.length;
+      sentenceLineEntropy -= p * Math.log2(p);
+    });
+  }
+
+  const punctuatedLineEnds = lines.filter(line =>
+    /[,.!?;:…][\s"'”’)\]]*$/.test(line)
+  ).length;
+
+  const punctuatedLineEndRatio = lines.length
+    ? punctuatedLineEnds / lines.length
+    : 0;
+
+  const sentenceEndGroups = text.match(/[.!?]+/g) || [];
+  const sentenceEndsAtLineEnd = lines.filter(line =>
+    /[.!?]+[\s"'”’)\]]*$/.test(line)
+  ).length;
+
+  const sentenceEndLineAlignment = sentenceEndGroups.length
+    ? Math.min(1, sentenceEndsAtLineEnd / sentenceEndGroups.length)
+    : 0;
+
+  const lineMeanForCv = average(lineWordCounts);
+  const sentenceMeanForCv = average(sentenceLengths);
+
+  const lineCv = lineMeanForCv > 0
+    ? deviation / lineMeanForCv
+    : 0;
+
+  const sentenceCv = sentenceMeanForCv > 0
+    ? sentenceDeviation / sentenceMeanForCv
+    : 0;
+
+  addSignal(
+    "Mondat–sortörés együttállás — TESZT",
+    0,
+    0,
+    (sentenceLineSpans.length
+      ? "Leggyakoribb sor/mondat érték: " + modalSentenceLines +
+        " sor, " + modalSentenceLineCount + "/" + sentenceLineSpans.length +
+        " mondat (" + Math.round(sentenceLineModeRatio * 100) + "%)"
+      : "Nem volt elég mondatszerkezeti adat") +
+    " · Sor/mondat entrópia: " + sentenceLineEntropy.toFixed(3) + " bit" +
+    " · Mondatvég–sorvég illeszkedés: " + Math.round(sentenceEndLineAlignment * 100) + "%" +
+    " · Írásjellel záródó sorok: " + Math.round(punctuatedLineEndRatio * 100) + "%" +
+    " · Sorhossz CV: " + (lineCv * 100).toFixed(1) + "%" +
+    " · Mondathossz CV: " + (sentenceCv * 100).toFixed(1) + "%" +
+    " · TESZTÜZEM: +0 pont."
   );
 
   // ----------------------------------------
