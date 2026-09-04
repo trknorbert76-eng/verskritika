@@ -1581,16 +1581,23 @@ function analysePoem() {
     sentenceEndLineAlignment >= 0.99 &&
     punctuatedLineEndRatio >= 0.99;
 
+  // H3: rejtett mondat–sortörés homogenizálás
+  const routeH3 =
+    sentenceLineSpans.length >= 6 &&
+    !routeH1 &&
+    !routeH2 &&
+    sentenceLineModeRatio >= 0.70 &&
+    sentenceLineEntropy <= 0.95;
+
   // E: emberi jellegű szerkezeti szétkapcsolódás
-  // A mondatszerkezet lényegesen szabadabban mozog.
   const routeE =
     sentenceLineSpans.length >= 4 &&
     !routeH1 &&
     !routeH2 &&
+    !routeH3 &&
     (
       sentenceLineModeRatio <= 0.50 ||
-      sentenceLineEntropy >= 1.40 ||
-      sentenceCv >= 0.45
+      sentenceLineEntropy >= 1.40
     );
 
   if (routeH1) {
@@ -1601,6 +1608,10 @@ function analysePoem() {
     structuralRoute = "H2 – lezárásos / imitált szabálytalanság";
     structuralRouteReason =
       "A szerkezet nem teljesen homogén, de a mondatvégek és a sorvégi írásjelek közel teljesen lezártak.";
+      } else if (routeH3) {
+    structuralRoute = "H3 – rejtett homogenizáló profil";
+    structuralRouteReason =
+      "A felszíni szerkezet változatosabb, de a mondatok sorokra osztása feltűnően koncentrált.";
   } else if (routeE) {
     structuralRoute = "E – emberi jellegű szétkapcsolódás";
     structuralRouteReason =
