@@ -1,741 +1,821 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="hu">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Ellenőrzés</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vers AI-detektor</title>
 
 <style>
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  font-family: Georgia, serif;
-  background: #111;
-  color: #eee;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: linear-gradient(135deg, #eef2f7, #dde5ee);
+  color: #1e293b;
+  min-height: 100vh;
 }
 
-.wrap {
-  max-width: 1180px;
+.page {
+  max-width: 950px;
   margin: 0 auto;
-  padding: 30px 20px 60px;
+  padding: 35px 18px 60px;
 }
 
-h1 {
-  font-size: 2.1rem;
-  margin-bottom: 10px;
+.header {
+  text-align: center;
+  margin-bottom: 28px;
 }
 
-.intro {
-  color: #bbb;
-  margin-bottom: 24px;
-  line-height: 1.6;
+.header h1 {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -1px;
 }
 
-.topbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-button,
-.btn {
-  padding: 12px 20px;
-  border: none;
-  border-radius: 10px;
-  background: #d6b36a;
-  color: #111;
-  font-weight: bold;
-  cursor: pointer;
-  font-size: 1rem;
-  text-decoration: none;
-  display: inline-block;
-}
-
-button.secondary,
-.btn.secondary {
-  background: #2b2b2b;
-  color: #eee;
-  border: 1px solid #444;
-}
-
-.notice {
-  background: #102d12;
-  border: 1px solid #2f8f44;
-  color: #cfeecf;
-  padding: 14px 16px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-}
-
-.grid-top {
-  display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  gap: 14px;
-  margin-bottom: 16px;
-}
-
-.grid-bottom {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-bottom: 20px;
+.header p {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 15px;
 }
 
 .card {
-  background: #171717;
-  border: 1px solid #3a3a3a;
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 12px 35px rgba(0,0,0,.08);
+  padding: 25px;
+  margin-bottom: 22px;
+}
+
+textarea {
+  width: 100%;
+  min-height: 340px;
+  resize: vertical;
+  border: 1px solid #cbd5e1;
   border-radius: 14px;
-  padding: 14px;
-}
-
-.card h2 {
-  margin: 0 0 12px;
-  font-size: 1.45rem;
-  color: #f0c66c;
-}
-
-.card h3 {
-  margin: 0 0 8px;
-  font-size: 1rem;
-  color: #f0c66c;
-}
-
-.field {
-  margin-bottom: 12px;
-}
-
-.label {
-  display: block;
-  font-size: 0.95rem;
-  color: #d8b25f;
-  margin-bottom: 6px;
-}
-
-.value {
-  background: #111;
-  border: 1px solid #333;
-  border-radius: 10px;
-  padding: 10px 12px;
-  line-height: 1.55;
-  min-height: 22px;
-}
-
-.value.small {
-  min-height: auto;
-}
-
-.poem-box {
-  background: #111;
-  border: 1px solid #333;
-  border-radius: 10px;
-  padding: 14px;
-  min-height: 360px;
-  max-height: 540px;
-  overflow: auto;
-  white-space: pre-wrap;
+  padding: 18px;
+  font-size: 17px;
   line-height: 1.6;
+  outline: none;
+  background: #f8fafc;
+  transition: .2s;
 }
 
-.mini-card {
-  background: #111;
-  border: 1px solid #333;
-  border-radius: 12px;
-  padding: 12px;
-  margin-bottom: 12px;
+textarea:focus {
+  border-color: #475569;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(71,85,105,.08);
 }
 
-.mini-card:last-child {
-  margin-bottom: 0;
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
 }
 
-.mini-title {
-  font-size: 1.05rem;
-  color: #f0c66c;
-  font-weight: bold;
-  margin-bottom: 10px;
+button {
+  border: none;
+  border-radius: 10px;
+  padding: 12px 21px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .15s;
 }
 
-.two-col-mini {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+button:hover {
+  transform: translateY(-1px);
 }
 
-.footerbar {
+.analyse {
+  background: #0f172a;
+  color: white;
+}
+
+.clear {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.results {
+  display: none;
+}
+
+.result-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.signal {
+  padding: 15px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.signal:last-child {
+  border-bottom: none;
+}
+
+.signal-top {
   display: flex;
   justify-content: space-between;
+  gap: 15px;
   align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-  margin-top: 12px;
+  font-weight: 600;
 }
 
-.status-text {
-  color: #9fd49f;
-  font-size: 0.98rem;
+.signal-points {
+  white-space: nowrap;
+  font-size: 16px;
 }
 
-@media (max-width: 900px) {
-  .grid-top,
-  .grid-bottom,
-  .two-col-mini {
-    grid-template-columns: 1fr;
+.signal-desc {
+  margin-top: 5px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.bar {
+  height: 7px;
+  background: #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.bar-fill {
+  height: 100%;
+  background: #64748b;
+  border-radius: 10px;
+}
+
+.summary {
+  margin-top: 26px;
+  padding: 24px;
+  border-radius: 16px;
+  text-align: center;
+  background: #f1f5f9;
+}
+
+.total-score {
+  font-size: 44px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.total-label {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.verdict {
+  margin-top: 20px;
+  font-size: 32px;
+  font-weight: 800;
+  padding: 15px;
+  border-radius: 12px;
+}
+
+.verdict.ai {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.verdict.human {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.verdict.uncertain {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.stat {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+}
+
+.stat strong {
+  display: block;
+  font-size: 19px;
+}
+
+.stat span {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.note {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 18px;
+  text-align: center;
+}
+
+@media (max-width: 650px) {
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  .poem-box {
-    min-height: 260px;
-    max-height: none;
+  .signal-top {
+    align-items: flex-start;
+  }
+
+  .header h1 {
+    font-size: 27px;
   }
 }
 </style>
 </head>
+
 <body>
-<div class="wrap">
-  <h1>Ellenőrzés</h1>
-  <div class="intro">
-    Ez a belső ellenőrző oldal először önálló benyomást alkot a versről, majd összeveti azt a korábbi elemző oldalak eredményeivel.
+
+<div class="page">
+
+  <div class="header">
+    <h1>Vers AI-detektor</h1>
+    <p>Helyi, szabályalapú kísérleti elemző · nincs API · nincs internet</p>
   </div>
 
-  <div class="topbar">
-    <a href="kifejezesmod.html" class="btn secondary">← Vissza a kifejezésmódhoz</a>
-    <button id="reanalyzeBtn">Újraellenőrzés</button>
+  <div class="card">
+    <textarea id="poem" placeholder="Másold ide a verset..."></textarea>
+
+    <div class="actions">
+      <button class="analyse" onclick="analysePoem()">Elemzés</button>
+      <button class="clear" onclick="clearAll()">Törlés</button>
+    </div>
   </div>
 
-  <div id="notice" class="notice" style="display:none;"></div>
+  <div class="card results" id="results">
 
-  <div class="grid-top">
-    <section class="card">
-      <h2>A vizsgált vers</h2>
-      <div id="poemBox" class="poem-box"></div>
-    </section>
+    <div class="result-title">Elemzési jelek</div>
 
-    <section class="card">
-      <h2>Saját vélemény</h2>
+    <div id="signals"></div>
 
-      <div class="field">
-        <span class="label">Első benyomás</span>
-        <div id="ownImpression" class="value">Részben működő, hangulatos, de nem minden pontján egyformán erős vers.</div>
+    <div class="stats">
+      <div class="stat">
+        <strong id="lineCount">0</strong>
+        <span>sor</span>
       </div>
 
-      <div class="field">
-        <span class="label">Önálló szintérzet</span>
-        <div id="ownLevel" class="value small">—</div>
+      <div class="stat">
+        <strong id="wordCount">0</strong>
+        <span>szó</span>
       </div>
 
-      <div class="field">
-        <span class="label">Miért ezt látja</span>
-        <div id="ownReason" class="value">Még nincs ellenőrzési indoklás.</div>
+      <div class="stat">
+        <strong id="avgLine">0</strong>
+        <span>átlag szó / sor</span>
       </div>
 
-      <div class="field">
-        <span class="label">Biztosság</span>
-        <div id="ownConfidence" class="value small">—</div>
+      <div class="stat">
+        <strong id="uniqueRatio">0%</strong>
+        <span>egyedi szavak</span>
       </div>
-    </section>
+    </div>
+
+    <div class="summary">
+
+      <div class="total-score" id="score">0</div>
+      <div class="total-label">AI-pont / 100</div>
+
+      <div class="verdict" id="verdict"></div>
+
+    </div>
+
+    <div class="note">
+      Kísérleti stilometriai becslés. Nem bizonyítja a szerzőséget.
+    </div>
+
   </div>
 
-  <div class="grid-bottom">
-    <section class="card">
-      <h2>Az elemző oldalak eredményei</h2>
-
-      <div class="mini-card">
-        <div class="mini-title">Felismerés</div>
-        <div class="two-col-mini">
-          <div class="field">
-            <span class="label">Fő típus</span>
-            <div id="kindMainType" class="value small">—</div>
-          </div>
-          <div class="field">
-            <span class="label">Hangulat</span>
-            <div id="kindMood" class="value small">—</div>
-          </div>
-        </div>
-        <div class="field">
-          <span class="label">Stílusjelleg</span>
-          <div id="kindStyle" class="value small">—</div>
-        </div>
-      </div>
-
-      <div class="mini-card">
-        <div class="mini-title">Szerkezet</div>
-        <div class="field">
-          <span class="label">Szerkezet típusa</span>
-          <div id="structureType" class="value small">—</div>
-        </div>
-        <div class="field">
-          <span class="label">Mozgás</span>
-          <div id="structureMovement" class="value">—</div>
-        </div>
-      </div>
-
-      <div class="mini-card">
-        <div class="mini-title">Ritmus</div>
-        <div class="field">
-          <span class="label">Ritmus jellege</span>
-          <div id="rhythmType" class="value small">—</div>
-        </div>
-        <div class="field">
-          <span class="label">Lendület</span>
-          <div id="rhythmMovement" class="value small">—</div>
-        </div>
-      </div>
-
-      <div class="mini-card">
-        <div class="mini-title">Képek</div>
-        <div class="two-col-mini">
-          <div class="field">
-            <span class="label">Képiség</span>
-            <div id="imagesPresence" class="value small">—</div>
-          </div>
-          <div class="field">
-            <span class="label">Eredetiség</span>
-            <div id="imagesOriginality" class="value small">—</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="mini-card">
-        <div class="mini-title">Kifejezésmód</div>
-        <div class="two-col-mini">
-          <div class="field">
-            <span class="label">Összkép</span>
-            <div id="expressionOverall" class="value small">—</div>
-          </div>
-          <div class="field">
-            <span class="label">Hang egyedisége</span>
-            <div id="expressionVoice" class="value small">—</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2>Az ellenőr megítélése</h2>
-
-      <div class="field">
-        <span class="label">Reális-e az eddigi összkép</span>
-        <div id="realisticOverall" class="value small">—</div>
-      </div>
-
-      <div class="field">
-        <span class="label">Mi áll közel a saját olvasathoz</span>
-        <div id="agreementPoints" class="value">Még nincs adat.</div>
-      </div>
-
-      <div class="field">
-        <span class="label">Mi csúszhatott félre</span>
-        <div id="mismatchPoints" class="value">Még nincs adat.</div>
-      </div>
-
-      <div class="field">
-        <span class="label">Torzítás iránya</span>
-        <div id="distortionDirection" class="value small">—</div>
-      </div>
-
-      <div class="field">
-        <span class="label">Korrekció</span>
-        <div id="correctionDecision" class="value small">—</div>
-      </div>
-
-      <div class="field">
-  <span class="label">Belső réteg</span>
-  <div id="innerLayerNote" class="value">
-    —
-  </div>
-</div>
-
-      <div class="field">
-        <span class="label">Indoklás</span>
-        <div id="correctionReason" class="value">Még nincs indoklás.</div>
-      </div>
-    </section>
-  </div>
-
-  <div class="footerbar">
-    <div class="status-text">Ellenőrzés kész. Továbbléphetsz az összegzésre.</div>
-    <a href="osszegzes.html" class="btn">Tovább az összegzésre →</a>
-  </div>
 </div>
 
 <script>
-const params = new URLSearchParams(window.location.search);
-const autorun = params.get("autorun") === "1";
-const WORKER_URL = "https://verskritika.trknorbert76.workers.dev";
-const NEXT_PAGE = "osszegzes.html"; 
 
-const noticeEl = document.getElementById("notice");
-const reanalyzeBtn = document.getElementById("reanalyzeBtn");
+function cleanWord(word) {
+  return word
+    .toLowerCase()
+    .replace(/[.,!?;:„”"()\-–—…]/g, "")
+    .trim();
+}
 
-function safeParse(text) {
-  try {
-    return JSON.parse(text);
-  } catch {
-    return null;
+function average(arr) {
+  if (!arr.length) return 0;
+  return arr.reduce((a,b) => a+b, 0) / arr.length;
+}
+
+function stdDev(arr) {
+  if (!arr.length) return 0;
+  const avg = average(arr);
+  const variance =
+    arr.reduce((sum, value) => sum + Math.pow(value - avg, 2), 0)
+    / arr.length;
+
+  return Math.sqrt(variance);
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function addSignal(name, points, maxPoints, description) {
+
+  const percent = maxPoints === 0
+    ? 0
+    : Math.round((points / maxPoints) * 100);
+
+  const html = `
+    <div class="signal">
+      <div class="signal-top">
+        <div>${name}</div>
+        <div class="signal-points">+${points} / ${maxPoints}</div>
+      </div>
+
+      <div class="signal-desc">${description}</div>
+
+      <div class="bar">
+        <div class="bar-fill" style="width:${percent}%"></div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("signals")
+    .insertAdjacentHTML("beforeend", html);
+}
+
+function analysePoem() {
+
+  const text = document.getElementById("poem").value.trim();
+
+  if (!text) {
+    alert("Másolj be előbb egy verset.");
+    return;
   }
-}
 
-function readJSON(key) {
-  return safeParse(sessionStorage.getItem(key) || "");
-}
+  const rawLines = text.split(/\n/);
 
-function unwrapPack(pack) {
-  if (!pack) return null;
-  return pack.result || pack;
-}
+  const lines = rawLines
+    .map(x => x.trim())
+    .filter(x => x.length > 0);
 
-function setText(id, value, fallback = "—") {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const text = typeof value === "string" && value.trim() ? value.trim() : fallback;
-  el.textContent = text;
-}
+  const words = text
+    .split(/\s+/)
+    .map(cleanWord)
+    .filter(Boolean);
 
+  if (words.length < 10) {
+    alert("Túl rövid szöveg az elemzéshez.");
+    return;
+  }
 
-function showNotice(message) {
-  noticeEl.textContent = message;
-  noticeEl.style.display = "block";
-}
+  document.getElementById("signals").innerHTML = "";
 
-const poemFallback = "Nincs betöltött vers.";
+  let score = 0;
 
-function fillView() {
-  const poem =
-    sessionStorage.getItem("poemText") ||
-    sessionStorage.getItem("poem") ||
-    poemFallback;
+  // ----------------------------------------
+  // 1. Rövid sorok
+  // ----------------------------------------
 
-  const kind = unwrapPack(readJSON("analysis_kind")) || {};
-  const structure = unwrapPack(readJSON("analysis_structure")) || {};
-  const rhythm = unwrapPack(readJSON("analysis_rhythm")) || {};
-  const images = unwrapPack(readJSON("analysis_images")) || {};
-  const expression = unwrapPack(readJSON("analysis_expression")) || {};
-
-  const seedCheck = unwrapPack(readJSON("analysis_check_seed")) || null;
-  const finalCheck = unwrapPack(readJSON("analysis_check")) || null;
-
-  setText("poemBox", poem, poemFallback);
-
-  setText("kindMainType", kind.main_type);
-  setText("kindMood", kind.mood);
-  setText("kindStyle", kind.style_label);
-
-  setText("structureType", structure.structure_type);
-  setText("structureMovement", structure.movement);
-
-  setText("rhythmType", rhythm.rhythm_type);
-  setText("rhythmMovement", rhythm.movement);
-
-  setText("imagesPresence", images.imagery_presence);
-  setText("imagesOriginality", images.originality);
-
-  setText("expressionOverall", expression.overall_expression);
-  setText("expressionVoice", expression.originality_of_voice);
-
-  // =========================
-  // JOBB OLDAL: CSAK SEED
-  // =========================
-  setText("ownImpression", seedCheck?.own_impression, "Még nincs első önálló olvasat.");
-  setText("ownLevel", seedCheck?.own_level, "—");
-  setText("ownReason", seedCheck?.own_reasoning, "Még nincs első önálló indoklás.");
-  setText("ownConfidence", seedCheck?.own_confidence, "—");
-
-  // =========================
-  // VÉGSŐ ELLENŐRZÉS: KÜLÖN
-  // =========================
-  setText(
-    "realisticOverall",
-    finalCheck?.realism_check,
-    seedCheck ? "A végső összevetés még nem készült el." : "—"
+  const lineWordCounts = lines.map(line =>
+    line.split(/\s+/).filter(Boolean).length
   );
-  setText(
-    "agreementPoints",
-    finalCheck?.agreement_points,
-    seedCheck ? "A végső összevetés még nem készült el." : "Még nincs adat."
+
+  const veryShortLines =
+    lineWordCounts.filter(n => n <= 3).length;
+
+  const shortRatio =
+    veryShortLines / lines.length;
+
+  let points = 0;
+
+  if (shortRatio >= 0.40) points = 12;
+  else if (shortRatio >= 0.30) points = 9;
+  else if (shortRatio >= 0.20) points = 6;
+  else if (shortRatio >= 0.10) points = 3;
+
+  score += points;
+
+  addSignal(
+    "Rövid sorok aránya",
+    points,
+    12,
+    Math.round(shortRatio * 100) +
+    "% háromszavas vagy rövidebb sor."
   );
-  setText(
-    "mismatchPoints",
-    finalCheck?.mismatch_points,
-    seedCheck ? "A végső összevetés még nem készült el." : "Még nincs adat."
+
+  // ----------------------------------------
+  // 2. Sorhossz szabályossága
+  // ----------------------------------------
+
+  const deviation = stdDev(lineWordCounts);
+
+  points = 0;
+
+  if (deviation < 1.8) points = 12;
+  else if (deviation < 2.5) points = 9;
+  else if (deviation < 3.3) points = 5;
+  else if (deviation < 4.0) points = 2;
+
+  score += points;
+
+  addSignal(
+    "Sorhossz szabályossága",
+    points,
+    12,
+    "Sorhossz szórása: " + deviation.toFixed(2)
   );
-  setText(
-    "distortionDirection",
-    finalCheck?.distortion_direction,
-    seedCheck ? "Még nincs végső döntés." : "—"
+
+  // ----------------------------------------
+  // 3. Szókincsváltozatosság
+  // ----------------------------------------
+
+  const uniqueWords =
+    new Set(words);
+
+  const uniqueWordRatio =
+    uniqueWords.size / words.length;
+
+  points = 0;
+
+  if (uniqueWordRatio < 0.48) points = 13;
+  else if (uniqueWordRatio < 0.56) points = 9;
+  else if (uniqueWordRatio < 0.64) points = 5;
+  else if (uniqueWordRatio < 0.70) points = 2;
+
+  score += points;
+
+  addSignal(
+    "Szókincsváltozatosság",
+    points,
+    13,
+    Math.round(uniqueWordRatio * 100) +
+    "% egyedi szó."
   );
-  setText(
-    "correctionDecision",
-    finalCheck?.correction_direction,
-    seedCheck ? "Még nincs végső döntés." : "—"
+
+  // ----------------------------------------
+  // 4. Ismétlések
+  // ----------------------------------------
+
+  const counts = {};
+
+  words.forEach(word => {
+    if (word.length < 4) return;
+    counts[word] = (counts[word] || 0) + 1;
+  });
+
+  const repeatedWords =
+    Object.values(counts)
+      .filter(count => count >= 3).length;
+
+  points = clamp(repeatedWords * 2, 0, 10);
+
+  score += points;
+
+  addSignal(
+    "Szóismétlési minta",
+    points,
+    10,
+    repeatedWords +
+    " tartalmi szó ismétlődik legalább háromszor."
   );
-  
-setText(
-  "innerLayerNote",
-  finalCheck?.inner_layer_note,
-  "Nincs belső réteg megjegyzés."
-);
-  
 
-let correctionText = "Még nincs indoklás.";
-if (finalCheck) {
-  const finalLevel = finalCheck.final_level || "—";
+  // ----------------------------------------
+  // 5. Tipikus kötőszavas indítás
+  // ----------------------------------------
 
-  correctionText =
-    `Végső szint: ${finalLevel}. ` +
-    (finalCheck.correction_reason || "Nincs külön indoklás.");
-} else if (seedCheck) {
-  correctionText = "A végső ellenőri indoklás még nem készült el.";
-}
+  const connectorRegex =
+    /^(és|de|hogy|ahogy|mintha|majd|csak|mert|ha|amikor|míg|mikor|ne|nem)\b/i;
 
-  setText("correctionReason", correctionText, "Még nincs indoklás.");
-}
+  const connectorLines =
+    lines.filter(line =>
+      connectorRegex.test(line)
+    ).length;
 
-async function runCheckAnalysis(forceRefresh = false) {
-const poem =
-  sessionStorage.getItem("poem") ||
-  sessionStorage.getItem("poemText");
-  
+  const connectorRatio =
+    connectorLines / lines.length;
 
-  const savedKind = readJSON("analysis_kind");
-  const savedStructure = readJSON("analysis_structure");
-  const savedRhythm = readJSON("analysis_rhythm");
-  const savedImages = readJSON("analysis_images");
-  const savedExpression = readJSON("analysis_expression");
-  const savedDepth = readJSON("analysis_depth");
-  const savedImpact = readJSON("analysis_impact");
-  const savedInner =
-  readJSON("analysis_inner_measure") ||
-  readJSON("analysis_inner") ||
-  readJSON("analysis_belso");
+  points = 0;
 
-  const savedInterpretation =
-  readJSON("analysis_interpretation") ||
-  readJSON("analysis_ertelmezes") ||
-  readJSON("analysis_interpretation_result");
+  if (connectorRatio >= 0.35) points = 10;
+  else if (connectorRatio >= 0.25) points = 8;
+  else if (connectorRatio >= 0.18) points = 5;
+  else if (connectorRatio >= 0.10) points = 2;
 
-  const kind = unwrapPack(savedKind);
-  const structure = unwrapPack(savedStructure);
-  const rhythm = unwrapPack(savedRhythm);
-  const images = unwrapPack(savedImages);
-  const expression = unwrapPack(savedExpression);
-  const depth = unwrapPack(savedDepth);
- const impact = unwrapPack(savedImpact) || {};
-  const inner = unwrapPack(savedInner) || null;
-  const interpretation = unwrapPack(savedInterpretation);
+  score += points;
 
-  const depthForCheck = depth ? {
-  secondary_layer: depth.secondary_layer,
-  positive_hit: depth.positive_hit,
-  negative_hit: depth.negative_hit,
-  mixed_hit: depth.mixed_hit,
-  depth_level: depth.depth_level,
-  reasoning: depth.reasoning,
-  checker_min_score: depth.checker_min_score,
-  checker_max_score: depth.checker_max_score
-} : null;
+  addSignal(
+    "Kötőszavas sorindítások",
+    points,
+    10,
+    Math.round(connectorRatio * 100) +
+    "% ilyen sor."
+  );
 
-  if (!poem) {
-    window.location.href = "index.html";
-    return;
+  // ----------------------------------------
+  // 6. Generikus lírai szókészlet
+  // ----------------------------------------
+
+  const genericWords = new Set([
+    "szív",
+    "szívem",
+    "lélek",
+    "lelkem",
+    "csend",
+    "álom",
+    "álmod",
+    "álmok",
+    "fény",
+    "árnyék",
+    "kéz",
+    "kezed",
+    "szem",
+    "szemed",
+    "könny",
+    "csók",
+    "hajnal",
+    "éj",
+    "éjjel",
+    "emlék",
+    "emléke",
+    "vágy",
+    "hiány",
+    "szeretlek",
+    "szerelem",
+    "hold",
+    "nap",
+    "csillag",
+    "út",
+    "hazatér",
+    "hazajön",
+    "örökké",
+    "pillanat",
+    "perc",
+    "idő"
+  ]);
+
+  const genericCount =
+    words.filter(w =>
+      genericWords.has(w)
+    ).length;
+
+  const genericRatio =
+    genericCount / words.length;
+
+  points = 0;
+
+  if (genericRatio >= 0.12) points = 11;
+  else if (genericRatio >= 0.08) points = 8;
+  else if (genericRatio >= 0.05) points = 5;
+  else if (genericRatio >= 0.03) points = 2;
+
+  score += points;
+
+  addSignal(
+    "Generikus lírai szókészlet",
+    points,
+    11,
+    genericCount +
+    " gyakori lírai kulcsszó."
+  );
+
+  // ----------------------------------------
+  // 7. AI-szerű retorikai szerkezetek
+  // ----------------------------------------
+
+  const patterns = [
+    /\bmintha\b/gi,
+    /\bahogy\b/gi,
+    /\bmajd egyszer\b/gi,
+    /\bne azért\b/gi,
+    /\bcsak .* nem\b/gi,
+    /\bhogy tudja\b/gi,
+    /\bha majd\b/gi,
+    /\bnem azért\b/gi,
+    /\bmaradj még\b/gi
+  ];
+
+  let patternHits = 0;
+
+  patterns.forEach(pattern => {
+    const matches = text.match(pattern);
+    if (matches) patternHits += matches.length;
+  });
+
+  points = clamp(patternHits * 3, 0, 12);
+
+  score += points;
+
+  addSignal(
+    "Retorikai sablonok",
+    points,
+    12,
+    patternHits +
+    " tipikus szerkezeti találat."
+  );
+
+  // ----------------------------------------
+  // 8. Nyomatéksorok
+  // ----------------------------------------
+
+  const emphasisLines =
+    lines.filter(line => {
+
+      const wc =
+        line.split(/\s+/).length;
+
+      return wc <= 4 &&
+        /[.!?]$/.test(line);
+
+    }).length;
+
+  const emphasisRatio =
+    emphasisLines / lines.length;
+
+  points = 0;
+
+  if (emphasisRatio >= 0.25) points = 10;
+  else if (emphasisRatio >= 0.18) points = 7;
+  else if (emphasisRatio >= 0.10) points = 4;
+  else if (emphasisRatio >= 0.05) points = 2;
+
+  score += points;
+
+  addSignal(
+    "Rövid nyomatéksorok",
+    points,
+    10,
+    emphasisLines +
+    " rövid, lezárt mondatsor."
+  );
+
+  // ----------------------------------------
+  // 9. Prózavers / rímhiány
+  // ----------------------------------------
+
+  const endings = lines.map(line => {
+
+    const w = line
+      .split(/\s+/)
+      .map(cleanWord)
+      .filter(Boolean);
+
+    return w.length
+      ? w[w.length - 1].slice(-3)
+      : "";
+
+  });
+
+  let rhymePairs = 0;
+
+  for (let i = 0; i < endings.length; i++) {
+    for (let j = i + 1; j < endings.length; j++) {
+      if (
+        endings[i].length >= 2 &&
+        endings[i] === endings[j]
+      ) {
+        rhymePairs++;
+      }
+    }
   }
 
-  if (!kind) {
-    window.location.href = "felismeres.html";
-    return;
-  }
+  if (rhymePairs === 0) points = 5;
+  else if (rhymePairs <= 2) points = 3;
+  else points = 0;
 
-  if (!structure) {
-    window.location.href = "szerkezet.html";
-    return;
-  }
+  score += points;
 
-  if (!rhythm) {
-    window.location.href = "ritmus.html";
-    return;
-  }
+  addSignal(
+    "Rímhiány / prózavers-jelleg",
+    points,
+    5,
+    rhymePairs +
+    " egyszerű sorvégi egyezés."
+  );
 
-  if (!images) {
-    window.location.href = "kepek.html";
-    return;
-  }
+  // ----------------------------------------
+  // 10. Nagyon tiszta mondatszerkezet
+  // ----------------------------------------
 
-  if (!expression) {
-    window.location.href = "kifejezesmod.html";
-    return;
-  }
+  const sentences =
+    text
+      .split(/[.!?]+/)
+      .map(s => s.trim())
+      .filter(Boolean);
 
-  if (!depth) {
-    window.location.href = "melyseg.html";
-    return;
-  }
+  const sentenceLengths =
+    sentences.map(s =>
+      s.split(/\s+/).length
+    );
 
-  if (!inner || inner.overall_score === undefined || inner.overall_score === null) {
-  showNotice("A belső mérés még nem készült el, várok rá...");
-  setTimeout(() => runCheckAnalysis(forceRefresh), 1500);
-  return;
-}
+  const sentenceDeviation =
+    stdDev(sentenceLengths);
 
-fillView();
-
-const existingFinalCheck = unwrapPack(readJSON("analysis_check"));
-
-if (!existingFinalCheck) {
-  sessionStorage.removeItem("step_check_done");
-  sessionStorage.removeItem("step_summary_done");
-}
-
-if (!forceRefresh) {
-  const savedSeed = unwrapPack(readJSON("analysis_check_seed"));
-  const savedCheck = unwrapPack(readJSON("analysis_check"));
+  points = 0;
 
   if (
-    savedSeed &&
-    savedCheck &&
-    inner &&
-    Number(savedCheck.inner_score) === Number(inner.overall_score) &&
-    savedCheck.inner_adjustment !== undefined
+    sentences.length >= 4 &&
+    sentenceDeviation < 3
   ) {
-    sessionStorage.setItem("step_check_done", Date.now().toString());
-    fillView();
-    showNotice("A korábbi ellenőrzési eredmény betöltve.");
-    return;
-  }
-
-  if (
-    savedCheck &&
-    inner &&
-    (
-      Number(savedCheck.inner_score) !== Number(inner.overall_score) ||
-      savedCheck.inner_adjustment === undefined
-    )
+    points = 5;
+  } else if (
+    sentences.length >= 4 &&
+    sentenceDeviation < 5
   ) {
-    sessionStorage.removeItem("analysis_check");
-    sessionStorage.removeItem("step_check_done");
+    points = 2;
   }
 
-  if (savedSeed && !unwrapPack(readJSON("analysis_check"))) {
-    fillView();
-    showNotice("Az első önálló olvasat betöltve, most készül a végső összevetés...");
+  score += points;
+
+  addSignal(
+    "Mondatszerkezet szabályossága",
+    points,
+    5,
+    "Mondathossz szórása: " +
+    sentenceDeviation.toFixed(2)
+  );
+
+  // ----------------------------------------
+  // SCORE
+  // ----------------------------------------
+
+  score = clamp(Math.round(score), 0, 100);
+
+  document.getElementById("score").textContent =
+    score;
+
+  document.getElementById("lineCount").textContent =
+    lines.length;
+
+  document.getElementById("wordCount").textContent =
+    words.length;
+
+  document.getElementById("avgLine").textContent =
+    average(lineWordCounts).toFixed(1);
+
+  document.getElementById("uniqueRatio").textContent =
+    Math.round(uniqueWordRatio * 100) + "%";
+
+  const verdict =
+    document.getElementById("verdict");
+
+  verdict.className = "verdict";
+
+  /*
+     Első tesztküszöbök.
+     Ezeket majd a valódi tesztek alapján állítjuk.
+  */
+
+  if (score >= 60) {
+
+    verdict.textContent = "AI";
+    verdict.classList.add("ai");
+
+  } else if (score >= 45) {
+
+    verdict.textContent = "BIZONYTALAN";
+    verdict.classList.add("uncertain");
+
+  } else {
+
+    verdict.textContent = "NEM AI";
+    verdict.classList.add("human");
+
   }
-}
 
+  document.getElementById("results").style.display =
+    "block";
 
-reanalyzeBtn.disabled = true;
-  try {
-    // ==================================
-    // 1. SEED - TISZTA ELSŐ OLVASAT
-    // ==================================
-  let seedResult = !forceRefresh
-  ? unwrapPack(readJSON("analysis_check_seed"))
-  : null;
-
-if (!seedResult) {
-  showNotice("Az ellenőr első önálló olvasata készül...");
-
-  const seedRes = await fetch(WORKER_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-  poem,
-  step: "check_seed",
-  previous: {
-    interpretation
-  }
-})
+  document.getElementById("results")
+    .scrollIntoView({
+      behavior: "smooth",
+      block: "start"
     });
-
-    const seedData = await seedRes.json();
-
-    if (!seedRes.ok || !seedData.ok) {
-      throw new Error(seedData.error || "A seed ellenőrzés nem sikerült.");
-    }
-
-  seedResult = seedData.result;
-sessionStorage.setItem("analysis_check_seed", JSON.stringify(seedResult));
-sessionStorage.setItem("step_check_seed_done", Date.now().toString());
-fillView();
-
-} else {
-  fillView();
-  showNotice("A korábbi első olvasat betöltve, készül a végső összevetés...");
 }
 
-    // ==================================
-    // 2. CHECK - ÖSSZEVETÉS
-    // ==================================
-    showNotice("A végső összevető ellenőrzés készül...");
+function clearAll() {
 
-    const checkRes = await fetch(WORKER_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        poem,
-        step: "check",
-previous: {
-  kind,
-  interpretation,
-  structure,
-  rhythm,
-  images,
-  expression,
-  depth: depthForCheck,
-  impact,
-  inner,
-  seed: seedResult
-}
-      })
-    });
+  document.getElementById("poem").value = "";
+  document.getElementById("results").style.display =
+    "none";
+  document.getElementById("signals").innerHTML = "";
 
-    const checkData = await checkRes.json();
-
-    if (!checkRes.ok || !checkData.ok) {
-      throw new Error(checkData.error || "A végső ellenőrzés nem sikerült.");
-    }
-
-    const finalCheckResult = checkData.result;
-
-const rangeMin = Number(depth?.checker_min_score ?? 0);
-const rangeMax = Number(depth?.checker_max_score ?? 100);
-
-finalCheckResult.score_range_min = rangeMin;
-finalCheckResult.score_range_max = rangeMax;
-
-    sessionStorage.setItem("analysis_check", JSON.stringify(finalCheckResult));
-    sessionStorage.setItem("step_check_done", Date.now().toString());
-
-  fillView();
-showNotice("Az ellenőrzés elkészült.");
-
-if (autorun && !forceRefresh) {
-  window.location.href = NEXT_PAGE + "?autorun=1";
 }
 
-
-  } catch (err) {
-    showNotice("Hiba történt az ellenőrzés során: " + (err.message || "ismeretlen hiba"));
-  } finally {
-    reanalyzeBtn.disabled = false;
-  }
-}
-
-reanalyzeBtn.addEventListener("click", () => {
-  sessionStorage.removeItem("analysis_check_seed");
-  sessionStorage.removeItem("analysis_check");
-  sessionStorage.removeItem("step_check_done");
-  runCheckAnalysis(true);
-});
-setInterval(() => {
-  const seed = unwrapPack(readJSON("analysis_check_seed"));
-  const check = unwrapPack(readJSON("analysis_check"));
-
-  if (seed || check) {
-    fillView();
-  }
-}, 1000);
-runCheckAnalysis(false);
 </script>
+
 </body>
 </html>
