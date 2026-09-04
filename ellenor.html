@@ -1409,6 +1409,38 @@ function analysePoem() {
   );
 
   // ----------------------------------------
+  // 19. Stilometriai együttállás — TESZTJEL
+  // Egyelőre NEM számít bele az AI-pontba.
+  // ----------------------------------------
+  const avgLineWords = average(lineWordCounts);
+  const styleConditions = [
+    {ok: uniqueWordRatio >= 0.68 && uniqueWordRatio <= 0.82, label:"egyedi szavak 68–82%"},
+    {ok: deviation >= 1.20 && deviation <= 2.60, label:"sorhossz-szórás 1,20–2,60"},
+    {ok: mediumFullRatio >= 0.70, label:"legalább 70% 6–11 szavas sor"},
+    {ok: avgLineWords >= 6 && avgLineWords <= 9, label:"átlagos sorhossz 6–9 szó"},
+    {ok: sentences.length >= 4 && sentenceDeviation <= 4.70, label:"mondathossz-szórás legfeljebb 4,70"}
+  ];
+  const styleConditionHits = styleConditions.filter(x => x.ok);
+  let styleTestPoints = 0;
+  if (styleConditionHits.length === 5) styleTestPoints = 18;
+  else if (styleConditionHits.length === 4) styleTestPoints = 10;
+  else if (styleConditionHits.length === 3) styleTestPoints = 5;
+
+  // NINCS score += styleTestPoints; — ez most csak megfigyelési jel.
+  addSignal(
+    "Stilometriai együttállás — TESZT, nem számít bele",
+    styleTestPoints,
+    18,
+    styleConditionHits.length + "/5 feltétel teljesül: " +
+    (styleConditionHits.length ? styleConditionHits.map(x=>x.label).join("; ") : "egyik sem") +
+    " · Nyers értékek: egyedi szó " + Math.round(uniqueWordRatio*100) +
+    "%; sorhossz-szórás " + deviation.toFixed(2) +
+    "; 6–11 szavas sor " + Math.round(mediumFullRatio*100) +
+    "%; átlag " + avgLineWords.toFixed(1) +
+    " szó/sor; mondathossz-szórás " + sentenceDeviation.toFixed(2) + "."
+  );
+
+  // ----------------------------------------
   // SCORE
   // ----------------------------------------
 
