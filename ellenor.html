@@ -1891,37 +1891,34 @@ function analyzeRhymeStanza21(stanzaLines) {
       continue;
     }
 
-    const queue = [i];
-    const group = [];
+ const group = [i];
+visited[i] = true;
 
-    visited[i] = true;
+// Az i. sor a rímcsoport REFERENCIÁJA.
+// Egy új sor csak akkor kerülhet ugyanabba a csoportba,
+// ha közvetlenül ehhez a referenciasorhoz rímel.
+// Nincs láncolás: A~B és B~C miatt C nem lesz automatikusan A.
 
-    while (queue.length > 0) {
+for (let j = i + 1; j < stanzaLines.length; j++) {
 
-      const current = queue.shift();
-      group.push(current);
+  if (
+    visited[j] ||
+    !keys[j].primary
+  ) {
+    continue;
+  }
 
-      for (let j = 0; j < stanzaLines.length; j++) {
+  const similarity =
+    getRhymeSimilarity21(
+      keys[i],
+      keys[j]
+    );
 
-        if (
-          visited[j] ||
-          !keys[j].primary
-        ) {
-          continue;
-        }
-
-        const similarity =
-          getRhymeSimilarity21(
-            keys[current],
-            keys[j]
-          );
-
-        if (similarity >= THRESHOLD) {
-          visited[j] = true;
-          queue.push(j);
-        }
-      }
-    }
+  if (similarity >= THRESHOLD) {
+    group.push(j);
+    visited[j] = true;
+  }
+}
 
 
     // Csak valódi rímkapcsolat kap betűt.
