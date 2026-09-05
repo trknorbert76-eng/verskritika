@@ -1699,140 +1699,246 @@ function getRhymeSimilarity21(keysA, keysB) {
 
   return 0;
 }
+// ----------------------------------------
+// 21. Rímforma-konzisztencia — TESZT
+// STRÓFÁNKÉNTI rímképlet
+// ----------------------------------------
 
+// A rawLines kell, mert az üres sorok jelölik a strófahatárt.
 
-// Csak a tényleges verssorok.
-// Az üres sorokat kihagyjuk.
-const rhymeLines21 = rawLines
-  .map(line => line.trim())
-  .filter(line => line.length > 0);
-
-
-// Ha az első nem üres sor után üres sor áll,
-// azt címnek tekintjük.
-let rhymePoemLines21 = [...rhymeLines21];
-
+// Első nem üres sor megkeresése
 const firstNonEmptyIndex21 =
   rawLines.findIndex(line => line.trim().length > 0);
+
+// Cím leválasztása:
+// ha az első nem üres sor után legalább egy üres sor jön,
+// akkor az első sort címnek tekintjük.
+let rhymeRaw21 = [...rawLines];
 
 if (
   firstNonEmptyIndex21 >= 0 &&
   rawLines[firstNonEmptyIndex21 + 1] !== undefined &&
   rawLines[firstNonEmptyIndex21 + 1].trim() === ""
 ) {
-  rhymePoemLines21.shift();
+  rhymeRaw21 = rawLines.slice(firstNonEmptyIndex21 + 1);
 }
 
 
-const rhymeKeys21 =
-  rhymePoemLines21.map(line => getRhymeKeys21(line));
+// ----------------------------------------
+// STRÓFÁK FELÉPÍTÉSE
+// Egy vagy több üres sor = strófahatár
+// ----------------------------------------
 
-const rhymeLetters21 =
-  new Array(rhymePoemLines21.length).fill("-");
+const rhymeStanzas21 = [];
+let currentStanza21 = [];
 
-const visited21 =
-  new Array(rhymePoemLines21.length).fill(false);
+rhymeRaw21.forEach(rawLine => {
 
-const alphabet21 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const line = rawLine.trim();
 
-let alphabetIndex21 = 0;
+  if (!line) {
 
-const RHYME_THRESHOLD21 = 80;
+    if (currentStanza21.length > 0) {
+      rhymeStanzas21.push(currentStanza21);
+      currentStanza21 = [];
+    }
 
-
-// Rímcsoportok létrehozása
-for (let i = 0; i < rhymePoemLines21.length; i++) {
-
-  if (!rhymeKeys21[i].primary || visited21[i]) {
-    continue;
+    return;
   }
 
-  const queue = [i];
-  const group = [];
+  currentStanza21.push(line);
+});
 
-  visited21[i] = true;
+if (currentStanza21.length > 0) {
+  rhymeStanzas21.push(currentStanza21);
+}
 
-  while (queue.length > 0) {
 
-    const current = queue.shift();
-    group.push(current);
+// ----------------------------------------
+// EGY STRÓFA RÍMBETŰZÉSE
+// ----------------------------------------
 
-    for (let j = 0; j < rhymePoemLines21.length; j++) {
+function analyzeRhymeStanza21(stanzaLines) {
 
-      if (visited21[j] || !rhymeKeys21[j].primary) {
-        continue;
+  const keys =
+    stanzaLines.map(line => getRhymeKeys21(line));
+
+  const letters =
+    new Array(stanzaLines.length).fill("-");
+
+  const visited =
+    new Array(stanzaLines.length).fill(false);
+
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+  let alphabetIndex = 0;
+
+  const THRESHOLD = 80;
+
+
+  for (let i = 0; i < stanzaLines.length; i++) {
+
+    if (!keys[i].primary || visited[i]) {
+      continue;
+    }
+
+    const queue = [i];
+    const group = [];
+
+    visited[i] = true;
+
+    while (queue.length > 0) {
+
+      const current = queue.shift();
+      group.push(current);
+
+      for (let j = 0; j < stanzaLines.length; j++) {
+
+        if (
+          visited[j] ||
+          !keys[j].primary
+        ) {
+          continue;
+        }
+
+        const similarity =
+          getRhymeSimilarity21(
+            keys[current],
+            keys[j]
+          );
+
+        if (similarity >= THRESHOLD) {
+          visited[j] = true;
+          queue.push(j);
+        }
       }
+    }
 
-      const similarity =
-        getRhymeSimilarity21(
-          rhymeKeys21[current],
-          rhymeKeys21[j]
-        );
 
-      if (similarity >= RHYME_THRESHOLD21) {
-        visited21[j] = true;
-        queue.push(j);
-      }
+    // Csak valódi rímkapcsolat kap betűt.
+    // Magányos sor marad "-"
+    if (group.length >= 2) {
+
+      const letter =
+        alphabet[alphabetIndex % alphabet.length];
+
+      group.forEach(index => {
+        letters[index] = letter;
+      });
+
+      alphabetIndex++;
     }
   }
 
-  // Csak akkor kap betűt,
-  // ha legalább két sor összerímel.
-  if (group.length >= 2) {
 
-    const letter =
-      alphabet21[alphabetIndex21 % alphabet21.length];
+  const rhymedLines =
+    letters.filter(letter => letter !== "-").length;
 
-    group.forEach(index => {
-      rhymeLetters21[index] = letter;
+  const coverage =
+    stanzaLines.length > 0
+      ? rhymedLines / stanzaLines.length
+      : 0;
+
+
+  const details =
+    stanzaLines.map((line, index) => {
+
+      const lastWord =
+        line.trim().split(/\s+/).pop() || "";
+
+      const cleanLast =
+        lastWord.replace(/[.,!?;:„”"()]/g, "");
+
+      return (
+        (index + 1) +
+        ":" +
+        letters[index] +
+        "(" +
+        cleanLast +
+        ")"
+      );
     });
 
-    alphabetIndex21++;
-  }
+
+  return {
+    scheme: letters.join(""),
+    rhymedLines,
+    totalLines: stanzaLines.length,
+    coverage,
+    details
+  };
 }
 
 
-// Betűsor
-const rhymeScheme21 =
-  rhymeLetters21.join("");
+// ----------------------------------------
+// ÖSSZES STRÓFA ELEMZÉSE
+// ----------------------------------------
+
+const stanzaResults21 =
+  rhymeStanzas21.map(stanza =>
+    analyzeRhymeStanza21(stanza)
+  );
 
 
-// Rímelő sorok aránya
-const rhymedLines21 =
-  rhymeLetters21.filter(letter => letter !== "-").length;
+let totalRhymedLines21 = 0;
+let totalPoemLines21 = 0;
 
-const rhymeCoverage21 =
-  rhymePoemLines21.length > 0
-    ? rhymedLines21 / rhymePoemLines21.length
+stanzaResults21.forEach(result => {
+  totalRhymedLines21 += result.rhymedLines;
+  totalPoemLines21 += result.totalLines;
+});
+
+
+const totalRhymeCoverage21 =
+  totalPoemLines21 > 0
+    ? totalRhymedLines21 / totalPoemLines21
     : 0;
 
 
-// Részletes sorvégek
-const rhymeDetails21 =
-  rhymePoemLines21.map((line, index) => {
+// ----------------------------------------
+// KIÍRÁS
+// ----------------------------------------
 
-    const lastWord =
-      line.trim().split(/\s+/).pop() || "";
+const stanzaOutput21 =
+  stanzaResults21.map((result, index) => {
 
     return (
-      (index + 1) + ":" +
-      rhymeLetters21[index] +
-      "(" + lastWord.replace(/[.,!?;:„”"()]/g, "") + ")"
+      (index + 1) +
+      ". strófa: " +
+      result.scheme +
+      " · " +
+      result.rhymedLines +
+      "/" +
+      result.totalLines +
+      " (" +
+      Math.round(result.coverage * 100) +
+      "%)" +
+      " · " +
+      result.details.join("; ")
     );
-  });
+
+  }).join(" | ");
 
 
 addSignal(
   "Rímforma-konzisztencia — TESZT",
   0,
   0,
-  "Rímképlet: " + rhymeScheme21 +
-  " · Rímcsoportba sorolt sorok: " +
-  rhymedLines21 + "/" + rhymePoemLines21.length +
-  " (" + Math.round(rhymeCoverage21 * 100) + "%)" +
-  " · " + rhymeDetails21.join("; ") +
+  "Strófák: " +
+  rhymeStanzas21.length +
+  " · Összes rímcsoportba sorolt sor: " +
+  totalRhymedLines21 +
+  "/" +
+  totalPoemLines21 +
+  " (" +
+  Math.round(totalRhymeCoverage21 * 100) +
+  "%)" +
+  " · " +
+  stanzaOutput21 +
   " · TESZTÜZEM: +0 pont."
 );
+
+
   // ----------------------------------------
   // SCORE
   // ----------------------------------------
