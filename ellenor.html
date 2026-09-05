@@ -1740,28 +1740,7 @@ function analysePoem() {
 // Rímvizsgálathoz a címet kihagyjuk,
 // ha az első szöveges sor után egy vagy több üres sor következik.
 
-const firstNonEmptyIndex =
-  rawLines.findIndex(line => line.trim().length > 0);
-
-let rhymeLines = lines;
-
-if (firstNonEmptyIndex >= 0) {
-
-  let i = firstNonEmptyIndex + 1;
-  let hasBlankAfterTitle = false;
-
-  // Az első szöveges sor után akár több üres sor is lehet.
-  while (i < rawLines.length && rawLines[i].trim() === "") {
-    hasBlankAfterTitle = true;
-    i++;
-  }
-
-  if (hasBlankAfterTitle) {
-    rhymeLines = lines.slice(1);
-  }
-}
-
-const rhymeEndWords = rhymeLines.map(getLastWord);
+const rhymeEndWords = lines.map(getLastWord);
 
   let pairRhymeCount = 0;
   let pairRhymeTotal = 0;
