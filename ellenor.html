@@ -1634,6 +1634,7 @@ function analysePoem() {
 // ----------------------------------------
 
 function getRhymeKeys21(text) {
+
   let word = text.trim().split(/\s+/).pop() || "";
 
   let clean = word
@@ -1641,9 +1642,16 @@ function getRhymeKeys21(text) {
     .replace(/[^a-záéíóöőúüű]/gi, "");
 
   if (clean.length < 2) {
-    return { primary: "", short: "" };
+    return {
+      primary: "",
+      short: "",
+      vowels: "",
+      lastVowel: "",
+      endingAfterVowel: ""
+    };
   }
 
+  // Hangzásközelítő normalizálás
   clean = clean
     .replace(/á/g, "a")
     .replace(/é/g, "e")
@@ -1657,45 +1665,146 @@ function getRhymeKeys21(text) {
     .replace(/z$/, "s")
     .replace(/v$/, "f");
 
+  // A szó magánhangzói
+  const vowelArray =
+    clean.match(/[aeiou]/g) || [];
+
+  // Utolsó két magánhangzó.
+  // Ez lesz az asszonancia egyik fő kulcsa.
+  const vowels =
+    vowelArray.slice(-2).join("");
+
+  const lastVowel =
+    vowelArray.length
+      ? vowelArray[vowelArray.length - 1]
+      : "";
+
+  // Az utolsó magánhangzótól a szó végéig.
+  // Pl. "szép" -> "ep"
+  //     "még"  -> "ek"
+  let endingAfterVowel = "";
+
+  for (let i = clean.length - 1; i >= 0; i--) {
+    if ("aeiou".includes(clean[i])) {
+      endingAfterVowel = clean.slice(i);
+      break;
+    }
+  }
+
   return {
     primary: clean.slice(-3),
-    short: clean.slice(-2)
+    short: clean.slice(-2),
+    vowels,
+    lastVowel,
+    endingAfterVowel
   };
 }
 
 
-const assonancePairs21 = {
-  "jta": ["tja"], "tja": ["jta"],
-  "enye": ["egye"], "egye": ["enye"],
-  "nat": ["adt"], "adt": ["nat"],
-  "enn": ["ten"], "ten": ["enn"],
-  "gam": ["van"], "van": ["gam"],
-  "kem": ["ken", "zen"], "ken": ["kem"], "zen": ["kem"],
-  "ard": ["sat"], "sat": ["ard"],
-  "sok": ["suk"], "suk": ["sok"],
-  "zon": ["nom"], "nom": ["zon"]
-};
+// ----------------------------------------
+// Magyar rímhangzás hasonlítása
+// ----------------------------------------
 
+function getRhymeSimilarity21(a, b) {
 
-function getRhymeSimilarity21(keysA, keysB) {
-
-  if (!keysA.primary || !keysB.primary) {
+  if (!a.primary || !b.primary) {
     return 0;
   }
 
-  if (keysA.primary === keysB.primary) {
+
+  // 1. Nagyon erős szóvégi egyezés
+  if (a.primary === b.primary) {
     return 100;
   }
 
-  if (keysA.short === keysB.short) {
+
+  // 2. Két utolsó karakter egyezik
+  if (a.short === b.short) {
+    return 95;
+  }
+
+
+  // 3. Az utolsó magánhangzótól teljesen
+  // azonos a szóvégi hangzás.
+  if (
+    a.endingAfterVowel &&
+    b.endingAfterVowel &&
+    a.endingAfterVowel === b.endingAfterVowel
+  ) {
+    return 95;
+  }
+
+
+  // 4. KÉT utolsó magánhangzó azonos.
+  //
+  // Ez már erős magyar asszonancia.
+  // Pl. élet / ízlelem -> ee
+  //     örök / görög   -> oo
+  if (
+    a.vowels.length >= 2 &&
+    b.vowels.length >= 2 &&
+    a.vowels === b.vowels
+  ) {
     return 85;
   }
 
-  const list = assonancePairs21[keysA.primary];
 
-  if (list && list.includes(keysB.primary)) {
-    return 85;
+  // 5. Egyetlen magánhangzó önmagában kevés.
+  // Csak akkor fogadjuk el, ha a szóvégek
+  // mássalhangzó-hangzása is közel áll.
+
+  if (
+    a.lastVowel &&
+    b.lastVowel &&
+    a.lastVowel === b.lastVowel
+  ) {
+
+    const endA = a.endingAfterVowel;
+    const endB = b.endingAfterVowel;
+
+    // Utolsó karakter összevetése
+    const lastA =
+      endA.length > 1
+        ? endA[endA.length - 1]
+        : "";
+
+    const lastB =
+      endB.length > 1
+        ? endB[endB.length - 1]
+        : "";
+
+    if (
+      lastA &&
+      lastB &&
+      lastA === lastB
+    ) {
+      return 82;
+    }
+
+
+    // Zöngés–zöngétlen szóvégi párok
+    // normalizálása miatt néhány hangzásközeli
+    // végződés itt még elfogadható.
+
+    const consonantPairs = [
+      ["k", "p"],
+      ["k", "t"],
+      ["p", "t"],
+      ["s", "t"],
+      ["s", "k"]
+    ];
+
+    const closeEnding =
+      consonantPairs.some(pair =>
+        (lastA === pair[0] && lastB === pair[1]) ||
+        (lastA === pair[1] && lastB === pair[0])
+      );
+
+    if (closeEnding) {
+      return 80;
+    }
   }
+
 
   return 0;
 }
