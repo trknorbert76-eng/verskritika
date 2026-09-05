@@ -1737,7 +1737,22 @@ function analysePoem() {
     return score;
   }
 
-  const rhymeEndWords = lines.map(getLastWord);
+  // Ha a nyers szövegben a cím után üres sor áll,
+// az első nem üres sort címként kihagyjuk a rímvizsgálatból.
+const firstNonEmptyIndex =
+  rawLines.findIndex(line => line.trim().length > 0);
+
+let rhymeLines = lines;
+
+if (
+  firstNonEmptyIndex >= 0 &&
+  rawLines[firstNonEmptyIndex + 1] !== undefined &&
+  rawLines[firstNonEmptyIndex + 1].trim() === ""
+) {
+  rhymeLines = lines.slice(1);
+}
+
+const rhymeEndWords = rhymeLines.map(getLastWord);
 
   let pairRhymeCount = 0;
   let pairRhymeTotal = 0;
