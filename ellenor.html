@@ -1737,19 +1737,28 @@ function analysePoem() {
     return score;
   }
 
-  // Ha a nyers szövegben a cím után üres sor áll,
-// az első nem üres sort címként kihagyjuk a rímvizsgálatból.
+// Rímvizsgálathoz a címet kihagyjuk,
+// ha az első szöveges sor után egy vagy több üres sor következik.
+
 const firstNonEmptyIndex =
   rawLines.findIndex(line => line.trim().length > 0);
 
 let rhymeLines = lines;
 
-if (
-  firstNonEmptyIndex >= 0 &&
-  rawLines[firstNonEmptyIndex + 1] !== undefined &&
-  rawLines[firstNonEmptyIndex + 1].trim() === ""
-) {
-  rhymeLines = lines.slice(1);
+if (firstNonEmptyIndex >= 0) {
+
+  let i = firstNonEmptyIndex + 1;
+  let hasBlankAfterTitle = false;
+
+  // Az első szöveges sor után akár több üres sor is lehet.
+  while (i < rawLines.length && rawLines[i].trim() === "") {
+    hasBlankAfterTitle = true;
+    i++;
+  }
+
+  if (hasBlankAfterTitle) {
+    rhymeLines = lines.slice(1);
+  }
 }
 
 const rhymeEndWords = rhymeLines.map(getLastWord);
