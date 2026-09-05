@@ -1626,6 +1626,164 @@ function analysePoem() {
     structuralRouteReason +
     " · TESZTÜZEM: +0 pont."
   );
+
+    // ----------------------------------------
+  // 21. Rímforma-konzisztencia — TESZT
+  // Egyelőre NEM számít bele az AI-pontba.
+  // Első teszt: páros sorok rímkapcsolatának vizsgálata.
+  // ----------------------------------------
+
+  function normalizeRhymeWord(word) {
+    return cleanWord(word)
+      .toLowerCase()
+      .replace(/[^a-záéíóöőúüű]/gi, "");
+  }
+
+  function getLastWord(line) {
+    const ws = line
+      .split(/\s+/)
+      .map(normalizeRhymeWord)
+      .filter(Boolean);
+
+    return ws.length ? ws[ws.length - 1] : "";
+  }
+
+  // Magyar magánhangzókat egyszerű hangosztályokra bontjuk.
+  // Ez még kísérleti közelítés, nem végleges fonetikai elemző.
+  function normalizeVowels(word) {
+    return word
+      .replace(/[áa]/g, "a")
+      .replace(/[ée]/g, "e")
+      .replace(/[íi]/g, "i")
+      .replace(/[óoöő]/g, "o")
+      .replace(/[úuüű]/g, "u");
+  }
+
+  // Az utolsó hangsúlyosnak tekintett magánhangzótól
+  // vizsgáljuk a szó hangzását.
+  function rhymeTail(word) {
+    const w = normalizeVowels(normalizeRhymeWord(word));
+
+    if (!w) return "";
+
+    const vowels = "aeiou";
+
+    let lastVowel = -1;
+
+    for (let i = w.length - 1; i >= 0; i--) {
+      if (vowels.includes(w[i])) {
+        lastVowel = i;
+        break;
+      }
+    }
+
+    if (lastVowel < 0) return w;
+
+    // Ha van előtte még magánhangzó, abból is megtartunk
+    // valamennyit, hogy ne legyen túl engedékeny.
+    let previousVowel = -1;
+
+    for (let i = lastVowel - 1; i >= 0; i--) {
+      if (vowels.includes(w[i])) {
+        previousVowel = i;
+        break;
+      }
+    }
+
+    const start =
+      previousVowel >= 0
+        ? previousVowel
+        : lastVowel;
+
+    return w.slice(start);
+  }
+
+  function rhymeSimilarity(wordA, wordB) {
+    const a = rhymeTail(wordA);
+    const b = rhymeTail(wordB);
+
+    if (!a || !b) return 0;
+
+    // Teljes rímfarok-egyezés
+    if (a === b) return 1;
+
+    // Közös szóvégi hangok száma
+    let same = 0;
+    const max = Math.min(a.length, b.length);
+
+    for (let i = 1; i <= max; i++) {
+      if (a[a.length - i] === b[b.length - i]) {
+        same++;
+      } else {
+        break;
+      }
+    }
+
+    // Magánhangzóváz összevetése
+    const vowelPattern = s =>
+      s.split("")
+       .filter(ch => "aeiou".includes(ch))
+       .join("");
+
+    const va = vowelPattern(a);
+    const vb = vowelPattern(b);
+
+    let score = max > 0 ? same / max : 0;
+
+    if (va && vb && va === vb) {
+      score = Math.max(score, 0.75);
+    }
+
+    return score;
+  }
+
+  const rhymeEndWords = lines.map(getLastWord);
+
+  let pairRhymeCount = 0;
+  let pairRhymeTotal = 0;
+
+  const pairRhymeDetails = [];
+
+  for (let i = 0; i + 1 < rhymeEndWords.length; i += 2) {
+
+    const a = rhymeEndWords[i];
+    const b = rhymeEndWords[i + 1];
+
+    if (!a || !b) continue;
+
+    pairRhymeTotal++;
+
+    const similarity = rhymeSimilarity(a, b);
+
+    // TESZTKÜSZÖB.
+    // Még nem használjuk AI/ember döntésre.
+    const rhymes = similarity >= 0.55;
+
+    if (rhymes) pairRhymeCount++;
+
+    pairRhymeDetails.push(
+      a + " ↔ " + b +
+      " (" + Math.round(similarity * 100) + "%)"
+    );
+  }
+
+  const pairRhymeRatio =
+    pairRhymeTotal > 0
+      ? pairRhymeCount / pairRhymeTotal
+      : 0;
+
+  addSignal(
+    "Rímforma-konzisztencia — TESZT",
+    0,
+    0,
+    "Páros rímegységek: " +
+    pairRhymeCount + "/" + pairRhymeTotal +
+    " (" + Math.round(pairRhymeRatio * 100) + "%)" +
+    (pairRhymeDetails.length
+      ? " · " + pairRhymeDetails.join("; ")
+      : "") +
+    " · TESZTÜZEM: +0 pont."
+  );
   // ----------------------------------------
   // SCORE
   // ----------------------------------------
