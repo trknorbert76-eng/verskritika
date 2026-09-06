@@ -1935,7 +1935,131 @@ for (let j = i + 1; j < stanzaLines.length; j++) {
       alphabetIndex++;
     }
   }
+// -------------------------------------------------
+// TELJESEN EGYBETŰS NÉGYSOROS STRÓFA FELÜLVIZSGÁLATA
+// Pl. AAAA / BBBB / CCCC...
+//
+// Ha a laza asszonancia mind a 4 sort egyetlen
+// rímcsoportba húzta, megvizsgáljuk külön:
+// ABAB = 1–3, 2–4
+// AABB = 1–2, 3–4
+// ABBA = 1–4, 2–3
+// -------------------------------------------------
 
+if (stanzaLines.length === 4) {
+
+  const usedLetters =
+    [...new Set(letters.filter(x => x !== "-"))];
+
+  const allSameRhymeGroup =
+    usedLetters.length === 1 &&
+    letters.every(x => x !== "-");
+
+  if (allSameRhymeGroup) {
+
+    // Szigorúbb páronkénti rímérték.
+    // Itt már nem elég önmagában a két
+    // azonos magánhangzó.
+
+    function strictRhyme21(a, b) {
+
+      if (!a.primary || !b.primary) return 0;
+
+      // 3 karakteres végződés
+      if (a.primary === b.primary) return 100;
+
+      // 2 karakteres végződés
+      if (a.short === b.short) return 95;
+
+      // Utolsó magánhangzótól azonos végződés
+      if (
+        a.endingAfterVowel &&
+        b.endingAfterVowel &&
+        a.endingAfterVowel === b.endingAfterVowel
+      ) {
+        return 95;
+      }
+
+      // Azonos magánhangzóváz:
+      // ez önmagában még nem dönt,
+      // csak alap-hasonlóság.
+      if (
+        a.vowels &&
+        b.vowels &&
+        a.vowels === b.vowels
+      ) {
+        return 60;
+      }
+
+      return 0;
+    }
+
+
+    // A három klasszikus négysoros
+    // rímképlet pontszáma.
+
+    const scoreABAB =
+      strictRhyme21(keys[0], keys[2]) +
+      strictRhyme21(keys[1], keys[3]);
+
+    const scoreAABB =
+      strictRhyme21(keys[0], keys[1]) +
+      strictRhyme21(keys[2], keys[3]);
+
+    const scoreABBA =
+      strictRhyme21(keys[0], keys[3]) +
+      strictRhyme21(keys[1], keys[2]);
+
+
+    const bestScore =
+      Math.max(
+        scoreABAB,
+        scoreAABB,
+        scoreABBA
+      );
+
+
+    // Csak akkor bontjuk fel az AAAA-t,
+    // ha valamelyik páros szerkezet
+    // ténylegesen erősebbnek látszik.
+
+    if (bestScore >= 150) {
+
+      if (
+        scoreABAB === bestScore &&
+        scoreABAB > scoreAABB &&
+        scoreABAB > scoreABBA
+      ) {
+        letters[0] = "A";
+        letters[1] = "B";
+        letters[2] = "A";
+        letters[3] = "B";
+      }
+
+      else if (
+        scoreAABB === bestScore &&
+        scoreAABB > scoreABAB &&
+        scoreAABB > scoreABBA
+      ) {
+        letters[0] = "A";
+        letters[1] = "A";
+        letters[2] = "B";
+        letters[3] = "B";
+      }
+
+      else if (
+        scoreABBA === bestScore &&
+        scoreABBA > scoreABAB &&
+        scoreABBA > scoreAABB
+      ) {
+        letters[0] = "A";
+        letters[1] = "B";
+        letters[2] = "B";
+        letters[3] = "A";
+      }
+    }
+  }
+}
 
   const rhymedLines =
     letters.filter(letter => letter !== "-").length;
