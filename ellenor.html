@@ -2170,12 +2170,18 @@ addSignal(
 
 
   // ----------------------------------------
-  // 22. Stilizálási ritmusprofil — TESZT
+  // 22. Stilizálási ritmusprofil — TESZT (v2)
   // Független kísérleti mérő. NEM ad AI-pontot.
   // A meglévő 20/B E/H1/H2/H3 útvonalhoz nem nyúl.
+  //
+  // 5 jel:
+  // 1) rövid önálló mondatok aránya
+  // 2) rövid mondatok rendszeres eloszlása 5 mondatos ablakokban
+  // 3) egysoros mondatok aránya
+  // 4) >=3x szomszédos mondathossz-kontraszt
+  // 5) rövid<->hosszú szerkesztett váltakozás
   // ----------------------------------------
 
-  // Mondatok egyszerű szegmentálása és szószáma.
   const rhythmSentences22 = (text.match(/[^.!?…]+[.!?…]+|[^.!?…]+$/g) || [])
     .map(s => s.trim())
     .filter(Boolean);
@@ -2184,140 +2190,160 @@ addSignal(
     (s.match(/\p{L}+(?:[’'-]\p{L}+)*/gu) || []).length
   );
 
-  let longToShort22 = 0;
-  let tripleContrast22 = 0;
-  let sentencePairs22 = Math.max(0, rhythmSentenceLengths22.length - 1);
+  const rhythmSentenceCount22 = rhythmSentenceLengths22.length;
+  const rhythmPairs22 = Math.max(0, rhythmSentenceCount22 - 1);
 
-  for (let i = 0; i < rhythmSentenceLengths22.length - 1; i++) {
-    const a = rhythmSentenceLengths22[i];
-    const b = rhythmSentenceLengths22[i + 1];
-    if (a >= 12 && b <= 4) longToShort22++;
-    if (a > 0 && b > 0 && (a / b >= 3 || b / a >= 3)) tripleContrast22++;
+  // 1. Rövid önálló mondatok: legfeljebb 4 szó.
+  const shortSentenceCount22 =
+    rhythmSentenceLengths22.filter(n => n > 0 && n <= 4).length;
+
+  const shortSentenceRatio22 = rhythmSentenceCount22
+    ? shortSentenceCount22 / rhythmSentenceCount22
+    : 0;
+
+  // 2. Rövid mondatok eloszlása:
+  // 5 egymást követő mondatból legalább 2 rövid.
+  let shortWindows22 = 0;
+  const shortWindowTotal22 = Math.max(0, rhythmSentenceCount22 - 4);
+
+  for (let i = 0; i <= rhythmSentenceCount22 - 5; i++) {
+    const window22 = rhythmSentenceLengths22.slice(i, i + 5);
+    const shortInWindow22 = window22.filter(n => n > 0 && n <= 4).length;
+    if (shortInWindow22 >= 2) shortWindows22++;
   }
 
-  const longToShortRatio22 = sentencePairs22 ? longToShort22 / sentencePairs22 : 0;
-  const tripleContrastRatio22 = sentencePairs22 ? tripleContrast22 / sentencePairs22 : 0;
+  const shortWindowRatio22 = shortWindowTotal22
+    ? shortWindows22 / shortWindowTotal22
+    : 0;
 
-  // Rövid mondatok csomósodása: legalább 3 egymást követő, legfeljebb 4 szavas mondat.
-  let shortClusters22 = 0;
-  let inShortCluster22 = false;
-  for (let i = 0; i <= rhythmSentenceLengths22.length - 3; i++) {
-    const hit = rhythmSentenceLengths22[i] <= 4 &&
-                rhythmSentenceLengths22[i + 1] <= 4 &&
-                rhythmSentenceLengths22[i + 2] <= 4;
-    if (hit && !inShortCluster22) {
-      shortClusters22++;
-      inShortCluster22 = true;
-    } else if (!hit) {
-      inShortCluster22 = false;
+  // 3. Egysoros mondatok aránya.
+  // A 20-as tesztben már kiszámolt sentenceLineSpans tömböt használjuk,
+  // így ugyanazt a mondat-sortörés logikát kapja.
+  const oneLineSentenceCount22 =
+    sentenceLineSpans.filter(n => n === 1).length;
+
+  const oneLineSentenceRatio22 = sentenceLineSpans.length
+    ? oneLineSentenceCount22 / sentenceLineSpans.length
+    : 0;
+
+  // 4. Legalább háromszoros mondathossz-kontraszt
+  // két szomszédos mondat között.
+  let tripleContrast22 = 0;
+
+  for (let i = 0; i < rhythmSentenceCount22 - 1; i++) {
+    const a22 = rhythmSentenceLengths22[i];
+    const b22 = rhythmSentenceLengths22[i + 1];
+
+    if (
+      a22 > 0 &&
+      b22 > 0 &&
+      (a22 / b22 >= 3 || b22 / a22 >= 3)
+    ) {
+      tripleContrast22++;
     }
   }
 
-  // Rövid–rövid–rövid–hosszú egységminta.
-  // Egységek: vessző, pontosvessző, kettőspont vagy mondatzáró jel mentén.
-  const rhythmUnits22 = text
-    .split(/[,;:!?\.…。]+/u)
-    .map(s => s.trim())
-    .filter(Boolean)
-    .map(s => (s.match(/\p{L}+(?:[’'-]\p{L}+)*/gu) || []).length)
-    .filter(n => n > 0);
-
-  let short3Long22 = 0;
-  for (let i = 0; i <= rhythmUnits22.length - 4; i++) {
-    if (
-      rhythmUnits22[i] <= 3 &&
-      rhythmUnits22[i + 1] <= 3 &&
-      rhythmUnits22[i + 2] <= 3 &&
-      rhythmUnits22[i + 3] >= 8
-    ) short3Long22++;
-  }
-  const short3LongRatio22 = rhythmUnits22.length >= 4
-    ? short3Long22 / (rhythmUnits22.length - 3)
+  const tripleContrastRatio22 = rhythmPairs22
+    ? tripleContrast22 / rhythmPairs22
     : 0;
 
-  // Távoli szó szerinti visszatérés versszakok között.
-  const stanzas22 = text
-    .split(/\n\s*\n+/)
-    .map(s => s.trim())
-    .filter(Boolean);
+  // 5. Szerkesztett rövid<->hosszú váltakozás.
+  // Rövid = <=4 szó, hosszú = >=8 szó.
+  // A közepes mondatok nem számítanak váltásnak.
+  let shortLongAlternations22 = 0;
 
-  const wordStanzas22 = new Map();
-  const allLongWords22 = new Set();
+  for (let i = 0; i < rhythmSentenceCount22 - 1; i++) {
+    const a22 = rhythmSentenceLengths22[i];
+    const b22 = rhythmSentenceLengths22[i + 1];
 
-  stanzas22.forEach((stanza, stanzaIndex) => {
-    const stanzaWords = new Set(
-      (stanza.normalize('NFC').toLocaleLowerCase('hu-HU')
-        .match(/\p{L}+(?:[’'-]\p{L}+)*/gu) || [])
-        .filter(w => w.length >= 4)
-    );
-    stanzaWords.forEach(w => {
-      allLongWords22.add(w);
-      if (!wordStanzas22.has(w)) wordStanzas22.set(w, []);
-      wordStanzas22.get(w).push(stanzaIndex);
-    });
-  });
+    const shortLong22 =
+      (a22 > 0 && a22 <= 4 && b22 >= 8) ||
+      (b22 > 0 && b22 <= 4 && a22 >= 8);
 
-  let distantReturnWords22 = 0;
-  if (stanzas22.length >= 4) {
-    const minGap22 = Math.max(2, Math.ceil(stanzas22.length / 2));
-    wordStanzas22.forEach(indices => {
-      let found = false;
-      for (let i = 0; i < indices.length && !found; i++) {
-        for (let j = i + 1; j < indices.length; j++) {
-          if (Math.abs(indices[j] - indices[i]) >= minGap22) {
-            found = true;
-            break;
-          }
-        }
-      }
-      if (found) distantReturnWords22++;
-    });
+    if (shortLong22) shortLongAlternations22++;
   }
 
-  const distantReturnRatio22 = (stanzas22.length >= 4 && allLongWords22.size)
-    ? distantReturnWords22 / allLongWords22.size
+  const shortLongAlternationRatio22 = rhythmPairs22
+    ? shortLongAlternations22 / rhythmPairs22
     : 0;
 
-  // Kísérleti profilpontok CSAK a 22-es saját E/H besorolásához.
-  // Nem kerülnek bele a fő AI-pontszámba.
-  let rhythmProfileHits22 = 0;
-  if (rhythmSentenceLengths22.length >= 6 && longToShortRatio22 >= 0.12) rhythmProfileHits22++;
-  if (rhythmSentenceLengths22.length >= 6 && tripleContrastRatio22 >= 0.25) rhythmProfileHits22++;
-  if (shortClusters22 >= 2) rhythmProfileHits22++;
-  if (short3Long22 >= 1) rhythmProfileHits22++;
-  if (stanzas22.length >= 4 && distantReturnRatio22 >= 0.06) rhythmProfileHits22++;
+  // ---------------------------------------------------------
+  // KÍSÉRLETI PROFILKÜSZÖBÖK
+  // Csak a 22-es saját E/H besorolásához.
+  // A fő AI-pontszámba továbbra sem kerül semmi.
+  // ---------------------------------------------------------
+
+  const rhythmFlags22 = [
+    {
+      active: rhythmSentenceCount22 >= 6 && shortSentenceRatio22 >= 0.40,
+      label: "rövid önálló mondatok >=40%"
+    },
+    {
+      active: rhythmSentenceCount22 >= 9 && shortWindowRatio22 >= 0.50,
+      label: "5-mondatos ablakok >=50%-ában legalább 2 rövid mondat"
+    },
+    {
+      active: sentenceLineSpans.length >= 6 && oneLineSentenceRatio22 >= 0.50,
+      label: "egysoros mondatok >=50%"
+    },
+    {
+      active: rhythmSentenceCount22 >= 6 && tripleContrastRatio22 >= 0.33,
+      label: ">=3x mondathossz-kontraszt >=33%"
+    },
+    {
+      active: rhythmSentenceCount22 >= 6 && shortLongAlternationRatio22 >= 0.20,
+      label: "rövid<->hosszú váltás >=20%"
+    }
+  ];
+
+  const activeRhythmFlags22 = rhythmFlags22.filter(x => x.active);
+  const rhythmProfileHits22 = activeRhythmFlags22.length;
 
   let rhythmRoute22 = "? – kevert / nem besorolható profil";
-  let rhythmReason22 = "A mért stilizálási ritmusjelek nem alkotnak egyértelmű együttállást.";
+  let rhythmReason22 =
+    "A mért stilizálási ritmusjelek nem alkotnak egyértelmű együttállást.";
 
-  if (rhythmProfileHits22 >= 4) {
+  // Rövid szövegnél nem erőltetünk E/H besorolást.
+  if (rhythmSentenceCount22 < 6) {
+    rhythmRoute22 = "? – kevés mondat a besoroláshoz";
+    rhythmReason22 =
+      "Legalább 6 mondat szükséges a kísérleti ritmusprofil besorolásához.";
+  } else if (rhythmProfileHits22 >= 4) {
     rhythmRoute22 = "H1 – erős stilizálási ritmusprofil";
-    rhythmReason22 = "Több, egymástól eltérő szerkesztett ritmusjel egyszerre erősen jelen van.";
+    rhythmReason22 =
+      "Legalább négy, egymástól eltérő ritmusszerkesztési jel egyszerre aktív.";
   } else if (rhythmProfileHits22 === 3) {
-    rhythmRoute22 = "H2 – közepes stilizálási ritmusprofil";
-    rhythmReason22 = "Három külön stilizálási ritmusjel együttesen aktív.";
+    rhythmRoute22 = "H2 – nyomatékoló stilizálási ritmusprofil";
+    rhythmReason22 =
+      "Három külön ritmusszerkesztési jel együttesen aktív.";
   } else if (rhythmProfileHits22 === 2) {
     rhythmRoute22 = "H3 – rejtett stilizálási ritmusprofil";
-    rhythmReason22 = "Két szerkezeti ritmusjel együtt jelenik meg, de a profil nem erősen homogenizált.";
-  } else if (rhythmProfileHits22 <= 1) {
+    rhythmReason22 =
+      "Két külön ritmusszerkesztési jel együtt jelenik meg.";
+  } else {
     rhythmRoute22 = "E – emberi jellegű ritmusprofil";
-    rhythmReason22 = "A vizsgált stilizálási ritmusmintákból legfeljebb egy érte el a kísérleti küszöböt.";
+    rhythmReason22 =
+      "A vizsgált stilizálási ritmusmintákból legfeljebb egy érte el a kísérleti küszöböt.";
   }
 
   addSignal(
     "Stilizálási ritmusprofil — TESZT",
     0,
     0,
-    "Hosszú→rövid mondat: " + longToShort22 + "/" + sentencePairs22 +
-    " (" + Math.round(longToShortRatio22 * 100) + "%)" +
-    " · ≥3× mondathossz-kontraszt: " + tripleContrast22 + "/" + sentencePairs22 +
+    "Rövid önálló mondatok: " + shortSentenceCount22 + "/" + rhythmSentenceCount22 +
+    " (" + Math.round(shortSentenceRatio22 * 100) + "%)" +
+    " · Rövidmondat-eloszlás: " + shortWindows22 + "/" + shortWindowTotal22 +
+    " ötmondatos ablak (" + Math.round(shortWindowRatio22 * 100) + "%)" +
+    " · Egysoros mondatok: " + oneLineSentenceCount22 + "/" + sentenceLineSpans.length +
+    " (" + Math.round(oneLineSentenceRatio22 * 100) + "%)" +
+    " · >=3× mondathossz-kontraszt: " + tripleContrast22 + "/" + rhythmPairs22 +
     " (" + Math.round(tripleContrastRatio22 * 100) + "%)" +
-    " · Rövidmondat-csomók: " + shortClusters22 +
-    " · Rövid×3→hosszú egységminta: " + short3Long22 +
-    " (" + Math.round(short3LongRatio22 * 100) + "%)" +
-    " · Távoli szóvisszatérés: " + distantReturnWords22 + "/" + allLongWords22.size +
-    " (" + Math.round(distantReturnRatio22 * 100) + "%)" +
+    " · Rövid↔hosszú váltás: " + shortLongAlternations22 + "/" + rhythmPairs22 +
+    " (" + Math.round(shortLongAlternationRatio22 * 100) + "%)" +
     " · Aktív profiljelek: " + rhythmProfileHits22 + "/5" +
+    (activeRhythmFlags22.length
+      ? " [" + activeRhythmFlags22.map(x => x.label).join("; ") + "]"
+      : "") +
     " · " + rhythmRoute22 +
     " · " + rhythmReason22 +
     " · TESZTÜZEM: +0 pont."
