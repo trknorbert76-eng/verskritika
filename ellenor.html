@@ -2376,26 +2376,43 @@ addSignal(
 
   verdict.className = "verdict";
 
-  /*
-     Első tesztküszöbök.
-     Ezeket majd a valódi tesztek alapján állítjuk.
-  */
+  // ----------------------------------------
+  // 3-AS TÖBBSÉGI DÖNTÉS — TESZT
+  // 1) Szerkezeti útvonal: H1/H2/H3 = AI, E = EMBER
+  // 2) Stilizálási ritmusprofil: H1/H2/H3 = AI, E = EMBER
+  // 3) AI-pont: 60–100 = AI, 0–59 = EMBER
+  // Nincs bizonytalan: 2 szavazat dönti el a végeredményt.
+  // ----------------------------------------
 
-  if (score >= 60) {
+  const structuralVote = /^H[123]\b/.test(structuralRoute) ? "AI" : "EMBER";
+  const rhythmVote = /^H[123]\b/.test(rhythmRoute22) ? "AI" : "EMBER";
+  const scoreVote = score >= 60 ? "AI" : "EMBER";
 
-    verdict.textContent = "AI";
+  const aiVotes =
+    (structuralVote === "AI" ? 1 : 0) +
+    (rhythmVote === "AI" ? 1 : 0) +
+    (scoreVote === "AI" ? 1 : 0);
+
+  const humanVotes = 3 - aiVotes;
+  const majorityVerdict = aiVotes >= 2 ? "AI" : "EMBER";
+
+  // A három döntő jel külön is látható az elemzési jelek végén.
+  addSignal(
+    "3-as döntés — ÖSSZESÍTÉS",
+    0,
+    0,
+    "Szerkezeti útvonal: " + structuralVote +
+    " · Stilizálási ritmusprofil: " + rhythmVote +
+    " · AI-pont (60-as határ): " + scoreVote +
+    " · Szavazás: AI " + aiVotes + ":" + humanVotes + " EMBER"
+  );
+
+  verdict.textContent = majorityVerdict;
+
+  if (majorityVerdict === "AI") {
     verdict.classList.add("ai");
-
-  } else if (score >= 45) {
-
-    verdict.textContent = "BIZONYTALAN";
-    verdict.classList.add("uncertain");
-
   } else {
-
-    verdict.textContent = "NEM AI";
     verdict.classList.add("human");
-
   }
 
   document.getElementById("results").style.display =
