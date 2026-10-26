@@ -941,38 +941,30 @@ async function runApiControl(poem) {
     const obsEl = document.getElementById("apiObservations");
     const limitationsEl = document.getElementById("apiLimitations");
 
-    // Az új soronkénti Worker válaszának külön kezelése.
-    // A régi, egész-vers AI/EMBER válasz továbbra is támogatott.
+    // Soronkénti Worker: CSAK a megjelölt, legalább 60 pontos sorokat mutatjuk.
+    // A többi helyi mérés és a régi Worker-formátum változatlan.
     if (Array.isArray(result?.lines)) {
       const percent = Number(result?.suspicious_text_percent);
+      const candidates = result.lines.filter(item => item?.flagged === true);
       verdictEl.textContent = Number.isFinite(percent)
         ? "Gyanús szövegrészek: " + percent.toLocaleString("hu-HU") + "%"
         : "SORONKÉNTI STÍLUSELEMZÉS";
-      statusEl.textContent = "Külön API-vizsgálat — nem számít bele a helyi AI-pontba. A piros sorok stilárisan eltérőnek minősültek, nem bizonyítottan AI-eredetűek.";
+      statusEl.textContent = "Külön API-vizsgálat — nem számít bele a helyi AI-pontba. A jelölés nem bizonyít AI-szerzőséget.";
       summaryEl.textContent = result?.summary || "";
-
-      // A verset eredeti sortöréseivel jelenítjük meg; kizárólag a
-      // Worker által megjelölt sorok kapnak piros kiemelést.
       obsEl.style.listStyle = "none";
       obsEl.style.marginLeft = "0";
       obsEl.style.paddingLeft = "0";
-      obsEl.innerHTML = result.lines.map(item => {
-        const line = escapeHtml(item?.text ?? "");
-        if (!String(item?.text ?? "").trim()) {
-          return '<li style="height:0.9em" aria-hidden="true"></li>';
-        }
-        const isFlagged = item?.flagged === true;
-        const color = isFlagged ? "#b91c1c" : "#1e3a8a";
-        const score = Number(item?.confidence);
-        const badge = isFlagged && Number.isFinite(score)
-          ? ' <small style="font-size:11px;color:#991b1b">[' + Math.round(score) + '/100]</small>'
-          : "";
-        const reason = isFlagged && item?.reason
-          ? '<div style="font-size:11px;color:#7f1d1d;padding-left:12px;margin-bottom:5px">↳ ' + escapeHtml(item.reason) + '</div>'
-          : "";
-        return '<li style="white-space:pre-wrap;color:' + color + ';line-height:1.55;font-size:14px">' +
-          line + badge + reason + '</li>';
-      }).join("");
+      if (candidates.length === 0) {
+        obsEl.innerHTML = '<li style="color:#166534;font-weight:600">Nem találtam megalapozottan gyanús sort (0%).</li>';
+      } else {
+        obsEl.innerHTML = candidates.map(item => {
+          const line = escapeHtml(item?.text ?? "");
+          const score = Number(item?.confidence);
+          const badge = Number.isFinite(score) ? ' <small style="font-size:11px;color:#991b1b">[' + Math.round(score) + '/100]</small>' : "";
+          const reason = item?.reason ? '<div style="font-size:12px;color:#7f1d1d;margin:3px 0 9px 0">↳ ' + escapeHtml(item.reason) + '</div>' : "";
+          return '<li style="white-space:pre-wrap;color:#b91c1c;line-height:1.5;font-size:14px;margin-bottom:3px">' + line + badge + reason + '</li>';
+        }).join("");
+      }
       const lim = result?.limitations;
       limitationsEl.textContent = lim ? "Korlát: " +
         (Array.isArray(lim) ? lim.join(" · ") : String(lim)) :
