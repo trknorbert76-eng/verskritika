@@ -923,35 +923,75 @@ async function runApiControl(poem) {
       body: JSON.stringify({ poem })
     });
 
-    let payload = null;
+    let payload;
     try {
       payload = await response.json();
     } catch (e) {
       throw new Error("A Worker nem JSON választ adott (HTTP " + response.status + ").");
     }
-
-    if (!response.ok) {
+    if (!response.ok || payload?.ok === false) {
       const detail = payload?.error?.message || payload?.error || payload?.message || ("HTTP " + response.status);
       throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
     }
 
-    // A Worker a strukturált modellválaszt a result mezőben adja vissza.
-    // A fallbackok miatt kisebb válaszformátum-változás esetén is megjelenik.
     const result = payload?.result || payload?.analysis || payload;
+    const verdictEl = document.getElementById("apiVerdict");
+    const statusEl = document.getElementById("apiStatus");
+    const summaryEl = document.getElementById("apiSummary");
+    const obsEl = document.getElementById("apiObservations");
+    const limitationsEl = document.getElementById("apiLimitations");
+
+    // Az új soronkénti Worker válaszának külön kezelése.
+    // A régi, egész-vers AI/EMBER válasz továbbra is támogatott.
+    if (Array.isArray(result?.lines)) {
+      const percent = Number(result?.suspicious_text_percent);
+      verdictEl.textContent = Number.isFinite(percent)
+        ? "Gyanús szövegrészek: " + percent.toLocaleString("hu-HU") + "%"
+        : "SORONKÉNTI STÍLUSELEMZÉS";
+      statusEl.textContent = "Külön API-vizsgálat — nem számít bele a helyi AI-pontba. A piros sorok stilárisan eltérőnek minősültek, nem bizonyítottan AI-eredetűek.";
+      summaryEl.textContent = result?.summary || "";
+
+      // A verset eredeti sortöréseivel jelenítjük meg; kizárólag a
+      // Worker által megjelölt sorok kapnak piros kiemelést.
+      obsEl.style.listStyle = "none";
+      obsEl.style.marginLeft = "0";
+      obsEl.style.paddingLeft = "0";
+      obsEl.innerHTML = result.lines.map(item => {
+        const line = escapeHtml(item?.text ?? "");
+        if (!String(item?.text ?? "").trim()) {
+          return '<li style="height:0.9em" aria-hidden="true"></li>';
+        }
+        const isFlagged = item?.flagged === true;
+        const color = isFlagged ? "#b91c1c" : "#1e3a8a";
+        const score = Number(item?.confidence);
+        const badge = isFlagged && Number.isFinite(score)
+          ? ' <small style="font-size:11px;color:#991b1b">[' + Math.round(score) + '/100]</small>'
+          : "";
+        const reason = isFlagged && item?.reason
+          ? '<div style="font-size:11px;color:#7f1d1d;padding-left:12px;margin-bottom:5px">↳ ' + escapeHtml(item.reason) + '</div>'
+          : "";
+        return '<li style="white-space:pre-wrap;color:' + color + ';line-height:1.55;font-size:14px">' +
+          line + badge + reason + '</li>';
+      }).join("");
+      const lim = result?.limitations;
+      limitationsEl.textContent = lim ? "Korlát: " +
+        (Array.isArray(lim) ? lim.join(" · ") : String(lim)) :
+        "Korlát: A stiláris eltérés nem bizonyítja az AI-szerzőséget.";
+      return;
+    }
+
+    // Régi Worker-formátum: változatlan AI / EMBER kontroll.
     const rawVerdict = String(result?.verdict || payload?.verdict || "uncertain").toLowerCase();
-    const labelMap = {
-      ai: "INKÁBB AI",
-      human: "INKÁBB EMBER",
-      uncertain: "NEM ELDÖNTHETŐ"
-    };
-
-    document.getElementById("apiVerdict").textContent =
-      payload?.verdict_label || labelMap[rawVerdict] || String(result?.verdict || "NEM ELDÖNTHETŐ").toUpperCase();
-    document.getElementById("apiStatus").textContent = "Külön API-elemzés — nem számít bele a helyi AI-pontba.";
-    document.getElementById("apiSummary").textContent = result?.summary || "";
-
+    const labelMap = { ai: "INKÁBB AI", human: "INKÁBB EMBER", uncertain: "NEM ELDÖNTHETŐ" };
+    verdictEl.textContent = result?.verdict_label || payload?.verdict_label ||
+      labelMap[rawVerdict] || String(result?.verdict || "NEM ELDÖNTHETŐ").toUpperCase();
+    statusEl.textContent = "Külön API-elemzés — nem számít bele a helyi AI-pontba.";
+    summaryEl.textContent = result?.summary || "";
+    obsEl.style.listStyle = "";
+    obsEl.style.marginLeft = "";
+    obsEl.style.paddingLeft = "";
     const obs = Array.isArray(result?.observations) ? result.observations : [];
-    document.getElementById("apiObservations").innerHTML = obs.map(o => {
+    obsEl.innerHTML = obs.map(o => {
       const quote = o?.quote ? "„" + escapeHtml(o.quote) + "” — " : "";
       const finding = escapeHtml(o?.finding || "");
       const relevance = o?.relevance ? " " + escapeHtml(o.relevance) : "";
@@ -959,11 +999,9 @@ async function runApiControl(poem) {
       const direction = o?.direction ? " [" + escapeHtml(String(o.direction).toUpperCase()) + "]" : "";
       return "<li>" + quote + finding + relevance + alternative + direction + "</li>";
     }).join("");
-
     const lim = result?.limitations;
-    document.getElementById("apiLimitations").textContent = lim
-      ? "Korlát: " + (Array.isArray(lim) ? lim.join(" · ") : lim)
-      : "";
+    limitationsEl.textContent = lim ? "Korlát: " +
+      (Array.isArray(lim) ? lim.join(" · ") : lim) : "";
 
   } catch (err) {
     document.getElementById("apiVerdict").textContent = "API-HIBA";
